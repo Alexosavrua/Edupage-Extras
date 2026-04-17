@@ -1,17 +1,20 @@
 {
   "name": "Edupage Extras",
-  "description": "A Chromium extension that adds extra QoL features to Edupage.",
-  "version": "0.0.1",
+  "description": "QoL extras for Edupage — dark mode, grade average bars, and more.",
+  "version": "0.2.0",
   "manifest_version": 3,
   "permissions": ["storage", "tabs"],
+  "host_permissions": ["https://*.edupage.org/*"],
   "action": {
     "default_popup": "menu/menu.html",
     "default_icon": "images/placeholder_icon.png"
   },
   "content_scripts": [
     {
-      "js": ["scripts/content.js"],
-      "matches": ["https://*.edupage.org/*"]
+      "matches": ["https://*.edupage.org/*"],
+      "js": ["scripts/content.js", "scripts/grades-enhancer.js"],
+      "run_at": "document_start",
+      "all_frames": true
     }
   ]
 }
