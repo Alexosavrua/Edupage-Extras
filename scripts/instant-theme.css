@@ -41,3 +41,39 @@ html.ee-theme-forest #bar_mainDiv {
   background: #11170f !important;
   color: #e5f2df !important;
 }
+
+html.ee-theme-emerald,
+html.ee-theme-emerald body,
+html.ee-theme-emerald .bgDiv,
+html.ee-theme-emerald .skinBody,
+html.ee-theme-emerald .skinContent,
+html.ee-theme-emerald .userContentInner,
+html.ee-theme-emerald #eb_main_content,
+html.ee-theme-emerald #bar_mainDiv {
+  background: #071a12 !important;
+  color: #eafff3 !important;
+}
+
+html.ee-theme-pink,
+html.ee-theme-pink body,
+html.ee-theme-pink .bgDiv,
+html.ee-theme-pink .skinBody,
+html.ee-theme-pink .skinContent,
+html.ee-theme-pink .userContentInner,
+html.ee-theme-pink #eb_main_content,
+html.ee-theme-pink #bar_mainDiv {
+  background: #fff5fa !important;
+  color: #25111b !important;
+}
+
+html.ee-theme-purple,
+html.ee-theme-purple body,
+html.ee-theme-purple .bgDiv,
+html.ee-theme-purple .skinBody,
+html.ee-theme-purple .skinContent,
+html.ee-theme-purple .userContentInner,
+html.ee-theme-purple #eb_main_content,
+html.ee-theme-purple #bar_mainDiv {
+  background: #171326 !important;
+  color: #f0eaff !important;
+}

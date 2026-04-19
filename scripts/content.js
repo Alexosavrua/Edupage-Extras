@@ -11,7 +11,15 @@ const THEME_KEY = "themeMode";
 const CLEAN_UI_KEY = "cleanUiEnabled";
 const HIDE_HELP_TEXT_KEY = "hideHelpTextEnabled";
 const CLASS_NAME = "ee-dark";
-const THEME_CLASSES = ["ee-theme-dark", "ee-theme-ocean", "ee-theme-forest", "ee-theme-light"];
+const THEME_CLASSES = [
+  "ee-theme-dark",
+  "ee-theme-ocean",
+  "ee-theme-forest",
+  "ee-theme-emerald",
+  "ee-theme-pink",
+  "ee-theme-purple",
+  "ee-theme-light",
+];
 const CLEAN_UI_CLASS = "ee-clean-ui";
 const HIDE_HELP_TEXT_CLASS = "ee-hide-help-text";
 const STYLE_ID = "ee-dark-mode-style";
@@ -70,6 +78,45 @@ function buildDarkCSS() {
       --ee-accent: #93d36b;
       --ee-warning: #e9c46a;
       --ee-danger: #ef767a;
+    }
+
+    html.ee-theme-emerald {
+      --ee-bg-base: #071a12;
+      --ee-bg-raised: #0b2619;
+      --ee-bg-elevated: #103621;
+      --ee-bg-muted: #15512e;
+      --ee-border: #1f7a45;
+      --ee-text-main: #eafff3;
+      --ee-text-muted: #a7e8c0;
+      --ee-accent: #2ff28a;
+      --ee-warning: #ffe66d;
+      --ee-danger: #ff6b7a;
+    }
+
+    html.ee-theme-pink {
+      --ee-bg-base: #fff5fa;
+      --ee-bg-raised: #ffe3f0;
+      --ee-bg-elevated: #ffd0e4;
+      --ee-bg-muted: #f2a6c9;
+      --ee-border: #c76491;
+      --ee-text-main: #25111b;
+      --ee-text-muted: #5f2d44;
+      --ee-accent: #b0005c;
+      --ee-warning: #ffd166;
+      --ee-danger: #8f003f;
+    }
+
+    html.ee-theme-purple {
+      --ee-bg-base: #171326;
+      --ee-bg-raised: #211a33;
+      --ee-bg-elevated: #2d2444;
+      --ee-bg-muted: #41335f;
+      --ee-border: #5b4a7f;
+      --ee-text-main: #f0eaff;
+      --ee-text-muted: #c4b5e6;
+      --ee-accent: #b69cff;
+      --ee-warning: #f3c969;
+      --ee-danger: #ff7aa2;
     }
 
     html.ee-dark,
@@ -132,6 +179,9 @@ function buildDarkCSS() {
 
     html.ee-dark .userButton,
     html.ee-dark .userRozvrh,
+    html.ee-dark .userHomeOther,
+    html.ee-dark .userHomeTitle,
+    html.ee-dark .userStats,
     html.ee-dark .rozvrhItem,
     html.ee-dark .rozvrhItemAlign,
     html.ee-dark .userCal2,
@@ -151,6 +201,8 @@ function buildDarkCSS() {
     html.ee-dark .profilemenu li,
     html.ee-dark .profilemenu a,
     html.ee-dark .edubarProfilebox,
+    html.ee-dark .edubarProfilebox .display,
+    html.ee-dark .edubarProfilebox .display span,
     html.ee-dark .hwItem,
     html.ee-dark .hwItemBg,
     html.ee-dark .hwItemInner,
@@ -185,6 +237,63 @@ function buildDarkCSS() {
       background-color: var(--ee-bg-raised) !important;
       color: var(--ee-text-main) !important;
       border-color: var(--ee-border) !important;
+    }
+
+    html.ee-dark .userTopDivInner .userHomeOther,
+    html.ee-dark .userTopDivInner .userHomeTitle,
+    html.ee-dark .userHomeOther,
+    html.ee-dark .userHomeTitle,
+    html.ee-dark .userStats {
+      background-color: var(--ee-bg-raised) !important;
+      background-image: none !important;
+      color: var(--ee-text-main) !important;
+    }
+
+    html.ee-dark .userRozvrh,
+    html.ee-dark .userRozvrh ul.rozvrh,
+    html.ee-dark .userTopDiv ul.rozvrh {
+      background-color: var(--ee-bg-raised) !important;
+      background-image: none !important;
+      color: var(--ee-text-main) !important;
+    }
+
+    html.ee-dark .edubarProfilebox,
+    html.ee-dark .edubarProfilebox:hover {
+      background: var(--ee-bg-elevated) !important;
+      border: 1px solid var(--ee-border) !important;
+      border-radius: 8px !important;
+      box-shadow: none !important;
+      color: var(--ee-text-main) !important;
+    }
+
+    html.ee-dark .edubarProfilebox .display,
+    html.ee-dark .edubarProfilebox .display b,
+    html.ee-dark .edubarProfilebox .display span {
+      background-color: transparent !important;
+      background-image: none !important;
+      color: var(--ee-text-main) !important;
+    }
+
+    html.ee-dark .edubarProfilebox .display b {
+      color: var(--ee-text-muted) !important;
+    }
+
+    html.ee-dark .edubarProfilebox .profilemenu,
+    html.ee-dark .edubarHelpMenu .edubarHelpSubmenu {
+      background: var(--ee-bg-elevated) !important;
+      border-color: var(--ee-border) !important;
+      color: var(--ee-text-main) !important;
+    }
+
+    html.ee-dark .edubarProfilebox .profilemenu a,
+    html.ee-dark .edubarProfilebox .profilemenu h1,
+    html.ee-dark .edubarProfilebox .profilemenu span {
+      color: var(--ee-text-main) !important;
+    }
+
+    html.ee-dark .edubarProfilebox .profilemenu a:hover {
+      background: var(--ee-bg-muted) !important;
+      color: var(--ee-accent) !important;
     }
 
     html.ee-dark .userButton:hover,
@@ -619,7 +728,7 @@ function markHelpText() {
 }
 
 function normalizeTheme(theme) {
-  return ["dark", "ocean", "forest", "light"].includes(theme) ? theme : "dark";
+  return ["dark", "ocean", "forest", "emerald", "pink", "purple", "light"].includes(theme) ? theme : "dark";
 }
 
 function setThemeClasses(theme, cleanEnabled, helpHidden) {

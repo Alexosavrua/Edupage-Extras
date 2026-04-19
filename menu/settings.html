@@ -3,6 +3,16 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
+    <script>
+      document.documentElement.dataset.theme = "dark";
+    </script>
+    <style>
+      html,
+      body {
+        background: #11111b;
+        color: #cdd6f4;
+      }
+    </style>
     <link rel="stylesheet" href="settings.css">
     <title>Edupage Extras Settings</title>
   </head>
@@ -21,8 +31,8 @@
 
         <div class="setting-row">
           <div>
-            <h3>Dark Mode</h3>
-            <p>Use the dark theme across Edupage.</p>
+            <h3>Themes</h3>
+            <p>Apply Edupage Extras colors across Edupage and the extension menus.</p>
           </div>
           <label class="switch" for="DarkModeCheckbox">
             <input type="checkbox" id="DarkModeCheckbox">
@@ -38,9 +48,12 @@
           <label class="select-control" for="ThemeSelect">
             <span>Theme</span>
             <select id="ThemeSelect">
-              <option value="dark">Midnight</option>
-              <option value="ocean">Ocean</option>
-              <option value="forest">Forest</option>
+              <option value="dark">Midnight Blue</option>
+              <option value="ocean">Ocean Cyan</option>
+              <option value="forest">Forest Green</option>
+              <option value="emerald">Emerald Green</option>
+              <option value="pink">Rose Pink</option>
+              <option value="purple">Royal Purple</option>
               <option value="light">Light</option>
             </select>
           </label>
@@ -99,6 +112,10 @@
           </label>
         </div>
       </section>
+
+      <footer class="made-by">
+        Made by <a href="https://github.com/Alexosavrua" target="_blank" rel="noopener noreferrer">JustAlex</a>
+      </footer>
     </main>
     <script src="settings.js"></script>
   </body>

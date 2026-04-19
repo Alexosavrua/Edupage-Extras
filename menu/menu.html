@@ -3,6 +3,16 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
+    <script>
+      document.documentElement.dataset.theme = "dark";
+    </script>
+    <style>
+      html,
+      body {
+        background: #11111b;
+        color: #cdd6f4;
+      }
+    </style>
     <link rel="stylesheet" href="menu.css">
     <title>Edupage Extras</title>
   </head>
@@ -15,8 +25,8 @@
 
       <label class="toggle-row" for="DarkModeCheckbox">
         <span>
-          <strong>Dark Mode</strong>
-          <small>Use the dark Edupage theme</small>
+          <strong>Themes</strong>
+          <small>Use Edupage Extras colors</small>
         </span>
         <input type="checkbox" id="DarkModeCheckbox">
       </label>
@@ -27,6 +37,10 @@
           <span aria-hidden="true">></span>
         </button>
       </div>
+
+      <footer class="made-by">
+        Made by <a href="https://github.com/Alexosavrua" target="_blank" rel="noopener noreferrer">JustAlex</a>
+      </footer>
     </main>
     <script src="menu.js"></script>
   </body>

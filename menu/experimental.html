@@ -3,6 +3,16 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
+    <script>
+      document.documentElement.dataset.theme = "dark";
+    </script>
+    <style>
+      html,
+      body {
+        background: #11111b;
+        color: #cdd6f4;
+      }
+    </style>
     <link rel="stylesheet" href="experimental.css">
     <title>Edupage Extras Experimental</title>
   </head>
@@ -11,10 +21,205 @@
       <header class="page-header">
         <div>
           <h1>Experimental</h1>
-          <p>No experimental features are available right now.</p>
+          <p>Test activity and visibility protections on Edupage pages.</p>
         </div>
         <button class="secondary-button" id="BackButton" type="button">Back</button>
       </header>
+
+      <section class="setting-group" aria-labelledby="activity-heading">
+        <div class="section-heading">
+          <h2 id="activity-heading">Stay Active Mode</h2>
+          <p>Controls how Edupage sees tab activity, focus, mouse movement, and clipboard actions. Changes apply live, but reloading open Edupage tabs gives the cleanest start.</p>
+        </div>
+
+        <div class="setting-row prominent-row">
+          <div>
+            <h3>Stay Active Mode</h3>
+            <p>Turn on the experimental activity controls for Edupage pages.</p>
+          </div>
+          <label class="switch" for="ActivityShieldEnabled">
+            <input type="checkbox" id="ActivityShieldEnabled">
+            <span>Enabled</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="setting-group" aria-labelledby="spoofing-heading">
+        <div class="section-heading">
+          <h2 id="spoofing-heading">Visibility & Focus</h2>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3>Keep Tab Marked Visible</h3>
+            <p>Make Edupage read the tab as <code>visible</code> even after switching away.</p>
+          </div>
+          <label class="switch" for="ActivityVisibilityState">
+            <input type="checkbox" id="ActivityVisibilityState">
+            <span>Enabled</span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3>Keep Tab Marked Not Hidden</h3>
+            <p>Make Edupage read <code>document.hidden</code> as <code>false</code>.</p>
+          </div>
+          <label class="switch" for="ActivityHidden">
+            <input type="checkbox" id="ActivityHidden">
+            <span>Enabled</span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3>Hide Tab-Switch Events</h3>
+            <p>Stop Edupage scripts from receiving visibility and page-hide events.</p>
+          </div>
+          <label class="switch" for="ActivityVisibilityEvents">
+            <input type="checkbox" id="ActivityVisibilityEvents">
+            <span>Enabled</span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3>Keep Page Marked Focused</h3>
+            <p>Make Edupage read the page as focused and hide focus-in events.</p>
+          </div>
+          <label class="switch" for="ActivityFocus">
+            <input type="checkbox" id="ActivityFocus">
+            <span>Enabled</span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3>Hide Focus Loss</h3>
+            <p>Stop Edupage scripts from receiving blur and focus-out events.</p>
+          </div>
+          <label class="switch" for="ActivityBlur">
+            <input type="checkbox" id="ActivityBlur">
+            <span>Enabled</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="setting-group" aria-labelledby="input-heading">
+        <div class="section-heading">
+          <h2 id="input-heading">Mouse & Input</h2>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3>Hide Cursor Leaving The Page</h3>
+            <p>Stop Edupage scripts from seeing mouse enter and leave events.</p>
+          </div>
+          <label class="switch" for="ActivityMouseleave">
+            <input type="checkbox" id="ActivityMouseleave">
+            <span>Enabled</span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3>Hide Cursor Moving Between Areas</h3>
+            <p>Stop Edupage scripts from seeing mouse over and out events.</p>
+          </div>
+          <label class="switch" for="ActivityMouseout">
+            <input type="checkbox" id="ActivityMouseout">
+            <span>Enabled</span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3>Hide Pointer Capture Changes</h3>
+            <p>Stop Edupage scripts from seeing pointer capture and release events.</p>
+          </div>
+          <label class="switch" for="ActivityPointercapture">
+            <input type="checkbox" id="ActivityPointercapture">
+            <span>Enabled</span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3>Hide Copy, Paste, Selection, And Dragging</h3>
+            <p>Stop Edupage scripts from seeing clipboard, context menu, selection, drag, and drop events.</p>
+          </div>
+          <label class="switch" for="ActivityClipboard">
+            <input type="checkbox" id="ActivityClipboard">
+            <span>Enabled</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="setting-group" aria-labelledby="background-heading">
+        <div class="section-heading">
+          <h2 id="background-heading">Background Behavior</h2>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3>Stop Hidden-Tab Reload Redirects</h3>
+            <p>Try to block reload redirects that start after Edupage becomes hidden.</p>
+          </div>
+          <label class="switch" for="ActivityRedirect">
+            <input type="checkbox" id="ActivityRedirect">
+            <span>Enabled</span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3>Keep Page Animation Running In Background</h3>
+            <p>Keep <code>requestAnimationFrame</code> callbacks moving while the tab is hidden.</p>
+          </div>
+          <label class="switch" for="ActivityAnimationFrame">
+            <input type="checkbox" id="ActivityAnimationFrame">
+            <span>Enabled</span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3>Show Status Dot On Edupage</h3>
+            <p>Show a small dot so users can see whether Stay Active Mode is active or paused.</p>
+          </div>
+          <label class="switch" for="ActivityVisualIndicator">
+            <input type="checkbox" id="ActivityVisualIndicator">
+            <span>Enabled</span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3>Show Console Debug Messages</h3>
+            <p>Print technical diagnostics in the page console when something cannot be changed.</p>
+          </div>
+          <label class="switch" for="ActivityLog">
+            <input type="checkbox" id="ActivityLog">
+            <span>Enabled</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="setting-group" aria-labelledby="maintenance-heading">
+        <div class="section-heading">
+          <h2 id="maintenance-heading">Maintenance</h2>
+          <p>Reset restores the experimental defaults and keeps Stay Active Mode turned off.</p>
+        </div>
+        <div class="actions-row">
+          <button class="secondary-button" id="ResetActivityShieldButton" type="button">Reset Stay Active Mode</button>
+          <button class="secondary-button" id="ReloadEdupageTabsButton" type="button">Reload Edupage Tabs</button>
+          <span class="save-status" id="SaveStatus" role="status"></span>
+        </div>
+      </section>
+
+      <footer class="made-by">
+        Made by <a href="https://github.com/Alexosavrua" target="_blank" rel="noopener noreferrer">JustAlex</a>
+      </footer>
     </main>
     <script src="experimental.js"></script>
   </body>

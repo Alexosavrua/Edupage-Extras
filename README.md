@@ -1,62 +1,166 @@
 # Edupage Extras
 
-A Chromium/Chrome **Manifest V3** browser extension that enhances the [Edupage](https://edupage.org) school portal with quality-of-life improvements injected directly into Edupage's existing UI.
+Edupage Extras is a Chromium Manifest V3 browser extension that improves the
+Edupage web portal with small quality-of-life features. It runs only on
+`https://*.edupage.org/*` pages and changes Edupage's existing interface in
+place.
+
+This project is not affiliated with Edupage, aSc Applied Software Consultants,
+or any school using Edupage.
 
 ## Features
 
-| Feature | Where | What it does |
-|---------|-------|-------------|
-| 🌙 **Dark Mode** | All pages | Full-page dark mode toggle via the popup |
-| 📊 **Grade Average Bars** | `/znamky/` grades page | Adds a color-coded bar and badge to each subject's average cell in the existing table |
-| 🏆 **Overall Average** | `/znamky/` grades page | Appends a summary row at the bottom with the weighted average across all subjects |
+### Appearance
 
-## How It Works
+- **Themes** for Edupage pages and extension menus.
+- **Theme picker** with Midnight Blue, Ocean Cyan, Forest Green, Emerald Green,
+  Rose Pink, Royal Purple, and Light themes.
+- **Centered layout** option for a cleaner main page layout.
+- **Help text cleanup** for hiding the top-right Edupage help greeting.
 
-Everything is injected **into Edupage's existing DOM** — no overlay, no shadow DOM, no separate panel. The extension reads what Edupage already renders on the page and enhances it in-place.
+### Grades
 
-### Grades Enhancement (`scripts/grades-enhancer.js`)
+- **Grade badges** on the Edupage grades page.
+- **Color-coded average bars** for subject averages.
+- **Overall average row** based on the averages Edupage already renders.
 
-On the `/znamky/` page, Edupage renders a `table.znamkyTable` with a `tr.predmetRow` per subject and a `.znPriemerCell` cell containing the computed average. The enhancer:
+The extension reads the values from Edupage's existing grade table. It does not
+log in, fetch grades from a server, or calculate hidden grade data.
 
-1. Reads each `.znPriemerCell` text value (e.g. `"2.13"`)
-2. Replaces it with a color-coded badge + progress bar (still using Edupage's own computed value)
-3. Appends a summary `tr.ee-overall-row` at the end of the table with the average of all subject averages
+### Absences
 
-Colors: green `≤1.5` → lime `≤2.5` → amber `≤3.5` → orange `≤4.5` → red `≤5`.
+- **Absence summary** on supported Edupage absence pages.
+- Shows total absences, total lessons, overall absence percentage, and per-subject
+  absence data when the required Edupage data is available in the page.
 
-### Dark Mode (`scripts/content.js`)
+### Experimental
 
-On all Edupage pages, applies a `ee-dark` class to `<html>` and uses CSS `!important` overrides to invert background/foreground colors.
+The Experimental page contains **Stay Active Mode**. This is an Edupage-only
+experimental feature that reduces page interruptions caused by common browser
+activity signals such as:
+
+- tab visibility changes
+- hidden-tab state
+- focus and blur events
+- mouse leaving the page
+- clipboard, selection, drag, and drop events
+- background animation throttling
+
+This feature is intentionally kept in the Experimental page. It may not affect
+every Edupage behavior, and some Edupage features can still depend on server-side
+state, timing, full-screen behavior, or other browser mechanisms.
+
+## Installation
+
+### Load unpacked in Chrome or Edge
+
+1. Download or clone this repository.
+2. Open `chrome://extensions` in Chrome, or `edge://extensions` in Edge.
+3. Enable **Developer mode**.
+4. Click **Load unpacked**.
+5. Select the project folder: `Edupage-Extras/`.
+6. Open an Edupage page such as `https://your-school.edupage.org/`.
+
+After changing `manifest.json` or content scripts, reload the extension from the
+extensions page.
+
+## Usage
+
+- Click the extension icon to quickly toggle themes or open settings.
+- Open **Settings** for appearance, grade, and absence options.
+- Open **Experimental** from Settings for Stay Active Mode controls.
+- If Experimental settings were changed while Edupage tabs are already open, use
+  **Reload Edupage Tabs** from the Experimental page for the cleanest result.
+
+## Permissions
+
+Edupage Extras requests:
+
+- `storage` - saves extension settings locally in the browser.
+- `tabs` - finds open Edupage tabs so settings can be applied or tabs can be
+  reloaded from the settings UI.
+- `https://*.edupage.org/*` host access - injects the extension scripts only on
+  Edupage pages.
+
+The extension does not request access to all websites.
+
+## Privacy
+
+- No backend server.
+- No analytics.
+- No external requests made by the extension.
+- No credentials are collected.
+- Settings are stored locally with `chrome.storage.local`.
+- Grade and absence enhancements are generated from data already present in the
+  currently loaded Edupage page.
 
 ## Project Structure
 
-```
+```text
 Edupage-Extras/
-├── manifest.json              # MV3 extension manifest
-├── menu/                      # Extension popup
-│   ├── menu.html
-│   ├── menu.css
-│   └── menu.js
-├── scripts/
-│   ├── content.js             # Dark mode content script
-│   └── grades-enhancer.js     # Grade table DOM enhancer (runs on /znamky/ only)
-├── images/
-│   └── placeholder_icon.png
-└── src/                       # Vite/React source (WIP, not loaded by extension)
+|-- manifest.json
+|-- README.md
+|-- images/
+|   `-- placeholder_icon.png
+|-- menu/
+|   |-- menu.html
+|   |-- menu.css
+|   |-- menu.js
+|   |-- settings.html
+|   |-- settings.css
+|   |-- settings.js
+|   |-- experimental.html
+|   |-- experimental.css
+|   `-- experimental.js
+`-- scripts/
+    |-- instant-theme.css
+    |-- content.js
+    |-- grades-enhancer.js
+    |-- activity-shield-main.js
+    `-- activity-shield-bridge.js
 ```
 
-## Load in Chrome
+## Main Files
 
-1. Open `chrome://extensions`
-2. Enable **Developer Mode** (top right)
-3. Click **Load unpacked** → select the **project root** (`Edupage-Extras/`)
-4. Navigate to `https://*.edupage.org/znamky/` to see the grade enhancements
+- `manifest.json` - extension manifest, permissions, and content script setup.
+- `scripts/content.js` - themes, layout cleanup, and visual fixes.
+- `scripts/grades-enhancer.js` - grade badges, average bars, and absence summary.
+- `scripts/activity-shield-main.js` - page-world Experimental activity controls.
+- `scripts/activity-shield-bridge.js` - storage bridge for Experimental activity
+  settings.
+- `menu/settings.html` - normal user-facing settings.
+- `menu/experimental.html` - experimental features that are intentionally kept
+  separate from normal settings.
 
-## Notes
+## Development Notes
 
-- No backend, no external requests, no credentials
-- Grades are read from the existing rendered DOM — no JS globals parsing needed for this feature
-- The extension only requests `storage` and `tabs` permissions (for dark mode persistence)
+This is a plain browser extension. There is no build step required for the
+current version.
+
+Recommended checks before publishing:
+
+```powershell
+node --check menu\menu.js
+node --check menu\settings.js
+node --check menu\experimental.js
+node --check scripts\content.js
+node --check scripts\grades-enhancer.js
+node --check scripts\activity-shield-main.js
+node --check scripts\activity-shield-bridge.js
+node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8')); console.log('manifest ok')"
+```
+
+## Compatibility
+
+Edupage changes its HTML, CSS, and JavaScript over time. Some selectors or data
+formats may need updates when Edupage changes its pages.
+
+If a feature stops working:
+
+1. Reload the extension.
+2. Reload the Edupage tab.
+3. Check whether the feature is enabled in Settings or Experimental.
+4. Open the browser console and look for Edupage Extras errors.
 
 ## License
 

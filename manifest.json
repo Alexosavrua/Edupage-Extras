@@ -16,8 +16,16 @@
   "content_scripts": [
     {
       "matches": ["https://*.edupage.org/*"],
+      "js": ["scripts/activity-shield-main.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true,
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://*.edupage.org/*"],
       "css": ["scripts/instant-theme.css"],
-      "js": ["scripts/content.js", "scripts/grades-enhancer.js"],
+      "js": ["scripts/activity-shield-bridge.js", "scripts/content.js", "scripts/grades-enhancer.js"],
       "run_at": "document_start",
       "all_frames": true,
       "match_about_blank": true
