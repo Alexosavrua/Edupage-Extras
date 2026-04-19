@@ -11,6 +11,19 @@ const CLEAN_UI_KEY = "cleanUiEnabled";
 const HIDE_HELP_TEXT_KEY = "hideHelpTextEnabled";
 const GRADE_BADGES_KEY = "gradeBadgesEnabled";
 const ABSENCE_COLUMNS_KEY = "absenceColumnsEnabled";
+const THEMES = ["dark", "ocean", "forest", "emerald", "pink", "purple", "light"];
+
+function normalizeTheme(theme) {
+	return THEMES.includes(theme) ? theme : "dark";
+}
+
+function applySettingsTheme(theme, darkModeEnabled = true) {
+	document.documentElement.dataset.theme = darkModeEnabled ? normalizeTheme(theme) : "light";
+}
+
+function updateDependentControls() {
+	themeSelect.disabled = !toggle.checked;
+}
 
 function notifyEdupageTabs() {
 	const darkModeEnabled = toggle.checked;
@@ -35,11 +48,13 @@ function notifyEdupageTabs() {
 
 chrome.storage.local.get([STORAGE_KEY, THEME_KEY, CLEAN_UI_KEY, HIDE_HELP_TEXT_KEY], (result) => {
 	const enabled = result[STORAGE_KEY] !== false;
-	const theme = ["dark", "ocean", "forest", "light"].includes(result[THEME_KEY]) ? result[THEME_KEY] : "dark";
+	const theme = normalizeTheme(result[THEME_KEY]);
 	toggle.checked = enabled;
 	themeSelect.value = theme;
 	cleanUiToggle.checked = result[CLEAN_UI_KEY] !== false;
 	hideHelpTextToggle.checked = result[HIDE_HELP_TEXT_KEY] !== false;
+	applySettingsTheme(theme, enabled);
+	updateDependentControls();
 });
 
 chrome.storage.local.get([GRADE_BADGES_KEY, ABSENCE_COLUMNS_KEY], (result) => {
@@ -50,11 +65,14 @@ chrome.storage.local.get([GRADE_BADGES_KEY, ABSENCE_COLUMNS_KEY], (result) => {
 toggle.addEventListener("change", () => {
 	const enabled = toggle.checked;
 	chrome.storage.local.set({ [STORAGE_KEY]: enabled });
+	applySettingsTheme(themeSelect.value, enabled);
+	updateDependentControls();
 	notifyEdupageTabs();
 });
 
 themeSelect.addEventListener("change", () => {
 	chrome.storage.local.set({ [THEME_KEY]: themeSelect.value });
+	applySettingsTheme(themeSelect.value, toggle.checked);
 	notifyEdupageTabs();
 });
 
