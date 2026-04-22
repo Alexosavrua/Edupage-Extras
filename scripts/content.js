@@ -8,6 +8,7 @@
 
 const STORAGE_KEY = "darkModeEnabled";
 const THEME_KEY = "themeMode";
+const CUSTOM_THEME_KEY = "customThemeColors";
 const CLEAN_UI_KEY = "cleanUiEnabled";
 const HIDE_HELP_TEXT_KEY = "hideHelpTextEnabled";
 const CLASS_NAME = "ee-dark";
@@ -18,6 +19,7 @@ const THEME_CLASSES = [
   "ee-theme-emerald",
   "ee-theme-pink",
   "ee-theme-purple",
+  "ee-theme-custom",
   "ee-theme-light",
 ];
 const CLEAN_UI_CLASS = "ee-clean-ui";
@@ -35,8 +37,21 @@ let observer = null;
 let normalizeTimer = null;
 let hasBootstrappedDarkMode = false;
 let currentTheme = "dark";
-let cleanUiEnabled = true;
-let hideHelpTextEnabled = true;
+let currentCustomTheme = null;
+let cleanUiEnabled = false;
+let hideHelpTextEnabled = false;
+const DEFAULT_CUSTOM_THEME = {
+  bgBase: "#11111b",
+  bgRaised: "#181825",
+  bgElevated: "#1e1e2e",
+  bgMuted: "#2a2b3d",
+  border: "#313244",
+  textMain: "#cdd6f4",
+  textMuted: "#a6adc8",
+  accent: "#89b4fa",
+  warning: "#fab387",
+  danger: "#f38ba8",
+};
 
 function buildDarkCSS() {
   return `
@@ -117,6 +132,19 @@ function buildDarkCSS() {
       --ee-accent: #b69cff;
       --ee-warning: #f3c969;
       --ee-danger: #ff7aa2;
+    }
+
+    html.ee-theme-custom {
+      --ee-bg-base: var(--ee-custom-bg-base, #11111b);
+      --ee-bg-raised: var(--ee-custom-bg-raised, #181825);
+      --ee-bg-elevated: var(--ee-custom-bg-elevated, #1e1e2e);
+      --ee-bg-muted: var(--ee-custom-bg-muted, #2a2b3d);
+      --ee-border: var(--ee-custom-border, #313244);
+      --ee-text-main: var(--ee-custom-text-main, #cdd6f4);
+      --ee-text-muted: var(--ee-custom-text-muted, #a6adc8);
+      --ee-accent: var(--ee-custom-accent, #89b4fa);
+      --ee-warning: var(--ee-custom-warning, #fab387);
+      --ee-danger: var(--ee-custom-danger, #f38ba8);
     }
 
     html.ee-dark,
@@ -728,7 +756,35 @@ function markHelpText() {
 }
 
 function normalizeTheme(theme) {
-  return ["dark", "ocean", "forest", "emerald", "pink", "purple", "light"].includes(theme) ? theme : "dark";
+  return ["dark", "ocean", "forest", "emerald", "pink", "purple", "custom", "light"].includes(theme) ? theme : "dark";
+}
+
+function normalizeColor(value, fallback) {
+  return /^#[0-9a-f]{6}$/i.test(String(value || "")) ? value : fallback;
+}
+
+function normalizeCustomTheme(theme) {
+  return Object.fromEntries(
+    Object.entries(DEFAULT_CUSTOM_THEME).map(([key, fallback]) => [
+      key,
+      normalizeColor(theme?.[key], fallback),
+    ]),
+  );
+}
+
+function applyCustomThemeProperties(theme) {
+  const colors = normalizeCustomTheme(theme);
+  const root = document.documentElement;
+  root.style.setProperty("--ee-custom-bg-base", colors.bgBase);
+  root.style.setProperty("--ee-custom-bg-raised", colors.bgRaised);
+  root.style.setProperty("--ee-custom-bg-elevated", colors.bgElevated);
+  root.style.setProperty("--ee-custom-bg-muted", colors.bgMuted);
+  root.style.setProperty("--ee-custom-border", colors.border);
+  root.style.setProperty("--ee-custom-text-main", colors.textMain);
+  root.style.setProperty("--ee-custom-text-muted", colors.textMuted);
+  root.style.setProperty("--ee-custom-accent", colors.accent);
+  root.style.setProperty("--ee-custom-warning", colors.warning);
+  root.style.setProperty("--ee-custom-danger", colors.danger);
 }
 
 function setThemeClasses(theme, cleanEnabled, helpHidden) {
@@ -741,15 +797,18 @@ function setThemeClasses(theme, cleanEnabled, helpHidden) {
 }
 
 function applyTheme({
-  darkModeEnabled = true,
+  darkModeEnabled = false,
   theme = currentTheme,
+  customTheme = currentCustomTheme,
   cleanEnabled = cleanUiEnabled,
   helpHidden = hideHelpTextEnabled,
 } = {}) {
   const selectedTheme = darkModeEnabled ? normalizeTheme(theme) : "light";
   currentTheme = selectedTheme === "light" ? normalizeTheme(theme) : selectedTheme;
+  currentCustomTheme = normalizeCustomTheme(customTheme);
   cleanUiEnabled = cleanEnabled;
   hideHelpTextEnabled = helpHidden;
+  applyCustomThemeProperties(currentCustomTheme);
   ensureStylesheet();
   setThemeClasses(selectedTheme, cleanEnabled, helpHidden);
   markHelpText();
@@ -769,6 +828,7 @@ function applyDarkMode(enabled) {
   applyTheme({
     darkModeEnabled: enabled,
     theme: currentTheme,
+    customTheme: currentCustomTheme,
     cleanEnabled: cleanUiEnabled,
     helpHidden: hideHelpTextEnabled,
   });
@@ -777,15 +837,16 @@ function applyDarkMode(enabled) {
 function initDarkMode() {
   if (!hasBootstrappedDarkMode) {
     hasBootstrappedDarkMode = true;
-    applyTheme({ darkModeEnabled: true, theme: "dark", cleanEnabled: true, helpHidden: true });
+    applyTheme({ darkModeEnabled: false, theme: "dark", cleanEnabled: false, helpHidden: false });
   }
 
-  chrome.storage.local.get([STORAGE_KEY, THEME_KEY, CLEAN_UI_KEY, HIDE_HELP_TEXT_KEY], (result) => {
-    const enabled = result[STORAGE_KEY] !== false;
+  chrome.storage.local.get([STORAGE_KEY, THEME_KEY, CUSTOM_THEME_KEY, CLEAN_UI_KEY, HIDE_HELP_TEXT_KEY], (result) => {
+    const enabled = result[STORAGE_KEY] === true;
     const theme = normalizeTheme(result[THEME_KEY]);
-    const cleanEnabled = result[CLEAN_UI_KEY] !== false;
-    const helpHidden = result[HIDE_HELP_TEXT_KEY] !== false;
-    applyTheme({ darkModeEnabled: enabled, theme, cleanEnabled, helpHidden });
+    const customTheme = normalizeCustomTheme(result[CUSTOM_THEME_KEY]);
+    const cleanEnabled = result[CLEAN_UI_KEY] === true;
+    const helpHidden = result[HIDE_HELP_TEXT_KEY] === true;
+    applyTheme({ darkModeEnabled: enabled, theme, customTheme, cleanEnabled, helpHidden });
   });
 }
 
@@ -796,16 +857,18 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (
     !changes[STORAGE_KEY]
     && !changes[THEME_KEY]
+    && !changes[CUSTOM_THEME_KEY]
     && !changes[CLEAN_UI_KEY]
     && !changes[HIDE_HELP_TEXT_KEY]
   ) return;
 
-  chrome.storage.local.get([STORAGE_KEY, THEME_KEY, CLEAN_UI_KEY, HIDE_HELP_TEXT_KEY], (result) => {
+  chrome.storage.local.get([STORAGE_KEY, THEME_KEY, CUSTOM_THEME_KEY, CLEAN_UI_KEY, HIDE_HELP_TEXT_KEY], (result) => {
     applyTheme({
-      darkModeEnabled: result[STORAGE_KEY] !== false,
+      darkModeEnabled: result[STORAGE_KEY] === true,
       theme: normalizeTheme(result[THEME_KEY]),
-      cleanEnabled: result[CLEAN_UI_KEY] !== false,
-      helpHidden: result[HIDE_HELP_TEXT_KEY] !== false,
+      customTheme: normalizeCustomTheme(result[CUSTOM_THEME_KEY]),
+      cleanEnabled: result[CLEAN_UI_KEY] === true,
+      helpHidden: result[HIDE_HELP_TEXT_KEY] === true,
     });
   });
 });
@@ -816,10 +879,11 @@ chrome.runtime.onMessage.addListener((message) => {
   }
   if (message && message.type === "ee-set-theme") {
     applyTheme({
-      darkModeEnabled: message.darkModeEnabled !== false,
+      darkModeEnabled: message.darkModeEnabled === true,
       theme: message.theme,
-      cleanEnabled: message.cleanUiEnabled !== false,
-      helpHidden: message.hideHelpTextEnabled !== false,
+      customTheme: message.customTheme || currentCustomTheme,
+      cleanEnabled: message.cleanUiEnabled === true,
+      helpHidden: message.hideHelpTextEnabled === true,
     });
   }
 });

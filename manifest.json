@@ -1,10 +1,16 @@
 {
   "name": "Edupage Extras",
-  "description": "QoL extras for Edupage — dark mode, grade average bars, and more.",
+  "description": "QoL extras for Edupage - themes, global grade tools, and update reminders.",
   "version": "0.2.0",
   "manifest_version": 3,
-  "permissions": ["storage", "tabs"],
-  "host_permissions": ["https://*.edupage.org/*"],
+  "permissions": ["storage", "tabs", "alarms", "notifications"],
+  "host_permissions": [
+    "https://*.edupage.org/*",
+    "https://raw.githubusercontent.com/Alexosavrua/Edupage-Extras/*"
+  ],
+  "background": {
+    "service_worker": "scripts/background.js"
+  },
   "action": {
     "default_popup": "menu/menu.html",
     "default_icon": "images/placeholder_icon.png"

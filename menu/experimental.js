@@ -4,7 +4,18 @@ const reloadTabsButton = document.getElementById("ReloadEdupageTabsButton");
 const saveStatus = document.getElementById("SaveStatus");
 const THEME_KEY = "themeMode";
 const DARK_MODE_KEY = "darkModeEnabled";
-const THEMES = ["dark", "ocean", "forest", "emerald", "pink", "purple", "light"];
+const CUSTOM_THEME_KEY = "customThemeColors";
+const THEMES = ["dark", "ocean", "forest", "emerald", "pink", "purple", "custom", "light"];
+const DEFAULT_CUSTOM_THEME = {
+	bgBase: "#11111b",
+	bgRaised: "#181825",
+	bgElevated: "#1e1e2e",
+	border: "#313244",
+	textMain: "#cdd6f4",
+	textMuted: "#a6adc8",
+	accent: "#89b4fa",
+	danger: "#f38ba8",
+};
 
 const settings = [
 	["ActivityShieldEnabled", "eeActivityShieldEnabled"],
@@ -25,18 +36,18 @@ const settings = [
 
 const defaults = {
 	eeActivityShieldEnabled: false,
-	eeActivityShieldVisibilityState: true,
-	eeActivityShieldHidden: true,
-	eeActivityShieldVisibilityEvents: true,
-	eeActivityShieldFocus: true,
-	eeActivityShieldBlur: true,
-	eeActivityShieldRedirect: true,
-	eeActivityShieldMouseleave: true,
-	eeActivityShieldMouseout: true,
-	eeActivityShieldPointercapture: true,
-	eeActivityShieldClipboard: true,
-	eeActivityShieldAnimationFrame: true,
-	eeActivityShieldVisualIndicator: true,
+	eeActivityShieldVisibilityState: false,
+	eeActivityShieldHidden: false,
+	eeActivityShieldVisibilityEvents: false,
+	eeActivityShieldFocus: false,
+	eeActivityShieldBlur: false,
+	eeActivityShieldRedirect: false,
+	eeActivityShieldMouseleave: false,
+	eeActivityShieldMouseout: false,
+	eeActivityShieldPointercapture: false,
+	eeActivityShieldClipboard: false,
+	eeActivityShieldAnimationFrame: false,
+	eeActivityShieldVisualIndicator: false,
 	eeActivityShieldLog: false,
 };
 
@@ -47,7 +58,34 @@ function normalizeTheme(theme) {
 	return THEMES.includes(theme) ? theme : "dark";
 }
 
-function applyExperimentalTheme(theme, darkModeEnabled = true) {
+function normalizeColor(value, fallback) {
+	return /^#[0-9a-f]{6}$/i.test(String(value || "")) ? value : fallback;
+}
+
+function normalizeCustomTheme(theme) {
+	return Object.fromEntries(
+		Object.entries(DEFAULT_CUSTOM_THEME).map(([key, fallback]) => [
+			key,
+			normalizeColor(theme?.[key], fallback),
+		]),
+	);
+}
+
+function applyCustomThemeVariables(theme) {
+	const colors = normalizeCustomTheme(theme);
+	const root = document.documentElement;
+	root.style.setProperty("--custom-page-bg", colors.bgBase);
+	root.style.setProperty("--custom-surface-bg", colors.bgRaised);
+	root.style.setProperty("--custom-control-bg", colors.bgElevated);
+	root.style.setProperty("--custom-border-color", colors.border);
+	root.style.setProperty("--custom-text-main", colors.textMain);
+	root.style.setProperty("--custom-text-muted", colors.textMuted);
+	root.style.setProperty("--custom-accent-color", colors.accent);
+	root.style.setProperty("--custom-danger-color", colors.danger);
+}
+
+function applyExperimentalTheme(theme, darkModeEnabled = false, customTheme = DEFAULT_CUSTOM_THEME) {
+	applyCustomThemeVariables(customTheme);
 	document.documentElement.dataset.theme = darkModeEnabled ? normalizeTheme(theme) : "light";
 }
 
@@ -121,15 +159,15 @@ reloadTabsButton.addEventListener("click", () => {
 });
 
 chrome.storage.local.get(defaults, render);
-chrome.storage.local.get([THEME_KEY, DARK_MODE_KEY], (result) => {
-	applyExperimentalTheme(result[THEME_KEY], result[DARK_MODE_KEY] !== false);
+chrome.storage.local.get([THEME_KEY, DARK_MODE_KEY, CUSTOM_THEME_KEY], (result) => {
+	applyExperimentalTheme(result[THEME_KEY], result[DARK_MODE_KEY] === true, result[CUSTOM_THEME_KEY]);
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
 	if (area !== "local") return;
-	if (changes[THEME_KEY] || changes[DARK_MODE_KEY]) {
-		chrome.storage.local.get([THEME_KEY, DARK_MODE_KEY], (result) => {
-			applyExperimentalTheme(result[THEME_KEY], result[DARK_MODE_KEY] !== false);
+	if (changes[THEME_KEY] || changes[DARK_MODE_KEY] || changes[CUSTOM_THEME_KEY]) {
+		chrome.storage.local.get([THEME_KEY, DARK_MODE_KEY, CUSTOM_THEME_KEY], (result) => {
+			applyExperimentalTheme(result[THEME_KEY], result[DARK_MODE_KEY] === true, result[CUSTOM_THEME_KEY]);
 		});
 	}
 	if (storageKeys.some((key) => changes[key])) {

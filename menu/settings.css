@@ -10,6 +10,7 @@
     --text-main: #cdd6f4;
     --text-muted: #a6adc8;
     --accent-color: #89b4fa;
+    --danger-color: #f38ba8;
 }
 
 :root[data-theme="ocean"] {
@@ -20,6 +21,7 @@
     --text-main: #d8f3f0;
     --text-muted: #9cc6c8;
     --accent-color: #61d4d4;
+    --danger-color: #ff6b7a;
 }
 
 :root[data-theme="forest"] {
@@ -30,6 +32,7 @@
     --text-main: #e5f2df;
     --text-muted: #b2c7aa;
     --accent-color: #93d36b;
+    --danger-color: #ef767a;
 }
 
 :root[data-theme="emerald"] {
@@ -40,6 +43,7 @@
     --text-main: #eafff3;
     --text-muted: #a7e8c0;
     --accent-color: #2ff28a;
+    --danger-color: #ff6b7a;
 }
 
 :root[data-theme="pink"] {
@@ -50,6 +54,7 @@
     --text-main: #25111b;
     --text-muted: #5f2d44;
     --accent-color: #b0005c;
+    --danger-color: #8f003f;
 }
 
 :root[data-theme="purple"] {
@@ -60,6 +65,18 @@
     --text-main: #f0eaff;
     --text-muted: #c4b5e6;
     --accent-color: #b69cff;
+    --danger-color: #ff7aa2;
+}
+
+:root[data-theme="custom"] {
+    --page-bg: var(--custom-page-bg, #11111b);
+    --surface-bg: var(--custom-surface-bg, #181825);
+    --control-bg: var(--custom-control-bg, #1e1e2e);
+    --border-color: var(--custom-border-color, #313244);
+    --text-main: var(--custom-text-main, #cdd6f4);
+    --text-muted: var(--custom-text-muted, #a6adc8);
+    --accent-color: var(--custom-accent-color, #89b4fa);
+    --danger-color: var(--custom-danger-color, #f38ba8);
 }
 
 :root[data-theme="light"] {
@@ -70,6 +87,7 @@
     --text-main: #20242c;
     --text-muted: #596273;
     --accent-color: #246bca;
+    --danger-color: #c53a5a;
 }
 
 body {
@@ -138,8 +156,85 @@ p {
     padding: 16px;
 }
 
+[hidden] {
+    display: none !important;
+}
+
 .setting-group {
     margin-bottom: 22px;
+}
+
+.setting-row-stack {
+    align-items: stretch;
+    flex-direction: column;
+}
+
+.custom-theme-row {
+    align-items: flex-start;
+}
+
+.custom-theme-controls {
+    display: grid;
+    gap: 12px;
+    justify-items: end;
+    max-width: 430px;
+}
+
+.custom-theme-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.custom-theme-grid label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--control-bg);
+    color: var(--text-muted);
+    font-size: 13px;
+    padding: 8px 10px;
+}
+
+.custom-theme-import {
+    display: grid;
+    gap: 6px;
+    width: 100%;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.custom-theme-import textarea {
+    width: 100%;
+    min-height: 104px;
+    resize: vertical;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--control-bg);
+    color: var(--text-main);
+    font: 12px/1.45 Consolas, "Courier New", monospace;
+    padding: 9px 10px;
+}
+
+.custom-theme-import textarea:focus-visible {
+    border-color: var(--accent-color);
+    outline: none;
+}
+
+.actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.save-status {
+    color: var(--accent-color);
+    font-size: 13px;
+    min-height: 18px;
+    text-align: right;
 }
 
 .switch {
@@ -162,6 +257,16 @@ input[type="checkbox"] {
     width: 18px;
 }
 
+input[type="color"] {
+    width: 42px;
+    height: 34px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--control-bg);
+    cursor: pointer;
+    padding: 3px;
+}
+
 select {
     min-width: 150px;
     border: 1px solid var(--border-color);
@@ -180,6 +285,15 @@ input[type="checkbox"]:disabled {
 
 .setting-row:has(:disabled) {
     opacity: 0.72;
+}
+
+#UpdateStatusText[data-state="available"] {
+    color: var(--accent-color);
+    font-weight: 700;
+}
+
+#UpdateStatusText[data-state="error"] {
+    color: var(--danger-color);
 }
 
 .secondary-button {
@@ -226,5 +340,14 @@ input[type="checkbox"]:disabled {
     .setting-row {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .custom-theme-controls,
+    .custom-theme-grid {
+        width: 100%;
+    }
+
+    .custom-theme-grid {
+        grid-template-columns: 1fr;
     }
 }

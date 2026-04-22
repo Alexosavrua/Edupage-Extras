@@ -27,12 +27,6 @@ or any school using Edupage.
 The extension reads the values from Edupage's existing grade table. It does not
 log in, fetch grades from a server, or calculate hidden grade data.
 
-### Absences
-
-- **Absence summary** on supported Edupage absence pages.
-- Shows total absences, total lessons, overall absence percentage, and per-subject
-  absence data when the required Edupage data is available in the page.
-
 ### Experimental
 
 The Experimental page contains **Stay Active Mode**. This is an Edupage-only
@@ -49,6 +43,14 @@ activity signals such as:
 This feature is intentionally kept in the Experimental page. It may not affect
 every Edupage behavior, and some Edupage features can still depend on server-side
 state, timing, full-screen behavior, or other browser mechanisms.
+
+### Updates
+
+- **Update reminders** check the public GitHub project manifest and compare it
+  with the installed unpacked extension version.
+- If a newer version is available, the extension shows a reminder to pull the
+  latest project from GitHub.
+- Update checks do not send Edupage data anywhere.
 
 ## Installation
 
@@ -67,7 +69,10 @@ extensions page.
 ## Usage
 
 - Click the extension icon to quickly toggle themes or open settings.
-- Open **Settings** for appearance, grade, and absence options.
+- Open **Settings** for appearance and grade options.
+- Choose **Custom** in the theme picker to build your own colors.
+- Use **Check For Updates** in Settings to manually check the public GitHub
+  version.
 - Open **Experimental** from Settings for Stay Active Mode controls.
 - If Experimental settings were changed while Edupage tabs are already open, use
   **Reload Edupage Tabs** from the Experimental page for the cleanest result.
@@ -79,8 +84,13 @@ Edupage Extras requests:
 - `storage` - saves extension settings locally in the browser.
 - `tabs` - finds open Edupage tabs so settings can be applied or tabs can be
   reloaded from the settings UI.
+- `alarms` - checks for updates on a daily schedule.
+- `notifications` - shows an unpacked-version update reminder when a newer
+  GitHub version is available.
 - `https://*.edupage.org/*` host access - injects the extension scripts only on
   Edupage pages.
+- `https://raw.githubusercontent.com/Alexosavrua/Edupage-Extras/*` host access -
+  reads the public project manifest for update checks.
 
 The extension does not request access to all websites.
 
@@ -88,11 +98,12 @@ The extension does not request access to all websites.
 
 - No backend server.
 - No analytics.
-- No external requests made by the extension.
+- No external requests made by the extension except the optional public GitHub
+  manifest update check.
 - No credentials are collected.
 - Settings are stored locally with `chrome.storage.local`.
-- Grade and absence enhancements are generated from data already present in the
-  currently loaded Edupage page.
+- Grade enhancements are generated from data already present in the currently
+  loaded Edupage page.
 
 ## Project Structure
 
@@ -113,6 +124,7 @@ Edupage-Extras/
 |   |-- experimental.css
 |   `-- experimental.js
 `-- scripts/
+    |-- background.js
     |-- instant-theme.css
     |-- content.js
     |-- grades-enhancer.js
@@ -123,8 +135,10 @@ Edupage-Extras/
 ## Main Files
 
 - `manifest.json` - extension manifest, permissions, and content script setup.
+- `scripts/background.js` - GitHub update checks and update reminders.
 - `scripts/content.js` - themes, layout cleanup, and visual fixes.
-- `scripts/grades-enhancer.js` - grade badges, average bars, and absence summary.
+- `scripts/grades-enhancer.js` - grade badges, average bars, and the overall
+  average row.
 - `scripts/activity-shield-main.js` - page-world Experimental activity controls.
 - `scripts/activity-shield-bridge.js` - storage bridge for Experimental activity
   settings.
@@ -143,6 +157,7 @@ Recommended checks before publishing:
 node --check menu\menu.js
 node --check menu\settings.js
 node --check menu\experimental.js
+node --check scripts\background.js
 node --check scripts\content.js
 node --check scripts\grades-enhancer.js
 node --check scripts\activity-shield-main.js

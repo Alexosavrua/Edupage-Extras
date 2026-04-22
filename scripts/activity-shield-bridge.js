@@ -28,18 +28,18 @@
 
   const defaults = {
     eeActivityShieldEnabled: false,
-    eeActivityShieldVisibilityState: true,
-    eeActivityShieldHidden: true,
-    eeActivityShieldVisibilityEvents: true,
-    eeActivityShieldFocus: true,
-    eeActivityShieldBlur: true,
-    eeActivityShieldRedirect: true,
-    eeActivityShieldMouseleave: true,
-    eeActivityShieldMouseout: true,
-    eeActivityShieldPointercapture: true,
-    eeActivityShieldClipboard: true,
-    eeActivityShieldAnimationFrame: true,
-    eeActivityShieldVisualIndicator: true,
+    eeActivityShieldVisibilityState: false,
+    eeActivityShieldHidden: false,
+    eeActivityShieldVisibilityEvents: false,
+    eeActivityShieldFocus: false,
+    eeActivityShieldBlur: false,
+    eeActivityShieldRedirect: false,
+    eeActivityShieldMouseleave: false,
+    eeActivityShieldMouseout: false,
+    eeActivityShieldPointercapture: false,
+    eeActivityShieldClipboard: false,
+    eeActivityShieldAnimationFrame: false,
+    eeActivityShieldVisualIndicator: false,
     eeActivityShieldLog: false,
   };
 
@@ -57,7 +57,7 @@
   });
 
   function setFlag(name, value) {
-    port.dataset[name] = String(value !== false);
+    port.dataset[name] = String(value === true);
   }
 
   function ensureIndicator() {
