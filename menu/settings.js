@@ -188,11 +188,11 @@ function renderUpdateStatus(status) {
 
 	if (status.updateAvailable) {
 		updateStatusText.dataset.state = "available";
-		updateStatusText.textContent = `Version ${status.latestVersion} is available. Pull the latest project from GitHub. Checked ${formatCheckedAt(status.checkedAt)}.`;
+		updateStatusText.textContent = `Downloaded version: ${status.localVersion}. Latest GitHub version: ${status.latestVersion}. Pull the latest project from GitHub. Checked ${formatCheckedAt(status.checkedAt)}.`;
 		return;
 	}
 
-	updateStatusText.textContent = `You are on ${status.localVersion}. Latest checked version is ${status.latestVersion}. Checked ${formatCheckedAt(status.checkedAt)}.`;
+	updateStatusText.textContent = `Downloaded version: ${status.localVersion}. Latest GitHub version: ${status.latestVersion}. Checked ${formatCheckedAt(status.checkedAt)}.`;
 }
 
 function checkForUpdates() {

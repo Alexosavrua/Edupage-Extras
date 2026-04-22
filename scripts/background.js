@@ -49,7 +49,8 @@ async function fetchLatestManifest() {
 
   for (const url of UPDATE_MANIFEST_URLS) {
     try {
-      const response = await fetch(url, { cache: "no-store" });
+      const requestUrl = `${url}?t=${Date.now()}`;
+      const response = await fetch(requestUrl, { cache: "no-store" });
       if (!response.ok) {
         lastError = `GitHub returned ${response.status}`;
         continue;
