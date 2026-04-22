@@ -1,19 +1,19 @@
-html:not(.ee-theme-light) {
+html.ee-dark {
   color-scheme: dark !important;
   background: #11111b !important;
 }
 
-html:not(.ee-theme-light) body {
+html.ee-dark body {
   background: #11111b !important;
   color: #cdd6f4 !important;
 }
 
-html:not(.ee-theme-light) .bgDiv,
-html:not(.ee-theme-light) .skinBody,
-html:not(.ee-theme-light) .skinContent,
-html:not(.ee-theme-light) .userContentInner,
-html:not(.ee-theme-light) #eb_main_content,
-html:not(.ee-theme-light) #bar_mainDiv {
+html.ee-dark .bgDiv,
+html.ee-dark .skinBody,
+html.ee-dark .skinContent,
+html.ee-dark .userContentInner,
+html.ee-dark #eb_main_content,
+html.ee-dark #bar_mainDiv {
   background: #11111b !important;
   color: #cdd6f4 !important;
 }
@@ -76,4 +76,16 @@ html.ee-theme-purple #eb_main_content,
 html.ee-theme-purple #bar_mainDiv {
   background: #171326 !important;
   color: #f0eaff !important;
+}
+
+html.ee-theme-custom,
+html.ee-theme-custom body,
+html.ee-theme-custom .bgDiv,
+html.ee-theme-custom .skinBody,
+html.ee-theme-custom .skinContent,
+html.ee-theme-custom .userContentInner,
+html.ee-theme-custom #eb_main_content,
+html.ee-theme-custom #bar_mainDiv {
+  background: var(--ee-custom-bg-base, #11111b) !important;
+  color: var(--ee-custom-text-main, #cdd6f4) !important;
 }

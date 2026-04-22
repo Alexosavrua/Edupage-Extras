@@ -4,13 +4,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
     <script>
-      document.documentElement.dataset.theme = "dark";
+      document.documentElement.dataset.theme = "light";
     </script>
     <style>
       html,
       body {
-        background: #11111b;
-        color: #cdd6f4;
+        background: #f6f8fb;
+        color: #1f2937;
       }
     </style>
     <link rel="stylesheet" href="settings.css">
@@ -54,9 +54,71 @@
               <option value="emerald">Emerald Green</option>
               <option value="pink">Rose Pink</option>
               <option value="purple">Royal Purple</option>
+              <option value="custom">Custom</option>
               <option value="light">Light</option>
             </select>
           </label>
+        </div>
+
+        <div class="setting-row custom-theme-row" id="CustomThemePanel" hidden>
+          <div>
+            <h3>Custom Theme</h3>
+            <p>Build your own Edupage Extras colors.</p>
+          </div>
+          <div class="custom-theme-controls">
+            <div class="custom-theme-grid">
+              <label>
+                <span>Background</span>
+                <input type="color" id="CustomBgBase">
+              </label>
+              <label>
+                <span>Surface</span>
+                <input type="color" id="CustomBgRaised">
+              </label>
+              <label>
+                <span>Controls</span>
+                <input type="color" id="CustomBgElevated">
+              </label>
+              <label>
+                <span>Muted Surface</span>
+                <input type="color" id="CustomBgMuted">
+              </label>
+              <label>
+                <span>Border</span>
+                <input type="color" id="CustomBorder">
+              </label>
+              <label>
+                <span>Main Text</span>
+                <input type="color" id="CustomTextMain">
+              </label>
+              <label>
+                <span>Muted Text</span>
+                <input type="color" id="CustomTextMuted">
+              </label>
+              <label>
+                <span>Accent</span>
+                <input type="color" id="CustomAccent">
+              </label>
+              <label>
+                <span>Warning</span>
+                <input type="color" id="CustomWarning">
+              </label>
+              <label>
+                <span>Danger</span>
+                <input type="color" id="CustomDanger">
+              </label>
+            </div>
+            <label class="custom-theme-import" for="CustomThemeImport">
+              <span>Import / Export</span>
+              <textarea id="CustomThemeImport" rows="5" placeholder="Paste a shared Edupage Extras custom theme here."></textarea>
+            </label>
+            <div class="actions-row">
+              <button class="secondary-button" id="ExportCustomThemeButton" type="button">Export Theme</button>
+              <button class="secondary-button" id="ImportCustomThemeButton" type="button">Import Theme</button>
+              <button class="secondary-button" id="ResetCustomThemeButton" type="button">Reset Custom Theme</button>
+            </div>
+            <span class="save-status" id="CustomThemeStatus" role="status"></span>
+          </div>
         </div>
       </section>
 
@@ -101,15 +163,31 @@
           </label>
         </div>
 
+      </section>
+
+      <section class="setting-group" aria-labelledby="updates-heading">
+        <h2 id="updates-heading">Updates</h2>
+
         <div class="setting-row">
           <div>
-            <h3>Absence Summary</h3>
-            <p>Show the absence summary on the absences page.</p>
+            <h3>Update Reminders</h3>
+            <p>Check the public GitHub project for a newer unpacked version.</p>
           </div>
-          <label class="switch" for="AbsenceColumnsCheckbox">
-            <input type="checkbox" id="AbsenceColumnsCheckbox">
+          <label class="switch" for="UpdateReminderCheckbox">
+            <input type="checkbox" id="UpdateReminderCheckbox">
             <span>Enabled</span>
           </label>
+        </div>
+
+        <div class="setting-row setting-row-stack">
+          <div>
+            <h3>Version Check</h3>
+            <p id="UpdateStatusText">No update check has run yet.</p>
+          </div>
+          <div class="actions-row">
+            <button class="secondary-button" id="CheckUpdatesButton" type="button">Check For Updates</button>
+            <button class="secondary-button" id="OpenRepositoryButton" type="button">Open GitHub</button>
+          </div>
         </div>
       </section>
 

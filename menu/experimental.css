@@ -68,6 +68,17 @@
     --danger-color: #ff7aa2;
 }
 
+:root[data-theme="custom"] {
+    --page-bg: var(--custom-page-bg, #11111b);
+    --surface-bg: var(--custom-surface-bg, #181825);
+    --control-bg: var(--custom-control-bg, #1e1e2e);
+    --border-color: var(--custom-border-color, #313244);
+    --text-main: var(--custom-text-main, #cdd6f4);
+    --text-muted: var(--custom-text-muted, #a6adc8);
+    --accent-color: var(--custom-accent-color, #89b4fa);
+    --danger-color: var(--custom-danger-color, #f38ba8);
+}
+
 :root[data-theme="light"] {
     --page-bg: #f7f8fb;
     --surface-bg: #ffffff;
