@@ -1,5 +1,7 @@
 const toggle = document.getElementById("DarkModeCheckbox");
 const themeSelect = document.getElementById("ThemeSelect");
+const openShortcutSettingsButton = document.getElementById("OpenShortcutSettingsButton");
+const themeShortcutStatus = document.getElementById("ThemeShortcutStatus");
 const cleanUiToggle = document.getElementById("CleanUiCheckbox");
 const hideHelpTextToggle = document.getElementById("HideHelpTextCheckbox");
 const gradeBadgesToggle = document.getElementById("GradeBadgesCheckbox");
@@ -32,6 +34,7 @@ const HALFYEAR_START_KEY = "eeHalfyearStartDate";
 const GRADES_ATTENDANCE_CACHE_KEY = "eeGradesAttendanceStatsCache";
 const UPDATE_STATUS_KEY = "eeUpdateStatus";
 const UPDATE_REMINDER_ENABLED_KEY = "eeUpdateReminderEnabled";
+const THEME_TOGGLE_COMMAND = "toggle-theme-mode";
 const REPO_URL = "https://github.com/Alexosavrua/Edupage-Extras";
 const THEMES = ["dark", "ocean", "forest", "emerald", "pink", "purple", "custom", "light"];
 const DEFAULT_CUSTOM_THEME = {
@@ -190,6 +193,7 @@ function normalizeDateInput(value) {
 }
 
 function renderUpdateStatus(status) {
+	const reloadReminder = " After pulling the latest project, also reload the unpacked extension in chrome://extensions/.";
 	updateStatusText.dataset.state = "";
 	if (!status) {
 		updateStatusText.textContent = "No update check has run yet.";
@@ -204,7 +208,7 @@ function renderUpdateStatus(status) {
 
 	if (status.updateAvailable) {
 		updateStatusText.dataset.state = "available";
-		updateStatusText.textContent = `Downloaded version: ${status.localVersion}. Latest GitHub version: ${status.latestVersion}. Pull the latest project from GitHub. Checked ${formatCheckedAt(status.checkedAt)}.`;
+		updateStatusText.textContent = `Downloaded version: ${status.localVersion}. Latest GitHub version: ${status.latestVersion}. Pull the latest project from GitHub.${reloadReminder} Checked ${formatCheckedAt(status.checkedAt)}.`;
 		return;
 	}
 
@@ -229,6 +233,21 @@ function checkForUpdates() {
 			return;
 		}
 		renderUpdateStatus(response.status);
+	});
+}
+
+function renderShortcutStatus() {
+	if (!chrome.commands?.getAll) {
+		themeShortcutStatus.textContent = "Shortcut status unavailable in this browser.";
+		return;
+	}
+
+	chrome.commands.getAll((commands) => {
+		const command = commands.find((entry) => entry.name === THEME_TOGGLE_COMMAND);
+		const shortcut = command?.shortcut?.trim();
+		themeShortcutStatus.textContent = shortcut
+			? `Current hotkey: ${shortcut}`
+			: "No hotkey assigned.";
 	});
 }
 
@@ -388,9 +407,16 @@ openRepositoryButton.addEventListener("click", () => {
 	chrome.tabs.create({ url: REPO_URL });
 });
 
+openShortcutSettingsButton.addEventListener("click", () => {
+	chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
+});
+
 experimentalSettingsButton.addEventListener("click", () => {
 	window.location.href = "experimental.html";
 });
+
+renderShortcutStatus();
+window.addEventListener("focus", renderShortcutStatus);
 
 chrome.storage.onChanged.addListener((changes, area) => {
 	if (area !== "local") return;
