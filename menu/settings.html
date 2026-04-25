@@ -32,6 +32,17 @@
 
         <div class="setting-row">
           <div>
+            <h3>Theme Hotkey</h3>
+            <p>Optional. Add a Chrome extension shortcut for toggling themes on or off.</p>
+          </div>
+          <div class="shortcut-controls">
+            <button class="secondary-button" id="OpenShortcutSettingsButton" type="button">Open Shortcut Settings</button>
+            <span class="shortcut-status" id="ThemeShortcutStatus">No hotkey assigned.</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div>
             <h3>Theme</h3>
             <p>Choose the colors Edupage Extras applies to Edupage.</p>
           </div>
@@ -180,11 +191,6 @@
           </label>
         </div>
 
-      </section>
-
-      <section class="setting-group" aria-labelledby="debug-heading">
-        <h2 id="debug-heading">Debug</h2>
-
         <div class="setting-row">
           <div>
             <h3>Second Halfyear Start Date</h3>
@@ -198,6 +204,11 @@
             <button class="secondary-button" id="ResetHalfyearStartDateButton" type="button">Use EduPage Default</button>
           </div>
         </div>
+
+      </section>
+
+      <section class="setting-group" aria-labelledby="debug-heading">
+        <h2 id="debug-heading">Debug</h2>
 
         <div class="setting-row">
           <div>
