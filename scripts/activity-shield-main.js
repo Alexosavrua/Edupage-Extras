@@ -50,6 +50,64 @@
     event.stopImmediatePropagation();
   };
 
+  const INTERACTIVE_SELECTOR = [
+    "input",
+    "textarea",
+    "select",
+    "option",
+    "button",
+    "label",
+    "summary",
+    "details",
+    "a[href]",
+    "[contenteditable]",
+    "[contenteditable='true']",
+    "[tabindex]",
+    "[role='button']",
+    "[role='link']",
+    "[role='checkbox']",
+    "[role='radio']",
+    "[role='switch']",
+    "[role='combobox']",
+    "[role='listbox']",
+    "[role='option']",
+    "[role='textbox']",
+  ].join(", ");
+
+  const isInteractiveNode = (value) => {
+    if (!(value instanceof Element)) return false;
+    return value.matches(INTERACTIVE_SELECTOR) || Boolean(value.closest(INTERACTIVE_SELECTOR));
+  };
+
+  const shouldPreserveInteractiveEvent = (event) => {
+    if (isInteractiveNode(event.target)) return true;
+    if (isInteractiveNode(event.relatedTarget)) return true;
+    const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+    return path.some(isInteractiveNode);
+  };
+
+  const SHORTCUT_KEYS = new Set([
+    "a",
+    "c",
+    "f",
+    "p",
+    "s",
+    "v",
+    "x",
+    "y",
+    "z",
+  ]);
+
+  const shouldBlockShortcutKeyEvent = (event) => {
+    if (!(event instanceof KeyboardEvent)) return false;
+    if (event.altKey) return false;
+    if (!(event.ctrlKey || event.metaKey)) return false;
+    if (event.repeat || event.isComposing) return false;
+
+    const key = typeof event.key === "string" ? event.key.toLowerCase() : "";
+    return SHORTCUT_KEYS.has(key);
+  };
+
   const debug = (...args) => {
     if (port.dataset.log === "true") {
       console.info("[Edupage Extras Activity Shield]", ...args);
@@ -132,10 +190,12 @@
   }
 
   const onFocus = (event) => {
+    if (shouldPreserveInteractiveEvent(event)) return;
     if (active("focus")) block(event);
   };
 
   const onBlur = (event) => {
+    if (shouldPreserveInteractiveEvent(event)) return;
     if (active("blur")) block(event);
   };
 
@@ -160,6 +220,7 @@
   });
 
   const onMouse = (event) => {
+    if (shouldPreserveInteractiveEvent(event)) return;
     const pref = event.type.includes("leave") || event.type.includes("enter") ? "mouseleave" : "mouseout";
     if (active(pref)) block(event);
   };
@@ -171,9 +232,11 @@
 
   ["lostpointercapture", "gotpointercapture"].forEach((name) => {
     window.addEventListener(name, (event) => {
+      if (shouldPreserveInteractiveEvent(event)) return;
       if (active("pointercapture")) block(event);
     }, true);
     document.addEventListener(name, (event) => {
+      if (shouldPreserveInteractiveEvent(event)) return;
       if (active("pointercapture")) block(event);
     }, true);
   });
@@ -184,6 +247,19 @@
     }, true);
     document.addEventListener(name, (event) => {
       if (active("clipboard")) block(event, false);
+    }, true);
+  });
+
+  ["keydown", "keyup", "keypress"].forEach((name) => {
+    window.addEventListener(name, (event) => {
+      if (active("clipboard") && shouldBlockShortcutKeyEvent(event)) {
+        block(event, false);
+      }
+    }, true);
+    document.addEventListener(name, (event) => {
+      if (active("clipboard") && shouldBlockShortcutKeyEvent(event)) {
+        block(event, false);
+      }
     }, true);
   });
 
