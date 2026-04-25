@@ -13,6 +13,8 @@ or any school using Edupage.
 ### Appearance
 
 - **Themes** for Edupage pages and extension menus.
+- **Theme hotkey** support for toggling themes on or off through Chrome's
+  extension shortcuts page.
 - **Theme picker** with Midnight Blue, Ocean Cyan, Forest Green, Emerald Green,
   Rose Pink, Royal Purple, and Light themes.
 - **Centered layout** option for a cleaner main page layout.
@@ -26,7 +28,10 @@ or any school using Edupage.
 
 ### Attendance
 
+- **Subject attendance** inside the Edupage grades table.
 - **Halfyear absence percentage** inside Edupage's existing attendance summary.
+- **Second halfyear start date override** in Settings for attendance
+  calculations when EduPage's default date needs adjustment.
 - Uses the official attendance data already embedded in the loaded Edupage page.
 - Highlights the currently active halfyear and shows the raw absent/total lesson ratio.
 
@@ -46,6 +51,9 @@ activity signals such as:
 - clipboard, selection, drag, and drop events
 - background animation throttling
 
+Experimental also includes a direct link to the local testing site:
+`https://edublurtesting.ct.ws/`
+
 This feature is intentionally kept in the Experimental page. It may not affect
 every Edupage behavior, and some Edupage features can still depend on server-side
 state, timing, full-screen behavior, or other browser mechanisms.
@@ -55,7 +63,8 @@ state, timing, full-screen behavior, or other browser mechanisms.
 - **Update reminders** check the public GitHub project manifest and compare it
   with the installed unpacked extension version.
 - If a newer version is available, the extension shows a reminder to pull the
-  latest project from GitHub.
+  latest project from GitHub and reload the unpacked extension from
+  `chrome://extensions/`.
 - Update checks do not send Edupage data anywhere.
 
 ## Installation
@@ -76,10 +85,15 @@ extensions page.
 
 - Click the extension icon to quickly toggle themes or open settings.
 - Open **Settings** for appearance and grade options.
+- Assign a shortcut in Chrome's extension shortcuts page if you want to toggle
+  themes without opening Settings.
 - Choose **Custom** in the theme picker to build your own colors.
 - Use **Check For Updates** in Settings to manually check the public GitHub
-  version.
+  version. If an update is available, pull the latest project and reload the
+  unpacked extension in `chrome://extensions/`.
 - Open **Experimental** from Settings for Stay Active Mode controls.
+- Use the testing site link on the Experimental page to verify Stay Active Mode
+  behavior outside EduPage.
 - If Experimental settings were changed while Edupage tabs are already open, use
   **Reload Edupage Tabs** from the Experimental page for the cleanest result.
 

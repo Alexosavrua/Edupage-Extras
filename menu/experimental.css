@@ -144,6 +144,18 @@ p {
     margin-top: 6px;
 }
 
+.inline-link {
+    color: var(--accent-color);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.inline-link:hover,
+.inline-link:focus-visible {
+    text-decoration: underline;
+    outline: none;
+}
+
 .setting-group {
     margin-bottom: 28px;
 }
@@ -210,9 +222,13 @@ code {
 }
 
 .shortcut-status {
-    color: var(--text-muted);
+    color: var(--accent-color);
     font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+    max-width: 220px;
     text-align: right;
+    word-break: break-word;
 }
 
 .save-status {
@@ -277,6 +293,7 @@ code {
     }
 
     .shortcut-status {
+        max-width: none;
         text-align: left;
     }
 }

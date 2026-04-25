@@ -3,7 +3,9 @@ const UPDATE_STATUS_KEY = "eeUpdateStatus";
 const UPDATE_REMINDER_ENABLED_KEY = "eeUpdateReminderEnabled";
 const UPDATE_LAST_NOTIFIED_KEY = "eeUpdateLastNotifiedVersion";
 const ACTIVITY_SHIELD_ENABLED_KEY = "eeActivityShieldEnabled";
+const DARK_MODE_ENABLED_KEY = "darkModeEnabled";
 const TOGGLE_ACTIVITY_SHIELD_COMMAND = "toggle-stay-active-mode";
+const TOGGLE_THEME_COMMAND = "toggle-theme-mode";
 const REPO_URL = "https://github.com/Alexosavrua/Edupage-Extras";
 const UPDATE_MANIFEST_URLS = [
   "https://raw.githubusercontent.com/Alexosavrua/Edupage-Extras/main/manifest.json",
@@ -51,6 +53,14 @@ async function toggleActivityShieldEnabled() {
   const enabled = result?.[ACTIVITY_SHIELD_ENABLED_KEY] === true;
   const nextValue = !enabled;
   await storageSet({ [ACTIVITY_SHIELD_ENABLED_KEY]: nextValue });
+  return nextValue;
+}
+
+async function toggleThemeEnabled() {
+  const result = await storageGet([DARK_MODE_ENABLED_KEY]);
+  const enabled = result?.[DARK_MODE_ENABLED_KEY] === true;
+  const nextValue = !enabled;
+  await storageSet({ [DARK_MODE_ENABLED_KEY]: nextValue });
   return nextValue;
 }
 
@@ -183,6 +193,13 @@ chrome.commands.onCommand.addListener((command) => {
   if (command === TOGGLE_ACTIVITY_SHIELD_COMMAND) {
     toggleActivityShieldEnabled().catch((error) => {
       console.warn("[Edupage Extras] Could not toggle Stay Active Mode.", error);
+    });
+    return;
+  }
+
+  if (command === TOGGLE_THEME_COMMAND) {
+    toggleThemeEnabled().catch((error) => {
+      console.warn("[Edupage Extras] Could not toggle themes.", error);
     });
   }
 });
