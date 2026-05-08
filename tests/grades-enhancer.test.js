@@ -8,7 +8,7 @@ function loadGradesEnhancerInternals() {
   const source = fs.readFileSync(scriptPath, "utf8");
   const instrumentedSource = source.replace(
     'if (document.readyState === "loading") {',
-    'globalThis.__eeTest = { parseAverage, gradeColor, gradePercentage, parseSubjectMap, computeSubjectAbsences, summarizeAttendance, summarizeRenderableAttendance, finalizeSubjectStats, resolveAttendanceBreakdown, matchSubjectStats, parseGradeTitleSegments, buildGradeOriginalTitleHtml, buildGradeTitleOverrideKey, gradeTableRowCount }; if (document.readyState === "loading") {',
+    'globalThis.__eeTest = { parseAverage, gradeColor, gradePercentage, parseDateOnly, normalizeDateInput, parseSubjectMap, computeSubjectAbsences, summarizeAttendance, summarizeRenderableAttendance, finalizeSubjectStats, resolveAttendanceBreakdown, matchSubjectStats, parseGradeTitleSegments, buildGradeOriginalTitleHtml, buildGradeTitleOverrideKey, gradeTableRowCount }; if (document.readyState === "loading") {',
   );
 
   const context = {
@@ -56,6 +56,15 @@ runTest("numeric averages still use the existing 1-5 grading scale", () => {
   assert.equal(average, 2.13);
   assert.equal(gradePercentage(average), 72.88);
   assert.equal(gradeColor(average), "#558b2f");
+});
+
+runTest("date-only parsing rejects calendar overflow dates", () => {
+  const { parseDateOnly, normalizeDateInput } = loadGradesEnhancerInternals();
+
+  assert.equal(parseDateOnly("2026-02-31"), null);
+  assert.equal(parseDateOnly("2026-13-01"), null);
+  assert.equal(normalizeDateInput("2026-02-31"), "");
+  assert.equal(normalizeDateInput("2026-02-28"), "2026-02-28");
 });
 
 runTest("subject absences can be assigned directly from attendance subject ids", () => {
