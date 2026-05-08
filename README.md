@@ -211,6 +211,10 @@ node --check scripts\grades-enhancer.js
 node --check scripts\attendance-enhancer.js
 node --check scripts\activity-shield-main.js
 node --check scripts\activity-shield-bridge.js
+node --check scripts\timetable-sync.js
+node tests\grades-enhancer.test.js
+node tests\attendance-enhancer.test.js
+node tests\background.test.js
 node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8')); console.log('manifest ok')"
 ```
 
