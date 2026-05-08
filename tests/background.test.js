@@ -8,7 +8,7 @@ function loadBackgroundInternals() {
   const source = fs.readFileSync(scriptPath, "utf8");
   const instrumentedSource = source.replace(
     "chrome.runtime.onInstalled.addListener(() => {",
-    "globalThis.__eeBackgroundTest = { shouldEnableGoogleCalendarAlarm, buildGoogleCalendarConnectedStatus, normalizeGoogleCalendarSyncMode, normalizeGoogleCalendarHalfyearScope, normalizeGoogleCalendarName }; chrome.runtime.onInstalled.addListener(() => {",
+    "globalThis.__eeBackgroundTest = { shouldEnableGoogleCalendarAlarm, buildGoogleCalendarConnectedStatus, normalizeGoogleCalendarSyncMode, normalizeGoogleCalendarHalfyearScope, normalizeGoogleCalendarName, parseDateOnly, toRfc3339 }; chrome.runtime.onInstalled.addListener(() => {",
   );
 
   const noop = () => {};
@@ -150,4 +150,13 @@ runTest("connected status preserves the selected sync mode and halfyear scope", 
   assert.equal(status.mode, "halfyear");
   assert.equal(status.halfyearScope, "full");
   assert.equal(status.calendarName, "School Calendar");
+});
+
+runTest("google calendar date helpers reject calendar overflow dates", () => {
+  const { parseDateOnly, toRfc3339 } = loadBackgroundInternals();
+
+  assert.equal(parseDateOnly("2026-02-31"), null);
+  assert.equal(parseDateOnly("2026-00-10"), null);
+  assert.equal(toRfc3339("2026-02-31", "08:00"), null);
+  assert.match(toRfc3339("2026-02-28", "08:00"), /^2026-02-28T08:00:00[+-]\d{2}:\d{2}$/);
 });
