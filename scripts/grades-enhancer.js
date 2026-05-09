@@ -18,19 +18,24 @@
   const GRADE_BADGES_KEY = "gradeBadgesEnabled";
   const GRADE_TITLE_OVERRIDES_KEY = "eeGradeTitleOverrides";
   const GRADES_ATTENDANCE_KEY = "gradesAttendanceStatsEnabled";
+  const ACCURATE_PREDICTED_ATTENDANCE_KEY = "eeAccuratePredictedAttendanceEnabled";
   const GRADES_ATTENDANCE_DEBUG_KEY = "gradesAttendanceDebugEnabled";
   const HALFYEAR_START_KEY = "eeHalfyearStartDate";
+  const HALFYEAR_END_KEY = "eeSecondHalfEndDate";
   const GRADES_ATTENDANCE_CACHE_KEY = "eeGradesAttendanceStatsCache";
-  const GRADES_ATTENDANCE_CACHE_VERSION = 10;
+  const GRADES_ATTENDANCE_CACHE_VERSION = 13;
   const CACHE_TTL_MS = 15 * 60 * 1000;
   const CLASSBOOK_RANGE_MAX_DAYS = 30;
   let gradeBadgesEnabled = false;
   let gradesAttendanceEnabled = true;
+  let accuratePredictedAttendanceEnabled = false;
   let gradesAttendanceDebugEnabled = false;
   let halfyearStartOverride = "";
+  let halfyearEndOverride = "";
   let observerTimer = null;
   let headerSyncTimer = null;
   let attendanceStatsCache = null;
+  let attendanceBaseStatsPromise = null;
   let attendanceStatsPromise = null;
   let attendanceLoadToken = 0;
   let ignoreMutationsUntil = 0;
@@ -525,6 +530,20 @@
         font-weight: normal;
       }
 
+      .ee-attendance-loading {
+        letter-spacing: 0.08em;
+        animation: eeAttendancePulse 1.15s ease-in-out infinite;
+      }
+
+      @keyframes eeAttendancePulse {
+        0%, 100% {
+          opacity: 0.45;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
       table.znamkyTable tr.predmetRow:hover .ee-avg-value {
         text-decoration: underline dotted;
       }
@@ -657,18 +676,26 @@
       .join("|");
   }
 
-  function buildSummaryRenderSignature(averageSignature, attendanceColumnsEnabled, attendanceBreakdown) {
+  function buildSummaryRenderSignature(
+    averageSignature,
+    attendanceColumnsEnabled,
+    attendanceBreakdown,
+    predictedAttendanceSummary = null,
+    attendanceState = "ready",
+    predictionState = "ready",
+  ) {
     if (!attendanceColumnsEnabled) {
       return `${averageSignature}|attendance:off`;
     }
 
     if (!attendanceBreakdown) {
-      return `${averageSignature}|attendance:pending`;
+      return `${averageSignature}|attendance:${attendanceState}|prediction:${predictionState}`;
     }
 
     const summary = attendanceBreakdown.summary || attendanceBreakdown;
     const unmatched = attendanceBreakdown.unmatched || { absent: 0, total: 0 };
-    return `${averageSignature}|attendance:${summary.absent}:${summary.total}:${unmatched.absent}:${unmatched.total}`;
+    const predicted = predictedAttendanceSummary || { absent: 0, total: 0 };
+    return `${averageSignature}|attendance:${summary.absent}:${summary.total}:${unmatched.absent}:${unmatched.total}|predicted:${predicted.absent}:${predicted.total}|prediction:${predictionState}`;
   }
 
   function tableColumnCount(table) {
@@ -683,7 +710,21 @@
     return Math.max(5, table.querySelector("tr")?.cells.length || 5);
   }
 
-  function ensureSummaryRow(table, averages, renderSignature, { attendanceColumns = false, attendanceSummary = null, attendanceBreakdown = null } = {}) {
+  function computeSummaryColumnLayout(colCount) {
+    const metricColumns = 5;
+    const trailingSpan = colCount >= 7 ? 1 : 0;
+    const labelSpan = Math.max(1, colCount - metricColumns - trailingSpan);
+    return { labelSpan, trailingSpan };
+  }
+
+  function ensureSummaryRow(table, averages, renderSignature, {
+    attendanceColumns = false,
+    attendanceSummary = null,
+    attendanceBreakdown = null,
+    predictedAttendanceSummary = null,
+    attendanceState = "loading",
+    predictionState = "loading",
+  } = {}) {
     const existing = table.querySelector("tr.ee-overall-row");
     if (existing?.dataset.eeSignature === renderSignature) return;
     if (existing) existing.remove();
@@ -747,8 +788,8 @@
     }
 
     const summaryTone = attendanceTone(attendanceSummary?.percent);
-    const usedMetricColumns = 3;
-    const labelSpan = Math.max(1, colCount - usedMetricColumns - 1);
+    const predictedTone = attendanceTone(predictedAttendanceSummary?.percent);
+    const { labelSpan, trailingSpan } = computeSummaryColumnLayout(colCount);
     labelCell.colSpan = labelSpan;
 
     const percentCell = document.createElement("td");
@@ -756,6 +797,12 @@
 
     const totalCell = document.createElement("td");
     totalCell.className = "ee-overall-attendance-cell ee-attendance-total-cell";
+
+    const predictedPercentCell = document.createElement("td");
+    predictedPercentCell.className = "ee-overall-attendance-cell ee-attendance-predicted-percent-cell";
+
+    const predictedTotalCell = document.createElement("td");
+    predictedTotalCell.className = "ee-overall-attendance-cell ee-attendance-predicted-total-cell";
 
     if (attendanceSummary && Number.isFinite(attendanceSummary.percent)) {
       const summaryTitle = unmatchedSummary && (unmatchedSummary.total > 0 || unmatchedSummary.absent > 0)
@@ -778,28 +825,85 @@
       totalCell.appendChild(totalValue);
       totalCell.title = summaryTitle;
     } else {
+      const percentPlaceholder = buildAttendancePlaceholderState(
+        attendanceState,
+        attendanceState === "loading"
+          ? "Current halfyear attendance data is still loading."
+          : "Official current-halfyear attendance data is not available yet.",
+      );
       const percentEmpty = document.createElement("span");
-      percentEmpty.className = "ee-attendance-empty";
-      percentEmpty.textContent = "-";
+      percentEmpty.className = percentPlaceholder.className;
+      percentEmpty.textContent = percentPlaceholder.text;
       percentCell.appendChild(percentEmpty);
-      percentCell.title = "Current halfyear attendance data is still loading.";
+      percentCell.title = percentPlaceholder.title;
 
+      const totalPlaceholder = buildAttendancePlaceholderState(
+        attendanceState,
+        attendanceState === "loading"
+          ? "Current halfyear attendance data is still loading."
+          : "Official current-halfyear attendance data is not available yet.",
+      );
       const totalEmpty = document.createElement("span");
-      totalEmpty.className = "ee-attendance-empty";
-      totalEmpty.textContent = "-";
+      totalEmpty.className = totalPlaceholder.className;
+      totalEmpty.textContent = totalPlaceholder.text;
       totalCell.appendChild(totalEmpty);
-      totalCell.title = "Current halfyear attendance data is still loading.";
+      totalCell.title = totalPlaceholder.title;
+    }
+
+    if (predictedAttendanceSummary && Number.isFinite(predictedAttendanceSummary.percent)) {
+      const predictedTitle = `If you miss no more lessons this halfyear, the projected absence total is ${predictedAttendanceSummary.absent}/${predictedAttendanceSummary.total}.`;
+      const predictedPercentValue = document.createElement("span");
+      predictedPercentValue.className = "ee-attendance-stat";
+      if (predictedTone?.className) {
+        predictedPercentValue.classList.add(predictedTone.className);
+      } else if (predictedTone?.color) {
+        predictedPercentValue.style.color = predictedTone.color;
+      }
+      predictedPercentValue.textContent = formatPercent(predictedAttendanceSummary.percent);
+      predictedPercentCell.appendChild(predictedPercentValue);
+      predictedPercentCell.title = predictedTitle;
+
+      const predictedTotalValue = document.createElement("span");
+      predictedTotalValue.className = "ee-attendance-stat ee-attendance-total";
+      predictedTotalValue.textContent = `${predictedAttendanceSummary.absent}/${predictedAttendanceSummary.total}`;
+      predictedTotalCell.appendChild(predictedTotalValue);
+      predictedTotalCell.title = predictedTitle;
+    } else {
+      const predictedPercentPlaceholder = buildAttendancePlaceholderState(
+        predictionState,
+        predictionState === "loading"
+          ? "Predicted end-of-halfyear attendance is still loading."
+          : "Predicted end-of-halfyear attendance is not available yet.",
+      );
+      const predictedPercentEmpty = document.createElement("span");
+      predictedPercentEmpty.className = predictedPercentPlaceholder.className;
+      predictedPercentEmpty.textContent = predictedPercentPlaceholder.text;
+      predictedPercentCell.appendChild(predictedPercentEmpty);
+      predictedPercentCell.title = predictedPercentPlaceholder.title;
+
+      const predictedTotalPlaceholder = buildAttendancePlaceholderState(
+        predictionState,
+        predictionState === "loading"
+          ? "Predicted end-of-halfyear attendance is still loading."
+          : "Predicted end-of-halfyear attendance is not available yet.",
+      );
+      const predictedTotalEmpty = document.createElement("span");
+      predictedTotalEmpty.className = predictedTotalPlaceholder.className;
+      predictedTotalEmpty.textContent = predictedTotalPlaceholder.text;
+      predictedTotalCell.appendChild(predictedTotalEmpty);
+      predictedTotalCell.title = predictedTotalPlaceholder.title;
     }
 
     summaryRow.appendChild(labelCell);
     summaryRow.appendChild(avgCell);
     summaryRow.appendChild(percentCell);
     summaryRow.appendChild(totalCell);
+    summaryRow.appendChild(predictedPercentCell);
+    summaryRow.appendChild(predictedTotalCell);
 
-    const remainingSpan = colCount - labelSpan - 3;
-    if (remainingSpan > 0) {
+    if (trailingSpan > 0) {
       const fillerCell = document.createElement("td");
-      fillerCell.colSpan = remainingSpan;
+      fillerCell.colSpan = trailingSpan;
       summaryRow.appendChild(fillerCell);
     }
 
@@ -1193,7 +1297,27 @@
     return new Date(turnoverDate.getFullYear() + 1, 1, 1);
   }
 
-  function resolveCurrentHalfWindow({ currentDate, yearTurnover, selectedYear, halves, secondHalfOverride }) {
+  function resolveSecondHalfEndDate(turnoverDate, secondHalfStart, overrideValue) {
+    const nextTurnover = new Date(
+      turnoverDate.getFullYear() + 1,
+      turnoverDate.getMonth(),
+      turnoverDate.getDate(),
+    );
+    const overrideDate = parseDateOnly(overrideValue);
+    if (overrideDate && overrideDate >= secondHalfStart && overrideDate < nextTurnover) {
+      return overrideDate;
+    }
+    return new Date(turnoverDate.getFullYear() + 1, 5, 30);
+  }
+
+  function resolveCurrentHalfWindow({
+    currentDate,
+    yearTurnover,
+    selectedYear,
+    halves,
+    secondHalfOverride,
+    secondHalfEndOverride,
+  }) {
     const today = parseDateOnly(currentDate) || new Date();
     const todayIso = formatDateISO(today);
 
@@ -1208,14 +1332,19 @@
     }
 
     const secondHalfStart = resolveSecondHalfStartDate(turnoverDate, secondHalfOverride);
+    const secondHalfEnd = resolveSecondHalfEndDate(turnoverDate, secondHalfStart, secondHalfEndOverride);
     const halfKey = today < secondHalfStart ? "1" : "2";
     const startDate = halfKey === "1" ? turnoverDate : secondHalfStart;
+    const halfEndDate = halfKey === "1"
+      ? new Date(secondHalfStart.getFullYear(), secondHalfStart.getMonth(), secondHalfStart.getDate() - 1)
+      : secondHalfEnd;
     const now = new Date();
 
     return {
       currentDate: todayIso,
       startDate: formatDateISO(startDate),
       endDate: todayIso,
+      halfEndDate: formatDateISO(halfEndDate),
       halfKey,
       halfLabel: halves?.[halfKey] || `${halfKey}. Polrok`,
       nowMinutes: todayIso === formatDateISO(now) ? now.getHours() * 60 + now.getMinutes() : 24 * 60,
@@ -1631,7 +1760,75 @@
     return entryMap;
   }
 
-  function finalizeSubjectStats(absentEntries, totalEntries) {
+  function weekdayIndexFromISO(dateKey) {
+    const date = parseDateOnly(dateKey);
+    return date ? date.getDay() : -1;
+  }
+
+  function computeProjectedSubjectTotals(classbookData, subjectMap, halfWindow) {
+    const entryMap = new Map();
+    const observedWeekdayCounts = new Map();
+    const remainingWeekdayCounts = new Map();
+    const currentDate = String(halfWindow?.currentDate || "");
+    const projectionEndDate = String(halfWindow?.halfEndDate || halfWindow?.endDate || "");
+
+    Object.entries(classbookData?.dates || {}).forEach(([dateKey, dateEntry]) => {
+      if (!isDateInRange(dateKey, halfWindow.startDate, halfWindow.endDate)) return;
+      if (dateKey >= currentDate) return;
+
+      const weekday = weekdayIndexFromISO(dateKey);
+      if (weekday < 1 || weekday > 5) return;
+
+      const plan = Array.isArray(dateEntry?.plan) ? dateEntry.plan : [];
+      const countedItems = plan.filter((item) => shouldCountLessonItem(item, dateKey, halfWindow));
+      if (countedItems.length === 0) return;
+
+      observedWeekdayCounts.set(weekday, numberValue(observedWeekdayCounts.get(weekday)) + 1);
+
+      countedItems.forEach((item) => {
+        const entry = ensureSubjectEntry(entryMap, extractLessonSubjectId(item), subjectMap);
+        if (!entry) return;
+
+        if (!entry.weekdayUnits) {
+          entry.weekdayUnits = new Map();
+        }
+
+        entry.weekdayUnits.set(
+          weekday,
+          numberValue(entry.weekdayUnits.get(weekday)) + lessonDurationUnits(item),
+        );
+      });
+    });
+
+    let cursor = addDaysISO(currentDate, 1);
+    while (cursor && projectionEndDate && cursor <= projectionEndDate) {
+      if (isSchoolDayISO(cursor)) {
+        const weekday = weekdayIndexFromISO(cursor);
+        if (weekday >= 1 && weekday <= 5) {
+          remainingWeekdayCounts.set(weekday, numberValue(remainingWeekdayCounts.get(weekday)) + 1);
+        }
+      }
+      cursor = addDaysISO(cursor, 1);
+    }
+
+    const projectedTotals = new Map();
+    entryMap.forEach((entry, key) => {
+      let projectedRemaining = 0;
+
+      entry.weekdayUnits?.forEach((units, weekday) => {
+        const observedDays = numberValue(observedWeekdayCounts.get(weekday));
+        const remainingDays = numberValue(remainingWeekdayCounts.get(weekday));
+        if (observedDays <= 0 || remainingDays <= 0) return;
+        projectedRemaining += (units / observedDays) * remainingDays;
+      });
+
+      projectedTotals.set(key, Math.max(0, Math.round(projectedRemaining)));
+    });
+
+    return projectedTotals;
+  }
+
+  function finalizeSubjectStats(absentEntries, totalEntries, projectedTotals = null) {
     const combined = new Map();
 
     [absentEntries, totalEntries].forEach((sourceMap) => {
@@ -1670,7 +1867,11 @@
         shortName: entry.shortName,
         absent: entry.absent,
         total: entry.total,
+        predictedTotal: entry.total + Math.max(0, numberValue(projectedTotals?.get?.(entry.key))),
         percent: entry.total > 0 ? (entry.absent / entry.total) * 100 : Number.NaN,
+        predictedPercent: (entry.total + Math.max(0, numberValue(projectedTotals?.get?.(entry.key)))) > 0
+          ? (entry.absent / (entry.total + Math.max(0, numberValue(projectedTotals?.get?.(entry.key))))) * 100
+          : Number.NaN,
         aliases: Array.from(entry.aliases),
       }))
       .sort((left, right) => {
@@ -1786,8 +1987,6 @@
     if (!headerRow) return;
 
     const averageHeaderCell = findAverageHeaderCell(headerRow);
-    const percentHeader = headerRow.querySelector(".ee-attendance-percent-header");
-    const totalHeader = headerRow.querySelector(".ee-attendance-total-header");
     const notesHeader = Array.from(headerRow.cells).find((cell) =>
       !cell.classList.contains("ee-attendance-header")
       && normalizeText(cell.textContent) === "poznamky",
@@ -1795,12 +1994,17 @@
     const referenceCell = averageHeaderCell || notesHeader || headerRow.cells[0] || null;
     if (!(referenceCell instanceof HTMLTableCellElement)) return;
 
-    if (percentHeader instanceof HTMLTableCellElement) {
-      syncHeaderCellLayout(percentHeader, referenceCell);
-    }
-    if (totalHeader instanceof HTMLTableCellElement) {
-      syncHeaderCellLayout(totalHeader, referenceCell);
-    }
+    [
+      ".ee-attendance-percent-header",
+      ".ee-attendance-total-header",
+      ".ee-attendance-predicted-percent-header",
+      ".ee-attendance-predicted-total-header",
+    ].forEach((selector) => {
+      const headerCell = headerRow.querySelector(selector);
+      if (headerCell instanceof HTMLTableCellElement) {
+        syncHeaderCellLayout(headerCell, referenceCell);
+      }
+    });
   }
 
   function ensureAttendanceDataCell(row, className, afterCell) {
@@ -1844,6 +2048,20 @@
         "Current halfyear absent lessons / lessons held so far per subject.",
         percentHeader,
       );
+      const predictedPercentHeader = ensureAttendanceHeaderCell(
+        headerRow,
+        "ee-attendance-predicted-percent-header",
+        "Pred. Abs %",
+        "Projected end-of-halfyear absence percentage if you miss no more lessons.",
+        headerRow.querySelector(".ee-attendance-total-header"),
+      );
+      ensureAttendanceHeaderCell(
+        headerRow,
+        "ee-attendance-predicted-total-header",
+        "Pred. Abs/Hod.",
+        "Projected absent lessons / projected total lessons by the end of the current halfyear if you miss no more lessons.",
+        predictedPercentHeader,
+      );
       syncAttendanceHeaderLayout(table);
     }
 
@@ -1861,6 +2079,16 @@
         "ee-attendance-total-cell",
         percentCell,
       );
+      const predictedPercentCell = ensureAttendanceDataCell(
+        row,
+        "ee-attendance-predicted-percent-cell",
+        row.querySelector(".ee-attendance-total-cell"),
+      );
+      ensureAttendanceDataCell(
+        row,
+        "ee-attendance-predicted-total-cell",
+        predictedPercentCell,
+      );
     });
   }
 
@@ -1874,12 +2102,35 @@
     table.removeAttribute(ATTENDANCE_RENDER_SIGNATURE_ATTR);
   }
 
-  function setAttendanceCellValue(cell, text, { tone = null, title = "", empty = false } = {}) {
+  function buildAttendancePlaceholderState(mode = "unavailable", title = "") {
+    const loading = mode === "loading";
+    return {
+      text: loading ? "..." : "-",
+      title: title || (loading
+        ? "Attendance data is still loading."
+        : "Attendance data is not available yet."),
+      empty: true,
+      loading,
+      className: loading ? "ee-attendance-empty ee-attendance-loading" : "ee-attendance-empty",
+    };
+  }
+
+  function shouldRenderPredictedAttendance({ predictionState = "ready", predictedPercent, predictedTotal } = {}) {
+    if (predictionState !== "ready") {
+      return false;
+    }
+    return Number.isFinite(predictedPercent) && numberValue(predictedTotal) > 0;
+  }
+
+  function setAttendanceCellValue(cell, text, { tone = null, title = "", empty = false, loading = false } = {}) {
     cell.textContent = "";
 
     const value = document.createElement("span");
     value.className = empty ? "ee-attendance-empty" : "ee-attendance-stat";
-    if (cell.classList.contains("ee-attendance-total-cell") && !empty) {
+    if (empty && loading) {
+      value.classList.add("ee-attendance-loading");
+    }
+    if ((cell.classList.contains("ee-attendance-total-cell") || cell.classList.contains("ee-attendance-predicted-total-cell")) && !empty) {
       value.classList.add("ee-attendance-total");
     }
     if (!empty) {
@@ -1900,17 +2151,22 @@
     }
   }
 
-  function populateAttendancePlaceholders(table, title = "Official current-halfyear attendance data is not available yet.") {
+  function populateAttendancePlaceholders(table, title = "Official current-halfyear attendance data is not available yet.", { loading = false } = {}) {
     markInternalMutation();
     ensureAttendanceColumns(table);
+    const placeholder = buildAttendancePlaceholderState(loading ? "loading" : "unavailable", title);
 
     Array.from(table.querySelectorAll("tr.predmetRow")).forEach((row) => {
       const percentCell = row.querySelector(".ee-attendance-percent-cell");
       const totalCell = row.querySelector(".ee-attendance-total-cell");
-      if (!percentCell || !totalCell) return;
+      const predictedPercentCell = row.querySelector(".ee-attendance-predicted-percent-cell");
+      const predictedTotalCell = row.querySelector(".ee-attendance-predicted-total-cell");
+      if (!percentCell || !totalCell || !predictedPercentCell || !predictedTotalCell) return;
 
-      setAttendanceCellValue(percentCell, "-", { empty: true, title });
-      setAttendanceCellValue(totalCell, "-", { empty: true, title });
+      setAttendanceCellValue(percentCell, placeholder.text, { empty: placeholder.empty, title: placeholder.title, loading: placeholder.loading });
+      setAttendanceCellValue(totalCell, placeholder.text, { empty: placeholder.empty, title: placeholder.title, loading: placeholder.loading });
+      setAttendanceCellValue(predictedPercentCell, placeholder.text, { empty: placeholder.empty, title: placeholder.title, loading: placeholder.loading });
+      setAttendanceCellValue(predictedTotalCell, placeholder.text, { empty: placeholder.empty, title: placeholder.title, loading: placeholder.loading });
       delete row.dataset.eeAttendanceSignature;
     });
 
@@ -1997,10 +2253,12 @@
     const displayNames = [];
     let absent = 0;
     let total = 0;
+    let predictedTotal = 0;
 
     entries.forEach((entry) => {
       absent += numberValue(entry.absent);
       total += numberValue(entry.total);
+      predictedTotal += Math.max(numberValue(entry.total), numberValue(entry.predictedTotal) || numberValue(entry.total));
       if (entry.displayName) {
         displayNames.push(entry.displayName);
       }
@@ -2010,8 +2268,51 @@
       displayNames,
       absent,
       total,
+      predictedTotal,
       percent: total > 0 ? (absent / total) * 100 : Number.NaN,
+      predictedPercent: predictedTotal > 0 ? (absent / predictedTotal) * 100 : Number.NaN,
     };
+  }
+
+  function projectionEntryMatchesSubject(entry, projection) {
+    const subjectAliases = new Set(entry.aliases || []);
+    const projectionAliases = buildNameAliases(projection?.title || "");
+    return projectionAliases.some((alias) => alias && subjectAliases.has(alias));
+  }
+
+  function applyProjectedTimetableTotals(subjects, projectedSubjects) {
+    return (subjects || []).map((entry) => {
+      const matchingProjections = (projectedSubjects || []).filter((projection) => projectionEntryMatchesSubject(entry, projection));
+      const projectedRemaining = matchingProjections.reduce(
+        (sum, projection) => sum + numberValue(projection?.remainingUnits),
+        0,
+      );
+      const predictedTotal = entry.total + Math.max(0, projectedRemaining);
+
+      return {
+        ...entry,
+        predictedTotal,
+        predictedPercent: predictedTotal > 0 ? (entry.absent / predictedTotal) * 100 : Number.NaN,
+      };
+    });
+  }
+
+  async function fetchProjectedTimetableTotals() {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({
+        type: "ee-grades-projected-subject-totals",
+        origin: window.location.origin,
+        secondHalfStartOverride: halfyearStartOverride,
+        secondHalfEndOverride: halfyearEndOverride,
+        accuratePredictionEnabled: accuratePredictedAttendanceEnabled,
+      }, (response) => {
+        if (chrome.runtime.lastError || !response?.ok) {
+          resolve([]);
+          return;
+        }
+        resolve(Array.isArray(response.data?.subjects) ? response.data.subjects : []);
+      });
+    });
   }
 
   function findMatchingSubjectEntries(rowText, subjectStats, rowSubjectId = "") {
@@ -2093,7 +2394,7 @@
       .map((row) => readPrimaryRowSubjectText(row))
       .join("|");
 
-    return `${data.currentDate}:${data.halfKey}:${data.subjects.length}:${data.fetchedAt}:${rowSignature}`;
+    return `${data.currentDate}:${data.halfKey}:${data.subjects.length}:${data.fetchedAt}:${data.predictionState || "ready"}:${rowSignature}`;
   }
 
   function renderSubjectAttendance(table, data) {
@@ -2111,7 +2412,9 @@
     Array.from(table.querySelectorAll("tr.predmetRow")).forEach((row) => {
       const percentCell = row.querySelector(".ee-attendance-percent-cell");
       const totalCell = row.querySelector(".ee-attendance-total-cell");
-      if (!percentCell || !totalCell) return;
+      const predictedPercentCell = row.querySelector(".ee-attendance-predicted-percent-cell");
+      const predictedTotalCell = row.querySelector(".ee-attendance-predicted-total-cell");
+      if (!percentCell || !totalCell || !predictedPercentCell || !predictedTotalCell) return;
 
       const rowText = readPrimaryRowSubjectText(row);
       const rowSubjectId = readRowSubjectId(row);
@@ -2127,6 +2430,16 @@
           "-",
           { empty: true, title: `Current halfyear (${data.halfLabel}) data was not matched to this grades row.` },
         );
+        setAttendanceCellValue(
+          predictedPercentCell,
+          "-",
+          { empty: true, title: `Projected end-of-halfyear (${data.halfLabel}) data was not matched to this grades row.` },
+        );
+        setAttendanceCellValue(
+          predictedTotalCell,
+          "-",
+          { empty: true, title: `Projected end-of-halfyear (${data.halfLabel}) data was not matched to this grades row.` },
+        );
         delete row.dataset.eeAttendanceSignature;
         renderDebugRows.push({
           rowText,
@@ -2135,9 +2448,22 @@
         return;
       }
 
-      const rowSignature = `${rowText}:${matchedStats.absent}:${matchedStats.total}`;
+      const predictedReady = shouldRenderPredictedAttendance({
+        predictionState: data.predictionState || "ready",
+        predictedPercent: matchedStats.predictedPercent,
+        predictedTotal: matchedStats.predictedTotal,
+      });
+      const predictedPlaceholder = buildAttendancePlaceholderState(
+        data.predictionState === "unavailable" ? "unavailable" : "loading",
+        data.predictionState === "unavailable"
+          ? "Predicted end-of-halfyear attendance is not available yet."
+          : "Predicted end-of-halfyear attendance is still loading.",
+      );
+      const rowSignature = `${rowText}:${matchedStats.absent}:${matchedStats.total}:${predictedReady ? matchedStats.predictedTotal : data.predictionState || "loading"}`;
       const title = `Current halfyear (${data.halfLabel}): ${matchedStats.absent}/${matchedStats.total} lessons absent. Formula: absent / lessons held so far in the halfyear.`;
+      const predictedTitle = `If you miss no more lessons this ${data.halfLabel.toLowerCase()}, the projected end-of-halfyear total is ${matchedStats.absent}/${matchedStats.predictedTotal}.`;
       const tone = attendanceTone(matchedStats.percent);
+      const predictedTone = attendanceTone(matchedStats.predictedPercent);
 
       setAttendanceCellValue(
         percentCell,
@@ -2153,6 +2479,25 @@
         `${matchedStats.absent}/${matchedStats.total}`,
         { title },
       );
+      setAttendanceCellValue(
+        predictedPercentCell,
+        predictedReady ? formatPercent(matchedStats.predictedPercent) : predictedPlaceholder.text,
+        {
+          tone: predictedReady ? predictedTone : null,
+          title: predictedReady ? predictedTitle : predictedPlaceholder.title,
+          empty: !predictedReady,
+          loading: !predictedReady && predictedPlaceholder.loading,
+        },
+      );
+      setAttendanceCellValue(
+        predictedTotalCell,
+        predictedReady ? `${matchedStats.absent}/${matchedStats.predictedTotal}` : predictedPlaceholder.text,
+        {
+          title: predictedReady ? predictedTitle : predictedPlaceholder.title,
+          empty: !predictedReady,
+          loading: !predictedReady && predictedPlaceholder.loading,
+        },
+      );
 
       row.dataset.eeAttendanceSignature = rowSignature;
       renderDebugRows.push({
@@ -2160,7 +2505,9 @@
         matched: true,
         absent: matchedStats.absent,
         total: matchedStats.total,
+        predictedTotal: predictedReady ? matchedStats.predictedTotal : null,
         percent: Number.isFinite(matchedStats.percent) ? Number(matchedStats.percent.toFixed(2)) : null,
+        predictedPercent: predictedReady && Number.isFinite(matchedStats.predictedPercent) ? Number(matchedStats.predictedPercent.toFixed(2)) : null,
         displayNames: matchedStats.displayNames,
       });
     });
@@ -2220,6 +2567,37 @@
     return summarizeAttendance(
       (subjects || []).filter((entry) => numberValue(entry.total) > 0),
     );
+  }
+
+  function summarizePredictedAttendance(subjects, currentSummary = null) {
+    let absent = numberValue(currentSummary?.absent);
+    let total = numberValue(currentSummary?.total);
+    let currentMatchedTotal = 0;
+    let predictedMatchedTotal = 0;
+
+    (subjects || []).forEach((entry) => {
+      const currentTotal = numberValue(entry.total);
+      const predictedTotal = Math.max(currentTotal, numberValue(entry.predictedTotal) || currentTotal);
+      currentMatchedTotal += currentTotal;
+      predictedMatchedTotal += predictedTotal;
+    });
+
+    if (!currentSummary) {
+      absent = 0;
+      total = 0;
+      (subjects || []).forEach((entry) => {
+        absent += numberValue(entry.absent);
+      });
+      total = currentMatchedTotal;
+    }
+
+    const projectedTotal = total + Math.max(0, predictedMatchedTotal - currentMatchedTotal);
+
+    return {
+      absent,
+      total: projectedTotal,
+      percent: projectedTotal > 0 ? (absent / projectedTotal) * 100 : Number.NaN,
+    };
   }
 
   function listAttendanceOnlyAbsentSubjects(subjects) {
@@ -2669,7 +3047,7 @@
     return mergedData;
   }
 
-  async function loadSubjectAttendanceStats() {
+  async function loadBaseSubjectAttendanceStats() {
     const today = formatDateISO(new Date());
 
     if (
@@ -2680,18 +3058,21 @@
       return attendanceStatsCache;
     }
 
-    if (attendanceStatsPromise) {
-      return attendanceStatsPromise;
+    if (attendanceBaseStatsPromise) {
+      return attendanceBaseStatsPromise;
     }
 
-    attendanceStatsPromise = (async () => {
+    attendanceBaseStatsPromise = (async () => {
       const cached = await readCachedAttendanceStats();
       if (cached) {
         attendanceStatsCache = cached;
         window.__eeGradesAttendanceDebug = cached.debug || null;
         syncAttendanceDebug(cached.debug || null);
+        attendanceStatsPromise = Promise.resolve(cached);
         return cached;
       }
+
+      const projectedTimetablePromise = fetchProjectedTimetableTotals();
 
       const [attendanceHtml, ttdayHtml] = await Promise.all([
         fetchText("/dashboard/eb.php?mode=attendance"),
@@ -2713,6 +3094,7 @@
         selectedYear: attendanceInfo.selectedYear || ttdayInfo.selectedYear,
         halves: attendanceInfo.halves,
         secondHalfOverride: halfyearStartOverride,
+        secondHalfEndOverride: halfyearEndOverride,
       });
       const officialHalfSummary = resolveOfficialHalfSummary(attendanceInfo, halfWindow);
       debugLog("Resolved half window", halfWindow);
@@ -2810,6 +3192,9 @@
         }
       }
 
+      const projectedTimetableSubjects = await projectedTimetablePromise;
+      subjects = applyProjectedTimetableTotals(subjects, projectedTimetableSubjects);
+
       const attendanceBreakdown = resolveAttendanceBreakdown(
         renderedAttendanceSummary,
         officialHalfSummary,
@@ -2817,7 +3202,7 @@
       );
       const attendanceSummary = attendanceBreakdown.summary;
       const attendanceOnlyAbsentSubjects = listAttendanceOnlyAbsentSubjects(subjects);
-      const debug = {
+      const baseDebug = {
         currentDate: halfWindow.currentDate,
         ttdayRenderDate: ttdayInfo.renderDate,
         halfKey: halfWindow.halfKey,
@@ -2845,7 +3230,7 @@
         subjects: summarizeSubjectsForDebug(subjects),
       };
 
-      const stats = {
+      const baseStats = {
         version: GRADES_ATTENDANCE_CACHE_VERSION,
         fetchedAt: Date.now(),
         currentDate: halfWindow.currentDate,
@@ -2853,21 +3238,49 @@
         halfLabel: halfWindow.halfLabel,
         subjects,
         attendanceSummary,
+        predictedAttendanceSummary: null,
         attendanceBreakdown,
-        debug,
+        predictionState: "loading",
+        debug: baseDebug,
       };
 
-      attendanceStatsCache = stats;
-      window.__eeGradesAttendanceDebug = debug;
-      syncAttendanceDebug(debug);
-      debugLog("Final attendance stats", debug);
-      if (attendanceSummary.total < 100 || debug.mergedDateCount <= embeddedDateCount) {
-        console.warn("[Edupage Extras] Grades attendance diagnostic", debug);
-      }
-      if (attendanceSummary.total >= 100) {
-        await writeCachedAttendanceStats(stats);
-      }
-      return stats;
+      window.__eeGradesAttendanceDebug = baseDebug;
+      syncAttendanceDebug(baseDebug);
+
+      attendanceStatsPromise = (async () => {
+        const projectedTimetableSubjects = await projectedTimetablePromise;
+        const predictedSubjects = applyProjectedTimetableTotals(subjects, projectedTimetableSubjects);
+        const predictedAttendanceSummary = summarizePredictedAttendance(predictedSubjects, attendanceSummary);
+        const debug = {
+          ...baseDebug,
+          subjects: summarizeSubjectsForDebug(predictedSubjects),
+        };
+        const stats = {
+          ...baseStats,
+          fetchedAt: Date.now(),
+          subjects: predictedSubjects,
+          predictedAttendanceSummary,
+          predictionState: "ready",
+          debug,
+        };
+
+        attendanceStatsCache = stats;
+        window.__eeGradesAttendanceDebug = debug;
+        syncAttendanceDebug(debug);
+        debugLog("Final attendance stats", debug);
+        if (attendanceSummary.total < 100 || debug.mergedDateCount <= embeddedDateCount) {
+          console.warn("[Edupage Extras] Grades attendance diagnostic", debug);
+        }
+        if (attendanceSummary.total >= 100) {
+          await writeCachedAttendanceStats(stats);
+        }
+        return stats;
+      })()
+        .finally(() => {
+          attendanceStatsPromise = null;
+        });
+
+      return baseStats;
     })()
       .catch((error) => {
         debugWarn("Could not load grades attendance stats.", error);
@@ -2875,10 +3288,35 @@
         throw error;
       })
       .finally(() => {
-        attendanceStatsPromise = null;
+        attendanceBaseStatsPromise = null;
       });
 
-    return attendanceStatsPromise;
+    return attendanceBaseStatsPromise;
+  }
+
+  async function loadSubjectAttendanceStats() {
+    const today = formatDateISO(new Date());
+
+    if (
+      attendanceStatsCache
+      && attendanceStatsCache.currentDate === today
+      && Date.now() - numberValue(attendanceStatsCache.fetchedAt) <= CACHE_TTL_MS
+    ) {
+      return attendanceStatsCache;
+    }
+
+    if (attendanceStatsPromise) {
+      return attendanceStatsPromise;
+    }
+
+    const baseStats = await loadBaseSubjectAttendanceStats();
+    if (baseStats?.predictionState === "ready") {
+      return baseStats;
+    }
+    if (attendanceStatsPromise) {
+      return attendanceStatsPromise;
+    }
+    return baseStats;
   }
 
   function enhanceGradesTable() {
@@ -2903,6 +3341,9 @@
         averageSignature,
         gradesAttendanceEnabled,
         null,
+        null,
+        gradesAttendanceEnabled ? "loading" : "unavailable",
+        gradesAttendanceEnabled ? "loading" : "unavailable",
       );
       if (
         table.getAttribute(AVERAGE_RENDER_SIGNATURE_ATTR) !== averageSignature
@@ -2912,7 +3353,12 @@
           table,
           averages,
           summarySignature,
-          { attendanceColumns: gradesAttendanceEnabled, attendanceSummary: null },
+          {
+            attendanceColumns: gradesAttendanceEnabled,
+            attendanceSummary: null,
+            attendanceState: gradesAttendanceEnabled ? "loading" : "unavailable",
+            predictionState: gradesAttendanceEnabled ? "loading" : "unavailable",
+          },
         );
         table.setAttribute(AVERAGE_RENDER_SIGNATURE_ATTR, averageSignature);
       }
@@ -2926,7 +3372,12 @@
     }
 
     const loadToken = ++attendanceLoadToken;
-    loadSubjectAttendanceStats()
+    tables.forEach((gradesTable) => populateAttendancePlaceholders(
+      gradesTable,
+      "Official current-halfyear attendance data is still loading.",
+      { loading: true },
+    ));
+    loadBaseSubjectAttendanceStats()
       .then((data) => {
         if (!gradesAttendanceEnabled || loadToken !== attendanceLoadToken) return;
 
@@ -2946,25 +3397,125 @@
           ensureSummaryRow(
             liveTable,
             liveAverages,
-            buildSummaryRenderSignature(liveAverageSignature, true, data.attendanceBreakdown || attendanceSummary),
+            buildSummaryRenderSignature(
+              liveAverageSignature,
+              true,
+              data.attendanceBreakdown || attendanceSummary,
+              data.predictedAttendanceSummary || null,
+              "ready",
+              data.predictionState || "ready",
+            ),
             {
               attendanceColumns: true,
               attendanceSummary,
+              predictedAttendanceSummary: data.predictedAttendanceSummary || null,
               attendanceBreakdown: data.attendanceBreakdown || null,
+              predictionState: data.predictionState || "ready",
             },
           );
           liveTable.setAttribute(AVERAGE_RENDER_SIGNATURE_ATTR, liveAverageSignature);
         }
+
+        if (data.predictionState === "ready") {
+          return;
+        }
+
+        loadSubjectAttendanceStats()
+          .then((finalData) => {
+            if (!gradesAttendanceEnabled || loadToken !== attendanceLoadToken) return;
+            const latestTable = getPrimaryGradesTable();
+            if (!latestTable) return;
+
+            renderSubjectAttendance(latestTable, finalData);
+
+            if (gradeBadgesEnabled) {
+              const latestAverages = collectAverages(latestTable);
+              const latestAverageSignature = buildAverageRenderSignature(latestAverages);
+              const latestAttendanceSummary = finalData.attendanceSummary || summarizeAttendance(finalData.subjects);
+              ensureSummaryRow(
+                latestTable,
+                latestAverages,
+                buildSummaryRenderSignature(
+                  latestAverageSignature,
+                  true,
+                  finalData.attendanceBreakdown || latestAttendanceSummary,
+                  finalData.predictedAttendanceSummary || null,
+                  "ready",
+                  finalData.predictionState || "ready",
+                ),
+                {
+                  attendanceColumns: true,
+                  attendanceSummary: latestAttendanceSummary,
+                  predictedAttendanceSummary: finalData.predictedAttendanceSummary || null,
+                  attendanceBreakdown: finalData.attendanceBreakdown || null,
+                  predictionState: finalData.predictionState || "ready",
+                },
+              );
+              latestTable.setAttribute(AVERAGE_RENDER_SIGNATURE_ATTR, latestAverageSignature);
+            }
+          })
+          .catch(() => {
+            if (!gradesAttendanceEnabled || loadToken !== attendanceLoadToken) return;
+            const latestTable = getPrimaryGradesTable();
+            if (!latestTable) return;
+            const unavailableData = {
+              ...data,
+              predictionState: "unavailable",
+            };
+            renderSubjectAttendance(latestTable, unavailableData);
+            if (gradeBadgesEnabled) {
+              const latestAverages = collectAverages(latestTable);
+              const latestAverageSignature = buildAverageRenderSignature(latestAverages);
+              const latestAttendanceSummary = unavailableData.attendanceSummary || summarizeAttendance(unavailableData.subjects);
+              ensureSummaryRow(
+                latestTable,
+                latestAverages,
+                buildSummaryRenderSignature(
+                  latestAverageSignature,
+                  true,
+                  unavailableData.attendanceBreakdown || latestAttendanceSummary,
+                  null,
+                  "ready",
+                  "unavailable",
+                ),
+                {
+                  attendanceColumns: true,
+                  attendanceSummary: latestAttendanceSummary,
+                  predictedAttendanceSummary: null,
+                  attendanceBreakdown: unavailableData.attendanceBreakdown || null,
+                  predictionState: "unavailable",
+                },
+              );
+              latestTable.setAttribute(AVERAGE_RENDER_SIGNATURE_ATTR, latestAverageSignature);
+            }
+          });
       })
       .catch(() => {
         if (loadToken !== attendanceLoadToken) return;
         const liveTable = getPrimaryGradesTable();
         if (liveTable && gradesAttendanceEnabled) {
           populateAttendancePlaceholders(liveTable);
+          if (gradeBadgesEnabled) {
+            const liveAverages = collectAverages(liveTable);
+            const liveAverageSignature = buildAverageRenderSignature(liveAverages);
+            ensureSummaryRow(
+              liveTable,
+              liveAverages,
+              buildSummaryRenderSignature(liveAverageSignature, true, null, null, "unavailable", "unavailable"),
+              {
+                attendanceColumns: true,
+                attendanceSummary: null,
+                predictedAttendanceSummary: null,
+                attendanceState: "unavailable",
+                predictionState: "unavailable",
+              },
+            );
+            liveTable.setAttribute(AVERAGE_RENDER_SIGNATURE_ATTR, liveAverageSignature);
+          }
         }
         getGradesTables()
           .filter((gradesTable) => gradesTable !== liveTable)
-          .forEach((gradesTable) => ensureAttendanceColumns(gradesTable));
+          .forEach((gradesTable) => populateAttendancePlaceholders(gradesTable));
       });
   }
 
@@ -2983,14 +3534,24 @@
   }
 
   function initStorage() {
-    chrome.storage.local.get([GRADE_BADGES_KEY, GRADE_TITLE_OVERRIDES_KEY, GRADES_ATTENDANCE_KEY, GRADES_ATTENDANCE_DEBUG_KEY, HALFYEAR_START_KEY], (result) => {
+    chrome.storage.local.get([
+      GRADE_BADGES_KEY,
+      GRADE_TITLE_OVERRIDES_KEY,
+      GRADES_ATTENDANCE_KEY,
+      ACCURATE_PREDICTED_ATTENDANCE_KEY,
+      GRADES_ATTENDANCE_DEBUG_KEY,
+      HALFYEAR_START_KEY,
+      HALFYEAR_END_KEY,
+    ], (result) => {
       gradeBadgesEnabled = result[GRADE_BADGES_KEY] === true;
       gradeTitleOverrides = result[GRADE_TITLE_OVERRIDES_KEY] && typeof result[GRADE_TITLE_OVERRIDES_KEY] === "object"
         ? result[GRADE_TITLE_OVERRIDES_KEY]
         : {};
       gradesAttendanceEnabled = result[GRADES_ATTENDANCE_KEY] !== false;
+      accuratePredictedAttendanceEnabled = result[ACCURATE_PREDICTED_ATTENDANCE_KEY] === true;
       gradesAttendanceDebugEnabled = result[GRADES_ATTENDANCE_DEBUG_KEY] === true;
       halfyearStartOverride = normalizeDateInput(result[HALFYEAR_START_KEY]);
+      halfyearEndOverride = normalizeDateInput(result[HALFYEAR_END_KEY]);
       enhanceGradesTable();
     });
 
@@ -3016,6 +3577,12 @@
         shouldEnhance = true;
       }
 
+      if (changes[ACCURATE_PREDICTED_ATTENDANCE_KEY]) {
+        accuratePredictedAttendanceEnabled = changes[ACCURATE_PREDICTED_ATTENDANCE_KEY].newValue === true;
+        attendanceStatsCache = null;
+        shouldEnhance = true;
+      }
+
       if (changes[GRADES_ATTENDANCE_DEBUG_KEY]) {
         gradesAttendanceDebugEnabled = changes[GRADES_ATTENDANCE_DEBUG_KEY].newValue === true;
         attendanceStatsCache = null;
@@ -3024,6 +3591,12 @@
 
       if (changes[HALFYEAR_START_KEY]) {
         halfyearStartOverride = normalizeDateInput(changes[HALFYEAR_START_KEY].newValue);
+        attendanceStatsCache = null;
+        shouldEnhance = true;
+      }
+
+      if (changes[HALFYEAR_END_KEY]) {
+        halfyearEndOverride = normalizeDateInput(changes[HALFYEAR_END_KEY].newValue);
         attendanceStatsCache = null;
         shouldEnhance = true;
       }

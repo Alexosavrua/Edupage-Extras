@@ -227,27 +227,52 @@ function isWeekend(date) {
   return day === 0 || day === 6;
 }
 
-function computeCurrentHalfyearRange(anchorDate) {
-  const year = anchorDate.getFullYear();
-  const month = anchorDate.getMonth();
+function resolveSecondHalfStartDate(turnoverDate, overrideValue) {
+  const nextTurnover = new Date(
+    turnoverDate.getFullYear() + 1,
+    turnoverDate.getMonth(),
+    turnoverDate.getDate(),
+  );
+  const overrideDate = parseDateOnly(overrideValue);
+  if (overrideDate && overrideDate >= turnoverDate && overrideDate < nextTurnover) {
+    return overrideDate;
+  }
+  return new Date(turnoverDate.getFullYear() + 1, 1, 1);
+}
 
-  if (month >= 8) {
+function resolveSecondHalfEndDate(turnoverDate, secondHalfStart, overrideValue) {
+  const nextTurnover = new Date(
+    turnoverDate.getFullYear() + 1,
+    turnoverDate.getMonth(),
+    turnoverDate.getDate(),
+  );
+  const overrideDate = parseDateOnly(overrideValue);
+  if (overrideDate && overrideDate >= secondHalfStart && overrideDate < nextTurnover) {
+    return overrideDate;
+  }
+  return new Date(turnoverDate.getFullYear() + 1, 5, 30);
+}
+
+function computeCurrentHalfyearRange(anchorDate, {
+  secondHalfStartOverride = "",
+  secondHalfEndOverride = "",
+} = {}) {
+  const month = anchorDate.getMonth();
+  const turnoverYear = month >= 8 ? anchorDate.getFullYear() : anchorDate.getFullYear() - 1;
+  const turnoverDate = new Date(turnoverYear, 8, 1);
+  const secondHalfStart = resolveSecondHalfStartDate(turnoverDate, secondHalfStartOverride);
+  const secondHalfEnd = resolveSecondHalfEndDate(turnoverDate, secondHalfStart, secondHalfEndOverride);
+
+  if (anchorDate < secondHalfStart) {
     return {
-      start: new Date(year, 8, 1),
-      end: new Date(year + 1, 0, 31),
+      start: turnoverDate,
+      end: new Date(secondHalfStart.getFullYear(), secondHalfStart.getMonth(), secondHalfStart.getDate() - 1),
     };
   }
 
-  if (month === 0) {
   return {
-    start: new Date(year - 1, 8, 1),
-    end: new Date(year, 0, 31),
-  };
-}
-
-  return {
-    start: new Date(year, 1, 1),
-    end: new Date(year, 5, 30),
+    start: secondHalfStart,
+    end: secondHalfEnd,
   };
 }
 
@@ -1371,6 +1396,38 @@ function shouldUseLessonInHalfyearTemplate(lesson) {
   return true;
 }
 
+function shouldCountActualFutureLesson(lesson) {
+  if (!lesson?.title || !lesson?.startTime || !lesson?.endTime) {
+    return false;
+  }
+
+  const titleKey = normalizeKeyText(lesson.title);
+  const hasMetadata = Boolean(
+    String(lesson.room || "").trim()
+    || String(lesson.teacher || "").trim()
+    || String(lesson.group || "").trim(),
+  );
+
+  if (!hasMetadata) {
+    if (lesson.title.includes(":")) {
+      return false;
+    }
+    if (
+      titleKey.includes("udalost")
+      || titleKey.includes("event")
+      || titleKey.includes("prijimacie-skusky")
+      || titleKey.includes("skusky")
+      || titleKey.includes("maturita")
+      || titleKey.includes("prazdniny")
+      || titleKey.includes("holiday")
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function countTemplateEligibleLessons(weekData) {
   return Array.isArray(weekData?.lessons)
     ? weekData.lessons.filter(shouldUseLessonInHalfyearTemplate).length
@@ -1558,6 +1615,121 @@ function buildHalfyearDesiredEvents(liveWeek, adjacentWeek) {
   return desired.sort((left, right) => left.startDateTime.localeCompare(right.startDateTime));
 }
 
+function timeStringToMinutes(value) {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(String(value || "").trim());
+  if (!match) return Number.NaN;
+  return (Number.parseInt(match[1], 10) * 60) + Number.parseInt(match[2], 10);
+}
+
+function numberOrZero(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function buildFutureSubjectLessonUnits(liveWeek, adjacentWeek, now = new Date()) {
+  const anchorDate = parseDateOnly(liveWeek?.dayHeaders?.[0]?.date) || now;
+  const halfyearRange = computeCurrentHalfyearRange(anchorDate, {
+    secondHalfStartOverride: liveWeek?.config?.secondHalfStartOverride,
+    secondHalfEndOverride: liveWeek?.config?.secondHalfEndOverride,
+  });
+  const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const currentWeekStart = startOfWeek(anchorDate);
+  const accuratePredictionEnabled = liveWeek?.config?.accuratePredictionEnabled === true;
+  const templateSamples = Array.isArray(liveWeek?.config?.templateSampleWeeks) && liveWeek.config.templateSampleWeeks.length > 0
+    ? liveWeek.config.templateSampleWeeks
+    : [liveWeek, adjacentWeek].filter(Boolean);
+  const templates = buildTemplateWeekMap(templateSamples);
+  const labels = [...templates.keys()];
+  const useAlternating = labels.length === 2;
+  const primaryLabel = liveWeek.weekLabel;
+  const secondaryLabel = labels.find((label) => label !== primaryLabel) || primaryLabel;
+  const byDate = new Map();
+
+  for (let cursor = startOfWeek(halfyearRange.start); cursor <= halfyearRange.end; cursor = addDays(cursor, 7)) {
+    const weekOffset = diffWeeks(cursor, currentWeekStart);
+    const label = useAlternating && Math.abs(weekOffset % 2) === 1 ? secondaryLabel : primaryLabel;
+    const sourceWeek = templates.get(label) || liveWeek;
+
+    for (const lesson of sourceWeek.lessons.filter(shouldUseLessonInHalfyearTemplate)) {
+      const dayDate = addDays(cursor, lesson.dayIndex);
+      if (dayDate > halfyearRange.end) continue;
+      if (shouldSkipGeneratedSchoolDay(dayDate)) continue;
+      if (!byDate.has(formatDate(dayDate))) {
+        byDate.set(formatDate(dayDate), []);
+      }
+      byDate.get(formatDate(dayDate)).push({
+        ...lesson,
+        date: formatDate(dayDate),
+        changed: false,
+      });
+    }
+  }
+
+  const liveDates = new Set((liveWeek?.dayHeaders || []).map((entry) => entry.date));
+  for (const date of liveDates) {
+    byDate.delete(date);
+  }
+  for (const lesson of liveWeek?.lessons || []) {
+    if (!byDate.has(lesson.date)) {
+      byDate.set(lesson.date, []);
+    }
+    if (shouldCountActualFutureLesson(lesson)) {
+      byDate.get(lesson.date).push(lesson);
+    }
+  }
+
+  if (accuratePredictionEnabled) {
+    templateSamples
+      .filter((weekData) => weekData && weekData !== liveWeek)
+      .forEach((weekData) => {
+        const sampledDates = new Set((weekData.dayHeaders || [])
+          .map((entry) => entry?.date)
+          .filter(Boolean));
+
+        sampledDates.forEach((dateText) => {
+          const sampledDate = parseDateOnly(dateText);
+          if (!sampledDate || sampledDate < currentDate || sampledDate > halfyearRange.end) return;
+          byDate.set(dateText, []);
+        });
+
+        for (const lesson of weekData.lessons || []) {
+          const lessonDate = parseDateOnly(lesson.date);
+          if (!lessonDate || lessonDate < currentDate || lessonDate > halfyearRange.end) continue;
+          if (!shouldCountActualFutureLesson(lesson)) continue;
+          if (!byDate.has(lesson.date)) {
+            byDate.set(lesson.date, []);
+          }
+          byDate.get(lesson.date).push(lesson);
+        }
+      });
+  }
+
+  const totals = new Map();
+  byDate.forEach((lessons, dateKey) => {
+    const lessonDate = parseDateOnly(dateKey);
+    if (!lessonDate || lessonDate < currentDate || lessonDate > halfyearRange.end) return;
+
+    lessons.forEach((lesson) => {
+      if (!shouldCountActualFutureLesson(lesson)) return;
+      if (lessonDate.getTime() === currentDate.getTime()) {
+        const startMinutes = timeStringToMinutes(lesson.startTime);
+        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+        if (Number.isFinite(startMinutes) && startMinutes <= nowMinutes) {
+          return;
+        }
+      }
+
+      const key = normalizeKeyText(lesson.title);
+      totals.set(key, {
+        title: lesson.title,
+        remainingUnits: numberOrZero(totals.get(key)?.remainingUnits) + Math.max(1, numberOrZero(lesson.duration)),
+      });
+    });
+  });
+
+  return Array.from(totals.values()).sort((left, right) => normalizeKeyText(left.title).localeCompare(normalizeKeyText(right.title)));
+}
+
 function createTab(url) {
   return new Promise((resolve, reject) => {
     chrome.tabs.create({ url, active: false }, (tab) => {
@@ -1737,7 +1909,12 @@ async function collectLiveEdupageWeek(config) {
         templateSampleWeeks.push(cloneWeekData(adjacentWeek));
       }
 
-      for (let index = 0; index < 2; index += 1) {
+      const requestedExtraSampleWeeks = Number.parseInt(config.extraHalfyearSampleWeeks, 10);
+      const extraHalfyearSampleWeeks = Math.max(
+        0,
+        Number.isFinite(requestedExtraSampleWeeks) ? requestedExtraSampleWeeks : 2,
+      );
+      for (let index = 0; index < extraHalfyearSampleWeeks; index += 1) {
         const extraWeek = await extractWeekFromHiddenTab(tab.id, 1);
         if (!extraWeek) break;
         extraWeek.config = config;
@@ -2040,6 +2217,57 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     sendResponse({ ok: true });
     return false;
+  }
+
+  if (message?.type === "ee-grades-projected-subject-totals") {
+    const origin = typeof message.origin === "string" && message.origin.startsWith("https://")
+      ? message.origin
+      : "";
+    const secondHalfStartOverride = typeof message.secondHalfStartOverride === "string"
+      ? message.secondHalfStartOverride
+      : "";
+    const secondHalfEndOverride = typeof message.secondHalfEndOverride === "string"
+      ? message.secondHalfEndOverride
+      : "";
+    const accuratePredictionEnabled = message.accuratePredictionEnabled === true;
+
+    collectLiveEdupageWeek({
+      lastEdupageOrigin: origin,
+      syncMode: "halfyear",
+      halfyearScope: "future",
+      roomInTitle: false,
+      teacherInTitle: false,
+      secondHalfStartOverride,
+      secondHalfEndOverride,
+      accuratePredictionEnabled,
+      extraHalfyearSampleWeeks: accuratePredictionEnabled ? 2 : 0,
+    })
+      .then(({ liveWeek, adjacentWeek, templateSampleWeeks }) => {
+        if (liveWeek) {
+          liveWeek.config = {
+            ...(liveWeek.config || {}),
+            templateSampleWeeks,
+            secondHalfStartOverride,
+            secondHalfEndOverride,
+            accuratePredictionEnabled,
+          };
+        }
+        if (adjacentWeek) {
+          adjacentWeek.config = liveWeek?.config || adjacentWeek.config;
+        }
+
+        sendResponse({
+          ok: true,
+          data: {
+            subjects: buildFutureSubjectLessonUnits(liveWeek, adjacentWeek, new Date()),
+          },
+        });
+      })
+      .catch((error) => sendResponse({
+        ok: false,
+        error: error?.message || "Could not build projected subject totals.",
+      }));
+    return true;
   }
 
   if (message?.type === "ee-google-calendar-connect") {
