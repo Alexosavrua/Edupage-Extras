@@ -182,6 +182,17 @@
 
         <div class="setting-row">
           <div>
+            <h3>More Accurate Predicted Attendance</h3>
+            <p>Scan upcoming timetable changes and planned events to subtract cancelled lessons from the prediction. Slower to load.</p>
+          </div>
+          <label class="switch" for="AccuratePredictedAttendanceCheckbox">
+            <input type="checkbox" id="AccuratePredictedAttendanceCheckbox">
+            <span>Enabled</span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div>
             <h3>Attendance Percentages</h3>
             <p>Show the current halfyear absence percentage inside Edupage's attendance summary table.</p>
           </div>
@@ -202,6 +213,20 @@
               <input type="date" id="HalfyearStartDateInput">
             </label>
             <button class="secondary-button" id="ResetHalfyearStartDateButton" type="button">Use EduPage Default</button>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3>Second Halfyear End Date</h3>
+            <p>Override when the second halfyear ends for predicted attendance in grades. Leave this empty to use EduPage's default end date for the current school year.</p>
+          </div>
+          <div class="date-setting-controls">
+            <label class="date-control" for="HalfyearEndDateInput">
+              <span>Date</span>
+              <input type="date" id="HalfyearEndDateInput">
+            </label>
+            <button class="secondary-button" id="ResetHalfyearEndDateButton" type="button">Use EduPage Default</button>
           </div>
         </div>
 

@@ -6,10 +6,13 @@ const cleanUiToggle = document.getElementById("CleanUiCheckbox");
 const hideHelpTextToggle = document.getElementById("HideHelpTextCheckbox");
 const gradeBadgesToggle = document.getElementById("GradeBadgesCheckbox");
 const gradesAttendanceToggle = document.getElementById("GradesAttendanceCheckbox");
+const accuratePredictedAttendanceToggle = document.getElementById("AccuratePredictedAttendanceCheckbox");
 const gradesAttendanceDebugToggle = document.getElementById("GradesAttendanceDebugCheckbox");
 const attendancePercentagesToggle = document.getElementById("AttendancePercentagesCheckbox");
 const halfyearStartInput = document.getElementById("HalfyearStartDateInput");
 const resetHalfyearStartButton = document.getElementById("ResetHalfyearStartDateButton");
+const halfyearEndInput = document.getElementById("HalfyearEndDateInput");
+const resetHalfyearEndButton = document.getElementById("ResetHalfyearEndDateButton");
 const experimentalSettingsButton = document.getElementById("ExperimentalSettingsButton");
 const customThemePanel = document.getElementById("CustomThemePanel");
 const customThemeImport = document.getElementById("CustomThemeImport");
@@ -52,9 +55,11 @@ const CLEAN_UI_KEY = "cleanUiEnabled";
 const HIDE_HELP_TEXT_KEY = "hideHelpTextEnabled";
 const GRADE_BADGES_KEY = "gradeBadgesEnabled";
 const GRADES_ATTENDANCE_KEY = "gradesAttendanceStatsEnabled";
+const ACCURATE_PREDICTED_ATTENDANCE_KEY = "eeAccuratePredictedAttendanceEnabled";
 const GRADES_ATTENDANCE_DEBUG_KEY = "gradesAttendanceDebugEnabled";
 const ATTENDANCE_PERCENTAGES_KEY = "attendancePercentagesEnabled";
 const HALFYEAR_START_KEY = "eeHalfyearStartDate";
+const HALFYEAR_END_KEY = "eeSecondHalfEndDate";
 const GRADES_ATTENDANCE_CACHE_KEY = "eeGradesAttendanceStatsCache";
 const UPDATE_STATUS_KEY = "eeUpdateStatus";
 const UPDATE_REMINDER_ENABLED_KEY = "eeUpdateReminderEnabled";
@@ -465,9 +470,11 @@ chrome.storage.local.get(
 		HIDE_HELP_TEXT_KEY,
 		GRADE_BADGES_KEY,
 		GRADES_ATTENDANCE_KEY,
+		ACCURATE_PREDICTED_ATTENDANCE_KEY,
 		GRADES_ATTENDANCE_DEBUG_KEY,
 		ATTENDANCE_PERCENTAGES_KEY,
 		HALFYEAR_START_KEY,
+		HALFYEAR_END_KEY,
 		UPDATE_STATUS_KEY,
 		UPDATE_REMINDER_ENABLED_KEY,
 		GOOGLE_CALENDAR_ENABLED_KEY,
@@ -496,9 +503,11 @@ chrome.storage.local.get(
 		hideHelpTextToggle.checked = result[HIDE_HELP_TEXT_KEY] === true;
 		gradeBadgesToggle.checked = result[GRADE_BADGES_KEY] === true;
 		gradesAttendanceToggle.checked = result[GRADES_ATTENDANCE_KEY] !== false;
+		accuratePredictedAttendanceToggle.checked = result[ACCURATE_PREDICTED_ATTENDANCE_KEY] === true;
 		gradesAttendanceDebugToggle.checked = result[GRADES_ATTENDANCE_DEBUG_KEY] === true;
 		attendancePercentagesToggle.checked = result[ATTENDANCE_PERCENTAGES_KEY] !== false;
 		halfyearStartInput.value = normalizeDateInput(result[HALFYEAR_START_KEY]);
+		halfyearEndInput.value = normalizeDateInput(result[HALFYEAR_END_KEY]);
 		updateReminderToggle.checked = result[UPDATE_REMINDER_ENABLED_KEY] === true;
 		googleCalendarEnabledToggle.checked = result[GOOGLE_CALENDAR_ENABLED_KEY] === true;
 		googleCalendarRedirectUriInput.value = getGoogleCalendarRedirectUri();
@@ -610,6 +619,12 @@ gradesAttendanceToggle.addEventListener("change", () => {
 	chrome.storage.local.set({ [GRADES_ATTENDANCE_KEY]: gradesAttendanceToggle.checked });
 });
 
+accuratePredictedAttendanceToggle.addEventListener("change", () => {
+	chrome.storage.local.set({ [ACCURATE_PREDICTED_ATTENDANCE_KEY]: accuratePredictedAttendanceToggle.checked }, () => {
+		chrome.storage.local.remove(GRADES_ATTENDANCE_CACHE_KEY);
+	});
+});
+
 gradesAttendanceDebugToggle.addEventListener("change", () => {
 	chrome.storage.local.set({ [GRADES_ATTENDANCE_DEBUG_KEY]: gradesAttendanceDebugToggle.checked });
 });
@@ -632,6 +647,22 @@ halfyearStartInput.addEventListener("change", () => {
 resetHalfyearStartButton.addEventListener("click", () => {
 	halfyearStartInput.value = "";
 	chrome.storage.local.remove([HALFYEAR_START_KEY, GRADES_ATTENDANCE_CACHE_KEY]);
+});
+
+halfyearEndInput.addEventListener("change", () => {
+	const value = normalizeDateInput(halfyearEndInput.value);
+	if (value) {
+		chrome.storage.local.set({ [HALFYEAR_END_KEY]: value }, () => {
+			chrome.storage.local.remove(GRADES_ATTENDANCE_CACHE_KEY);
+		});
+		return;
+	}
+	chrome.storage.local.remove([HALFYEAR_END_KEY, GRADES_ATTENDANCE_CACHE_KEY]);
+});
+
+resetHalfyearEndButton.addEventListener("click", () => {
+	halfyearEndInput.value = "";
+	chrome.storage.local.remove([HALFYEAR_END_KEY, GRADES_ATTENDANCE_CACHE_KEY]);
 });
 
 updateReminderToggle.addEventListener("change", () => {

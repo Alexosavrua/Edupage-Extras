@@ -8,7 +8,7 @@ function loadBackgroundInternals() {
   const source = fs.readFileSync(scriptPath, "utf8");
   const instrumentedSource = source.replace(
     "chrome.runtime.onInstalled.addListener(() => {",
-    "globalThis.__eeBackgroundTest = { shouldEnableGoogleCalendarAlarm, buildGoogleCalendarConnectedStatus, normalizeGoogleCalendarSyncMode, normalizeGoogleCalendarHalfyearScope, normalizeGoogleCalendarName, parseDateOnly, toRfc3339, buildTemplateWeekMap, buildHalfyearDesiredEvents, buildSchoolEventDesiredEvents }; chrome.runtime.onInstalled.addListener(() => {",
+    "globalThis.__eeBackgroundTest = { shouldEnableGoogleCalendarAlarm, buildGoogleCalendarConnectedStatus, normalizeGoogleCalendarSyncMode, normalizeGoogleCalendarHalfyearScope, normalizeGoogleCalendarName, parseDateOnly, toRfc3339, buildTemplateWeekMap, buildHalfyearDesiredEvents, buildSchoolEventDesiredEvents, buildFutureSubjectLessonUnits }; chrome.runtime.onInstalled.addListener(() => {",
   );
 
   const noop = () => {};
@@ -250,4 +250,194 @@ runTest("school event desired events create managed all-day exam events", () => 
   assert.equal(desired[0].payload.end.date, "2026-05-21");
   assert.equal(desired[0].payload.extendedProperties.private.eeManaged, "1");
   assert.equal(desired[0].payload.extendedProperties.private.eeType, "school-event");
+});
+
+runTest("future subject lesson units use the timetable template instead of sparse observed history", () => {
+  const { buildFutureSubjectLessonUnits } = loadBackgroundInternals();
+
+  const liveWeek = {
+    weekLabel: "A",
+    config: { templateSampleWeeks: [] },
+    dayHeaders: [
+      { date: "2026-05-11" },
+      { date: "2026-05-12" },
+      { date: "2026-05-13" },
+      { date: "2026-05-14" },
+      { date: "2026-05-15" },
+    ],
+    lessons: [{
+      title: "dejepis",
+      date: "2026-05-12",
+      dayIndex: 1,
+      period: "3",
+      startTime: "10:00",
+      endTime: "10:45",
+      duration: 1,
+      group: "",
+      room: "",
+      teacher: "",
+      changed: false,
+      slotIndex: 0,
+      eventKey: "2026-05-12|3|0|dejepis|",
+    }],
+  };
+
+  const adjacentWeek = {
+    weekLabel: "A",
+    dayHeaders: [
+      { date: "2026-05-18" },
+      { date: "2026-05-19" },
+      { date: "2026-05-20" },
+      { date: "2026-05-21" },
+      { date: "2026-05-22" },
+    ],
+    lessons: [{
+      title: "dejepis",
+      date: "2026-05-19",
+      dayIndex: 1,
+      period: "3",
+      startTime: "10:00",
+      endTime: "10:45",
+      duration: 1,
+      group: "",
+      room: "",
+      teacher: "",
+      changed: false,
+      slotIndex: 0,
+      eventKey: "2026-05-19|3|0|dejepis|",
+    }],
+  };
+
+  liveWeek.config.templateSampleWeeks = [liveWeek, adjacentWeek];
+  const units = buildFutureSubjectLessonUnits(liveWeek, adjacentWeek, new Date(2026, 4, 11, 8, 0));
+  const dejepis = units.find((entry) => entry.title === "dejepis");
+
+  assert.ok(dejepis);
+  assert.ok(dejepis.remainingUnits >= 6);
+});
+
+runTest("future subject lesson units honor a custom second-half end date", () => {
+  const { buildFutureSubjectLessonUnits } = loadBackgroundInternals();
+
+  const liveWeek = {
+    weekLabel: "A",
+    config: {
+      templateSampleWeeks: [],
+      secondHalfEndOverride: "2026-06-16",
+    },
+    dayHeaders: [
+      { date: "2026-05-11" },
+      { date: "2026-05-12" },
+      { date: "2026-05-13" },
+      { date: "2026-05-14" },
+      { date: "2026-05-15" },
+    ],
+    lessons: [{
+      title: "dejepis",
+      date: "2026-05-12",
+      dayIndex: 1,
+      period: "3",
+      startTime: "10:00",
+      endTime: "10:45",
+      duration: 1,
+      group: "",
+      room: "",
+      teacher: "",
+      changed: false,
+      slotIndex: 0,
+      eventKey: "2026-05-12|3|0|dejepis|",
+    }],
+  };
+
+  const adjacentWeek = {
+    weekLabel: "A",
+    dayHeaders: [
+      { date: "2026-05-18" },
+      { date: "2026-05-19" },
+      { date: "2026-05-20" },
+      { date: "2026-05-21" },
+      { date: "2026-05-22" },
+    ],
+    lessons: [{
+      title: "dejepis",
+      date: "2026-05-19",
+      dayIndex: 1,
+      period: "3",
+      startTime: "10:00",
+      endTime: "10:45",
+      duration: 1,
+      group: "",
+      room: "",
+      teacher: "",
+      changed: false,
+      slotIndex: 0,
+      eventKey: "2026-05-19|3|0|dejepis|",
+    }],
+  };
+
+  liveWeek.config.templateSampleWeeks = [liveWeek, adjacentWeek];
+  const units = buildFutureSubjectLessonUnits(liveWeek, adjacentWeek, new Date(2026, 4, 11, 8, 0));
+  const dejepis = units.find((entry) => entry.title === "dejepis");
+
+  assert.ok(dejepis);
+  assert.equal(dejepis.remainingUnits, 6);
+});
+
+runTest("accurate future subject lesson units subtract sampled upcoming cancellations", () => {
+  const { buildFutureSubjectLessonUnits } = loadBackgroundInternals();
+
+  const liveWeek = {
+    weekLabel: "A",
+    config: {
+      templateSampleWeeks: [],
+      accuratePredictionEnabled: false,
+    },
+    dayHeaders: [
+      { date: "2026-05-11" },
+      { date: "2026-05-12" },
+      { date: "2026-05-13" },
+      { date: "2026-05-14" },
+      { date: "2026-05-15" },
+    ],
+    lessons: [{
+      title: "dejepis",
+      date: "2026-05-12",
+      dayIndex: 1,
+      period: "3",
+      startTime: "10:00",
+      endTime: "10:45",
+      duration: 1,
+      group: "",
+      room: "",
+      teacher: "",
+      changed: false,
+      slotIndex: 0,
+      eventKey: "2026-05-12|3|0|dejepis|",
+    }],
+  };
+
+  const cancelledAdjacentWeek = {
+    weekLabel: "A",
+    dayHeaders: [
+      { date: "2026-05-18" },
+      { date: "2026-05-19" },
+      { date: "2026-05-20" },
+      { date: "2026-05-21" },
+      { date: "2026-05-22" },
+    ],
+    lessons: [],
+  };
+
+  liveWeek.config.templateSampleWeeks = [liveWeek, cancelledAdjacentWeek];
+  const basicUnits = buildFutureSubjectLessonUnits(liveWeek, cancelledAdjacentWeek, new Date(2026, 4, 11, 8, 0));
+  const basicDejepis = basicUnits.find((entry) => entry.title === "dejepis");
+
+  liveWeek.config.accuratePredictionEnabled = true;
+  const accurateUnits = buildFutureSubjectLessonUnits(liveWeek, cancelledAdjacentWeek, new Date(2026, 4, 11, 8, 0));
+  const accurateDejepis = accurateUnits.find((entry) => entry.title === "dejepis");
+
+  assert.ok(basicDejepis);
+  assert.ok(accurateDejepis);
+  assert.equal(basicDejepis.remainingUnits, 8);
+  assert.equal(accurateDejepis.remainingUnits, 7);
 });
