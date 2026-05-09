@@ -8,7 +8,7 @@ function loadGradesEnhancerInternals() {
   const source = fs.readFileSync(scriptPath, "utf8");
   const instrumentedSource = source.replace(
     'if (document.readyState === "loading") {',
-    'globalThis.__eeTest = { parseAverage, gradeColor, gradePercentage, parseDateOnly, normalizeDateInput, parseSubjectMap, computeSubjectAbsences, summarizeAttendance, summarizeRenderableAttendance, finalizeSubjectStats, resolveAttendanceBreakdown, matchSubjectStats, parseGradeTitleSegments, buildGradeOriginalTitleHtml, buildGradeTitleOverrideKey, gradeTableRowCount }; if (document.readyState === "loading") {',
+    'globalThis.__eeTest = { parseAverage, gradeColor, gradePercentage, parseDateOnly, normalizeDateInput, parseSubjectMap, computeSubjectAbsences, summarizeAttendance, summarizeRenderableAttendance, finalizeSubjectStats, resolveAttendanceBreakdown, matchSubjectStats, parseGradeTitleSegments, buildGradeOriginalTitleHtml, buildGradeTitleOverrideKey, gradeTableRowCount, resolveCurrentHalfWindow, computeProjectedSubjectTotals, buildAttendancePlaceholderState, shouldRenderPredictedAttendance, computeSummaryColumnLayout }; if (document.readyState === "loading") {',
   );
 
   const context = {
@@ -65,6 +65,79 @@ runTest("date-only parsing rejects calendar overflow dates", () => {
   assert.equal(parseDateOnly("2026-13-01"), null);
   assert.equal(normalizeDateInput("2026-02-31"), "");
   assert.equal(normalizeDateInput("2026-02-28"), "2026-02-28");
+});
+
+runTest("attendance loading placeholders are visibly different from unavailable placeholders", () => {
+  const { buildAttendancePlaceholderState } = loadGradesEnhancerInternals();
+
+  const loading = buildAttendancePlaceholderState("loading");
+  const unavailable = buildAttendancePlaceholderState("unavailable");
+
+  assert.equal(loading.text, "...");
+  assert.equal(loading.empty, true);
+  assert.equal(loading.loading, true);
+  assert.match(loading.title, /loading/i);
+
+  assert.equal(unavailable.text, "-");
+  assert.equal(unavailable.empty, true);
+  assert.equal(unavailable.loading, false);
+});
+
+runTest("predicted attendance stays hidden while prediction data is still loading", () => {
+  const { shouldRenderPredictedAttendance } = loadGradesEnhancerInternals();
+
+  assert.equal(shouldRenderPredictedAttendance({
+    predictionState: "loading",
+    predictedPercent: 10,
+    predictedTotal: 20,
+  }), false);
+
+  assert.equal(shouldRenderPredictedAttendance({
+    predictionState: "ready",
+    predictedPercent: 10,
+    predictedTotal: 20,
+  }), true);
+});
+
+runTest("overall row layout keeps the notes corner while preserving the first two label columns", () => {
+  const { computeSummaryColumnLayout } = loadGradesEnhancerInternals();
+
+  const withNotes = computeSummaryColumnLayout(8);
+  assert.equal(withNotes.labelSpan, 2);
+  assert.equal(withNotes.trailingSpan, 1);
+
+  const manyGradeCells = computeSummaryColumnLayout(12);
+  assert.equal(manyGradeCells.labelSpan, 6);
+  assert.equal(manyGradeCells.trailingSpan, 1);
+});
+
+runTest("current half window keeps the projection end at June 30 in the second halfyear", () => {
+  const { resolveCurrentHalfWindow } = loadGradesEnhancerInternals();
+  const halfWindow = resolveCurrentHalfWindow({
+    currentDate: "2026-05-09",
+    yearTurnover: "2025-09-01",
+    selectedYear: 2025,
+    halves: { "1": "1. Polrok", "2": "2. Polrok" },
+    secondHalfOverride: "",
+  });
+
+  assert.equal(halfWindow.halfKey, "2");
+  assert.equal(halfWindow.halfEndDate, "2026-06-30");
+});
+
+runTest("current half window honors a custom second-half projection end date", () => {
+  const { resolveCurrentHalfWindow } = loadGradesEnhancerInternals();
+  const halfWindow = resolveCurrentHalfWindow({
+    currentDate: "2026-05-09",
+    yearTurnover: "2025-09-01",
+    selectedYear: 2025,
+    halves: { "1": "1. Polrok", "2": "2. Polrok" },
+    secondHalfOverride: "",
+    secondHalfEndOverride: "2026-06-19",
+  });
+
+  assert.equal(halfWindow.halfKey, "2");
+  assert.equal(halfWindow.halfEndDate, "2026-06-19");
 });
 
 runTest("subject absences can be assigned directly from attendance subject ids", () => {
@@ -222,6 +295,61 @@ runTest("attendance-only events stay unmatched instead of pretending to belong t
   assert.equal(renderedSummary.absent, 0);
   assert.equal(renderedSummary.total, 10);
   assert.equal(breakdown.unmatched.absent, 6);
+});
+
+runTest("projected subject totals extend the denominator while keeping absences fixed", () => {
+  const { computeProjectedSubjectTotals, parseSubjectMap, finalizeSubjectStats } = loadGradesEnhancerInternals();
+  const classbookData = {
+    dates: {
+      "2026-02-02": { plan: [{ type: "lesson", subjectid: "42", period: "1" }] },
+      "2026-02-04": { plan: [{ type: "lesson", subjectid: "42", period: "2" }] },
+      "2026-02-09": { plan: [{ type: "lesson", subjectid: "42", period: "1" }] },
+      "2026-02-11": { plan: [{ type: "lesson", subjectid: "42", period: "2" }] },
+    },
+  };
+  const subjectMap = parseSubjectMap({
+    42: { name: "dejepis", short: "DEJ" },
+  });
+  const halfWindow = {
+    startDate: "2026-02-01",
+    endDate: "2026-02-11",
+    currentDate: "2026-02-11",
+    halfEndDate: "2026-02-18",
+    nowMinutes: 24 * 60,
+  };
+  const absentEntries = new Map([[
+    "id:42",
+    {
+      key: "id:42",
+      rawId: "42",
+      displayName: "dejepis",
+      shortName: "DEJ",
+      absent: 1,
+      total: 0,
+      aliases: new Set(["dejepis", "dej"]),
+    },
+  ]]);
+  const totalEntries = new Map([[
+    "id:42",
+    {
+      key: "id:42",
+      rawId: "42",
+      displayName: "dejepis",
+      shortName: "DEJ",
+      absent: 0,
+      total: 4,
+      aliases: new Set(["dejepis", "dej"]),
+    },
+  ]]);
+
+  const projectedTotals = computeProjectedSubjectTotals(classbookData, subjectMap, halfWindow);
+  const subjects = finalizeSubjectStats(absentEntries, totalEntries, projectedTotals);
+  const dejepis = subjects.find((entry) => entry.rawId === "42");
+
+  assert.ok(dejepis);
+  assert.equal(dejepis.total, 4);
+  assert.equal(dejepis.predictedTotal, 6);
+  assert.equal(Number(dejepis.predictedPercent.toFixed(2)), 16.67);
 });
 
 runTest("grade title overrides preserve the date details and replace only the title", () => {
