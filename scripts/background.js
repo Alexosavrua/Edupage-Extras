@@ -1730,6 +1730,50 @@ function buildFutureSubjectLessonUnits(liveWeek, adjacentWeek, now = new Date())
   return Array.from(totals.values()).sort((left, right) => normalizeKeyText(left.title).localeCompare(normalizeKeyText(right.title)));
 }
 
+function selectTimetableSampleWeeks(weeks, config = {}, today = new Date()) {
+  const series = Array.isArray(weeks) ? weeks.filter(Boolean) : [];
+  if (series.length === 0) {
+    return {
+      liveWeek: null,
+      adjacentWeek: null,
+      templateSampleWeeks: [],
+    };
+  }
+
+  let liveIndex = 0;
+  const firstWeekEnd = parseDateOnly(series[0]?.dayHeaders?.[series[0].dayHeaders.length - 1]?.date);
+  if (isWeekend(today) && firstWeekEnd && firstWeekEnd < today && series[1]) {
+    liveIndex = 1;
+  }
+
+  const liveWeek = series[liveIndex] || null;
+  const halfyearMode = config.syncMode === "halfyear";
+  const adjacentWeek = halfyearMode ? (series[liveIndex + 1] || null) : null;
+  const requestedExtraSampleWeeks = Number.parseInt(config.extraHalfyearSampleWeeks, 10);
+  const extraHalfyearSampleWeeks = Math.max(
+    0,
+    Number.isFinite(requestedExtraSampleWeeks) ? requestedExtraSampleWeeks : 0,
+  );
+
+  const templateSampleWeeks = [];
+  if (liveWeek) templateSampleWeeks.push(liveWeek);
+  if (adjacentWeek) templateSampleWeeks.push(adjacentWeek);
+
+  if (halfyearMode) {
+    for (let index = 0; index < extraHalfyearSampleWeeks; index += 1) {
+      const extraWeek = series[liveIndex + 2 + index];
+      if (!extraWeek) break;
+      templateSampleWeeks.push(extraWeek);
+    }
+  }
+
+  return {
+    liveWeek,
+    adjacentWeek,
+    templateSampleWeeks,
+  };
+}
+
 function createTab(url) {
   return new Promise((resolve, reject) => {
     chrome.tabs.create({ url, active: false }, (tab) => {
@@ -1821,6 +1865,17 @@ async function extractWeekFromHiddenTab(tabId, steps = 0) {
   return response.data;
 }
 
+async function extractWeekSeriesFromHiddenTab(tabId, count = 1) {
+  const response = await sendTabMessageRetry(tabId, {
+    type: "ee-extract-timetable-week-series",
+    count,
+  });
+  if (!response?.ok || !Array.isArray(response.data?.weeks)) {
+    throw new Error(response?.error || "EduPage timetable series extraction failed.");
+  }
+  return response.data.weeks;
+}
+
 async function extractSchoolEventsFromHiddenTab(tabId, types = {}) {
   const response = await sendTabMessageRetry(tabId, {
     type: "ee-extract-school-events",
@@ -1891,36 +1946,25 @@ async function collectLiveEdupageWeek(config) {
   const tab = await createTab(`${config.lastEdupageOrigin}/dashboard/eb.php?mode=timetable`);
   try {
     await waitForTabComplete(tab.id);
-    let liveWeek = await extractWeekFromHiddenTab(tab.id, 0);
-    liveWeek.config = config;
     const today = new Date();
-    const liveWeekEnd = parseDateOnly(liveWeek.dayHeaders[liveWeek.dayHeaders.length - 1]?.date);
-    if (isWeekend(today) && liveWeekEnd && liveWeekEnd < today) {
-      liveWeek = await extractWeekFromHiddenTab(tab.id, 1);
-      liveWeek.config = config;
-    }
-
-    let adjacentWeek = null;
-    const templateSampleWeeks = [cloneWeekData(liveWeek)];
-    if (config.syncMode === "halfyear") {
-      adjacentWeek = await extractWeekFromHiddenTab(tab.id, 1);
-      if (adjacentWeek) {
-        adjacentWeek.config = config;
-        templateSampleWeeks.push(cloneWeekData(adjacentWeek));
-      }
-
-      const requestedExtraSampleWeeks = Number.parseInt(config.extraHalfyearSampleWeeks, 10);
-      const extraHalfyearSampleWeeks = Math.max(
-        0,
-        Number.isFinite(requestedExtraSampleWeeks) ? requestedExtraSampleWeeks : 2,
-      );
-      for (let index = 0; index < extraHalfyearSampleWeeks; index += 1) {
-        const extraWeek = await extractWeekFromHiddenTab(tab.id, 1);
-        if (!extraWeek) break;
-        extraWeek.config = config;
-        templateSampleWeeks.push(cloneWeekData(extraWeek));
-      }
-    }
+    const requestedExtraSampleWeeks = Number.parseInt(config.extraHalfyearSampleWeeks, 10);
+    const extraHalfyearSampleWeeks = Math.max(
+      0,
+      Number.isFinite(requestedExtraSampleWeeks) ? requestedExtraSampleWeeks : 0,
+    );
+    const requestedWeekCount = (
+      1
+      + (config.syncMode === "halfyear" ? 1 + extraHalfyearSampleWeeks : 0)
+      + (isWeekend(today) ? 1 : 0)
+    );
+    const extractedWeeks = await extractWeekSeriesFromHiddenTab(tab.id, requestedWeekCount);
+    const selectedWeeks = selectTimetableSampleWeeks(extractedWeeks, {
+      syncMode: config.syncMode,
+      extraHalfyearSampleWeeks,
+    }, today);
+    const liveWeek = cloneWeekData(selectedWeeks.liveWeek, config);
+    const adjacentWeek = cloneWeekData(selectedWeeks.adjacentWeek, config);
+    const templateSampleWeeks = selectedWeeks.templateSampleWeeks.map((week) => cloneWeekData(week));
 
     await writeTimetableSyncCache(config.lastEdupageOrigin, {
       liveWeek,
