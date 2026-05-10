@@ -8,7 +8,7 @@ function loadBackgroundInternals() {
   const source = fs.readFileSync(scriptPath, "utf8");
   const instrumentedSource = source.replace(
     "chrome.runtime.onInstalled.addListener(() => {",
-    "globalThis.__eeBackgroundTest = { shouldEnableGoogleCalendarAlarm, buildGoogleCalendarConnectedStatus, normalizeGoogleCalendarSyncMode, normalizeGoogleCalendarHalfyearScope, normalizeGoogleCalendarName, parseDateOnly, toRfc3339, buildTemplateWeekMap, buildHalfyearDesiredEvents, buildSchoolEventDesiredEvents, buildFutureSubjectLessonUnits }; chrome.runtime.onInstalled.addListener(() => {",
+    "globalThis.__eeBackgroundTest = { shouldEnableGoogleCalendarAlarm, buildGoogleCalendarConnectedStatus, normalizeGoogleCalendarSyncMode, normalizeGoogleCalendarHalfyearScope, normalizeGoogleCalendarName, parseDateOnly, toRfc3339, buildTemplateWeekMap, buildHalfyearDesiredEvents, buildSchoolEventDesiredEvents, buildFutureSubjectLessonUnits, selectTimetableSampleWeeks }; chrome.runtime.onInstalled.addListener(() => {",
   );
 
   const noop = () => {};
@@ -440,4 +440,27 @@ runTest("accurate future subject lesson units subtract sampled upcoming cancella
   assert.ok(accurateDejepis);
   assert.equal(basicDejepis.remainingUnits, 8);
   assert.equal(accurateDejepis.remainingUnits, 7);
+});
+
+runTest("week sample selection shifts stale weekend weeks and keeps accurate extras", () => {
+  const { selectTimetableSampleWeeks } = loadBackgroundInternals();
+  const weeks = [
+    { weekLabel: "A", classLabel: "3.A", dayHeaders: [{ date: "2026-05-04" }, { date: "2026-05-08" }], lessons: [] },
+    { weekLabel: "B", classLabel: "3.A", dayHeaders: [{ date: "2026-05-11" }, { date: "2026-05-15" }], lessons: [] },
+    { weekLabel: "A", classLabel: "3.A", dayHeaders: [{ date: "2026-05-18" }, { date: "2026-05-22" }], lessons: [] },
+    { weekLabel: "B", classLabel: "3.A", dayHeaders: [{ date: "2026-05-25" }, { date: "2026-05-29" }], lessons: [] },
+    { weekLabel: "A", classLabel: "3.A", dayHeaders: [{ date: "2026-06-01" }, { date: "2026-06-05" }], lessons: [] },
+  ];
+
+  const selected = selectTimetableSampleWeeks(weeks, {
+    syncMode: "halfyear",
+    extraHalfyearSampleWeeks: 2,
+  }, new Date(2026, 4, 10));
+
+  assert.equal(selected.liveWeek.dayHeaders[0].date, "2026-05-11");
+  assert.equal(selected.adjacentWeek.dayHeaders[0].date, "2026-05-18");
+  assert.deepEqual(
+    Array.from(selected.templateSampleWeeks, (week) => week.dayHeaders[0].date),
+    ["2026-05-11", "2026-05-18", "2026-05-25", "2026-06-01"],
+  );
 });

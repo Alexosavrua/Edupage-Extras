@@ -359,6 +359,15 @@
     throw new Error(`Timetable did not change after clicking ${targetText}.`);
   }
 
+  function serializeParsedWeek(parsed) {
+    return {
+      weekLabel: parsed.weekLabel,
+      classLabel: parsed.classLabel,
+      dayHeaders: parsed.dayHeaders,
+      lessons: parsed.lessons,
+    };
+  }
+
   chrome.runtime.sendMessage({
     type: "ee-google-calendar-page-context",
     origin: window.location.origin,
@@ -368,38 +377,58 @@
   });
 
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message?.type !== "ee-extract-timetable-week") return false;
+    if (message?.type !== "ee-extract-timetable-week" && message?.type !== "ee-extract-timetable-week-series") return false;
 
     (async () => {
       if (!window.location.href.includes("mode=timetable")) {
         throw new Error("The hidden tab is not on the EduPage timetable page.");
       }
 
-      await waitForTimetableReady();
+      let parsed = await waitForTimetableReady();
+      if (!parsed) {
+        throw new Error("EduPage timetable did not finish rendering.");
+      }
+
+      if (message?.type === "ee-extract-timetable-week-series") {
+        const requestedCount = Number.parseInt(message.count, 10);
+        const count = Math.max(1, Number.isFinite(requestedCount) ? requestedCount : 1);
+        const weeks = [serializeParsedWeek(parsed)];
+        lastResolvedWeekStart = parseDateOnly(parsed.dayHeaders?.[0]?.date);
+
+        for (let index = 1; index < count; index += 1) {
+          await clickWeekNavigator(1);
+          parsed = await waitForTimetableReady();
+          if (!parsed) {
+            throw new Error("EduPage timetable did not finish rendering.");
+          }
+          lastResolvedWeekStart = parseDateOnly(parsed.dayHeaders?.[0]?.date);
+          weeks.push(serializeParsedWeek(parsed));
+        }
+
+        sendResponse({
+          ok: true,
+          data: { weeks },
+        });
+        return;
+      }
+
       const steps = Number.parseInt(message.steps, 10) || 0;
       if (steps !== 0) {
         const direction = steps > 0 ? 1 : -1;
         for (let index = 0; index < Math.abs(steps); index += 1) {
           await clickWeekNavigator(direction);
-          const navigatedWeek = await waitForTimetableReady();
-          lastResolvedWeekStart = parseDateOnly(navigatedWeek?.dayHeaders?.[0]?.date);
+          parsed = await waitForTimetableReady();
+          if (!parsed) {
+            throw new Error("EduPage timetable did not finish rendering.");
+          }
+          lastResolvedWeekStart = parseDateOnly(parsed?.dayHeaders?.[0]?.date);
         }
-      }
-
-      const parsed = await waitForTimetableReady();
-      if (!parsed) {
-        throw new Error("EduPage timetable did not finish rendering.");
       }
       lastResolvedWeekStart = parseDateOnly(parsed.dayHeaders?.[0]?.date);
 
       sendResponse({
         ok: true,
-        data: {
-          weekLabel: parsed.weekLabel,
-          classLabel: parsed.classLabel,
-          dayHeaders: parsed.dayHeaders,
-          lessons: parsed.lessons,
-        },
+        data: serializeParsedWeek(parsed),
       });
     })().catch((error) => {
       sendResponse({
