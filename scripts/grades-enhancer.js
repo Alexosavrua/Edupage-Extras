@@ -24,6 +24,7 @@
   const HALFYEAR_END_KEY = "eeSecondHalfEndDate";
   const GRADES_ATTENDANCE_CACHE_KEY = "eeGradesAttendanceStatsCache";
   const GRADES_ATTENDANCE_CACHE_VERSION = 13;
+  const VIRTUAL_GRADES_KEY = "eeVirtualGrades";
   const CACHE_TTL_MS = 15 * 60 * 1000;
   const CLASSBOOK_RANGE_MAX_DAYS = 30;
   let gradeBadgesEnabled = false;
@@ -41,6 +42,8 @@
   let ignoreMutationsUntil = 0;
   let gradeTitleOverrides = {};
   let gradeTitleOverridesPromise = null;
+  let virtualGradesData = {};
+  let activeVirtualPopover = null;
 
   function parseAverage(text) {
     if (!text) return Number.NaN;
@@ -604,8 +607,591 @@
       html.ee-dark .ee-attendance-tone-danger {
         color: var(--ee-danger) !important;
       }
+
+      .ee-vg-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        margin-left: 5px;
+        background: #e8f0fe;
+        border: 1.5px solid #3e83b8;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        color: #1565c0;
+        vertical-align: middle;
+        padding: 0;
+        line-height: 1;
+        transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+        flex-shrink: 0;
+      }
+
+      .ee-vg-btn:hover {
+        background: #3e83b8;
+        color: #fff;
+        box-shadow: 0 1px 5px rgba(62, 131, 184, 0.45);
+      }
+
+      .ee-vg-btn.ee-vg-btn-active {
+        background: #3e83b8;
+        color: #fff;
+        box-shadow: 0 1px 4px rgba(62, 131, 184, 0.35);
+      }
+
+      .ee-vg-projected {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        margin-top: 3px;
+      }
+
+      .ee-vg-arrow {
+        font-size: 10px;
+        color: #888;
+        flex-shrink: 0;
+      }
+
+      .ee-vg-popover {
+        position: fixed;
+        z-index: 99999;
+        background: #fff;
+        border: 1px solid #d0d0d0;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        padding: 12px;
+        min-width: 210px;
+        max-width: 290px;
+      }
+
+      .ee-vg-popover-header {
+        font-size: 13px;
+        font-weight: bold;
+        color: #1565c0;
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .ee-vg-list {
+        margin-bottom: 8px;
+        min-height: 20px;
+      }
+
+      .ee-vg-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 2px 0;
+        font-size: 12px;
+        gap: 4px;
+      }
+
+      .ee-vg-item-label {
+        flex: 1;
+        color: #444;
+      }
+
+      .ee-vg-empty {
+        font-size: 11px;
+        color: #999;
+        font-style: italic;
+      }
+
+      .ee-vg-remove {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: #c62828;
+        font-size: 15px;
+        padding: 0 2px;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+
+      .ee-vg-remove:hover {
+        color: #e53935;
+      }
+
+      .ee-vg-projection-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        border-top: 1px solid #e8e8e8;
+        margin-bottom: 8px;
+      }
+
+      .ee-vg-proj-label {
+        font-size: 11px;
+        color: #666;
+        white-space: nowrap;
+      }
+
+      .ee-vg-form {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        padding-top: 8px;
+        border-top: 1px solid #e0e0e0;
+        flex-wrap: nowrap;
+      }
+
+      .ee-vg-input {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 4px 6px;
+        font-size: 12px;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .ee-vg-input:focus {
+        outline: none;
+        border-color: #3e83b8;
+      }
+
+      .ee-vg-weight-input {
+        flex: 0 0 42px;
+      }
+
+      .ee-vg-add-btn {
+        background: #1565c0;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 12px;
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .ee-vg-add-btn:hover {
+        background: #1976d2;
+      }
+
+      html.ee-dark .ee-vg-btn {
+        background: rgba(62, 131, 184, 0.15);
+        border-color: var(--ee-accent);
+        color: var(--ee-accent);
+      }
+
+      html.ee-dark .ee-vg-btn:hover,
+      html.ee-dark .ee-vg-btn.ee-vg-btn-active {
+        background: var(--ee-accent);
+        color: #fff;
+      }
+
+      html.ee-dark .ee-vg-arrow {
+        color: var(--ee-text-muted);
+      }
+
+      html.ee-dark .ee-vg-popover {
+        background: var(--ee-bg-elevated);
+        border-color: var(--ee-border);
+        color: var(--ee-text-main);
+      }
+
+      html.ee-dark .ee-vg-popover-header {
+        color: var(--ee-accent);
+        border-bottom-color: var(--ee-border);
+      }
+
+      html.ee-dark .ee-vg-item-label {
+        color: var(--ee-text-main);
+      }
+
+      html.ee-dark .ee-vg-empty {
+        color: var(--ee-text-muted);
+      }
+
+      html.ee-dark .ee-vg-remove {
+        color: var(--ee-danger);
+      }
+
+      html.ee-dark .ee-vg-projection-row {
+        border-top-color: var(--ee-border);
+      }
+
+      html.ee-dark .ee-vg-proj-label {
+        color: var(--ee-text-muted);
+      }
+
+      html.ee-dark .ee-vg-form {
+        border-top-color: var(--ee-border);
+      }
+
+      html.ee-dark .ee-vg-input {
+        background: var(--ee-bg-base);
+        border-color: var(--ee-border);
+        color: var(--ee-text-main);
+      }
+
+      html.ee-dark .ee-vg-add-btn {
+        background: var(--ee-accent);
+      }
+
+      .ee-vg-reset-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        margin-left: 5px;
+        background: #fce8e8;
+        border: 1.5px solid #e57373;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        color: #c62828;
+        vertical-align: middle;
+        padding: 0;
+        line-height: 1;
+        transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+      }
+
+      .ee-vg-reset-btn:hover {
+        background: #c62828;
+        color: #fff;
+        border-color: #c62828;
+        box-shadow: 0 1px 5px rgba(198, 40, 40, 0.45);
+      }
+
+      .ee-vg-reset-btn:disabled {
+        background: transparent;
+        border-color: #ddd;
+        color: #ccc;
+        cursor: default;
+        pointer-events: none;
+        box-shadow: none;
+      }
+
+      html.ee-dark .ee-vg-reset-btn {
+        background: rgba(198, 40, 40, 0.15);
+        border-color: var(--ee-danger);
+        color: var(--ee-danger);
+      }
+
+      html.ee-dark .ee-vg-reset-btn:hover {
+        background: var(--ee-danger);
+        color: #fff;
+      }
+
+      html.ee-dark .ee-vg-reset-btn:disabled {
+        background: transparent;
+        border-color: var(--ee-border);
+        color: var(--ee-text-muted);
+      }
     `;
     (document.head || document.documentElement).appendChild(style);
+  }
+
+  // ============================================================
+  // Virtual Grade Calculator
+  // ============================================================
+
+  function parseGradeWeight(tooltipHtml) {
+    const match = /v[aá][hž][aá]\s*:\s*(\d+(?:[.,]\d+)?)/i.exec(String(tooltipHtml || ""));
+    return match ? Math.max(0.1, Number.parseFloat(match[1].replace(",", "."))) : 1;
+  }
+
+  function readSubjectGrades(row) {
+    const grades = [];
+    row.querySelectorAll("span.tips").forEach((tip) => {
+      if (!tip.querySelector(".znZnamka")) return;
+      const valueText = normalizeWhitespace(tip.querySelector(".znZnamka").textContent || "");
+      const value = parseAverage(valueText);
+      if (!Number.isFinite(value) || value <= 0) return;
+      const tooltipHtml = tip.getAttribute("data-ee-original-grade-title") || tip.getAttribute("original-title") || "";
+      grades.push({ value, weight: parseGradeWeight(tooltipHtml) });
+    });
+    return grades;
+  }
+
+  function calcWeightedAvg(grades) {
+    if (!grades.length) return Number.NaN;
+    const totalWeight = grades.reduce((s, g) => s + g.weight, 0);
+    if (totalWeight === 0) return Number.NaN;
+    return grades.reduce((s, g) => s + g.value * g.weight, 0) / totalWeight;
+  }
+
+  function getProjectedAverage(row, predmetid, originalAvg) {
+    const virtual = virtualGradesData[predmetid];
+    if (!virtual || virtual.length === 0) return null;
+    const existing = readSubjectGrades(row);
+    if (existing.length > 0) {
+      return calcWeightedAvg([...existing, ...virtual]);
+    }
+    const virtualWeight = virtual.reduce((s, g) => s + g.weight, 0);
+    return calcWeightedAvg([{ value: originalAvg, weight: virtualWeight }, ...virtual]);
+  }
+
+  function saveVirtualGrades() {
+    return storageSet({ [VIRTUAL_GRADES_KEY]: virtualGradesData });
+  }
+
+  function closeVirtualPopover() {
+    if (activeVirtualPopover) {
+      activeVirtualPopover.remove();
+      activeVirtualPopover = null;
+    }
+  }
+
+  function handleDocumentClickForPopover(event) {
+    if (!activeVirtualPopover) return;
+    if (activeVirtualPopover.contains(event.target)) return;
+    if (event.target instanceof Element && event.target.closest(".ee-vg-btn")) return;
+    closeVirtualPopover();
+  }
+
+  function updateVirtualDisplay(row, predmetid, scale, originalAvg) {
+    const priemerCell = row.querySelector(".znPriemerCell");
+    if (!priemerCell) return;
+
+    priemerCell.querySelector(".ee-vg-projected")?.remove();
+
+    const btn = priemerCell.querySelector(".ee-vg-btn");
+    const hasVirtual = (virtualGradesData[predmetid] || []).length > 0;
+    if (btn) btn.classList.toggle("ee-vg-btn-active", hasVirtual);
+
+    if (!hasVirtual) return;
+
+    const projected = getProjectedAverage(row, predmetid, originalAvg);
+    if (!Number.isFinite(projected)) return;
+
+    const indicator = document.createElement("div");
+    indicator.className = "ee-vg-projected";
+
+    const arrow = document.createElement("span");
+    arrow.className = "ee-vg-arrow";
+    arrow.textContent = "→";
+
+    const projValue = document.createElement("span");
+    projValue.className = "ee-avg-value";
+    projValue.style.setProperty("--avg-color", gradeColor(projected, scale));
+    projValue.textContent = formatAverageDisplay(projected, scale);
+
+    indicator.appendChild(arrow);
+    indicator.appendChild(projValue);
+    priemerCell.appendChild(indicator);
+  }
+
+  function buildPopoverContent(popover, row, predmetid, scale, originalAvg) {
+    popover.innerHTML = "";
+
+    const header = document.createElement("div");
+    header.className = "ee-vg-popover-header";
+    header.textContent = "Virtual Grades";
+    popover.appendChild(header);
+
+    const virtual = virtualGradesData[predmetid] || [];
+
+    const list = document.createElement("div");
+    list.className = "ee-vg-list";
+
+    if (virtual.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "ee-vg-empty";
+      empty.textContent = "No virtual grades added yet.";
+      list.appendChild(empty);
+    } else {
+      virtual.forEach((grade, i) => {
+        const item = document.createElement("div");
+        item.className = "ee-vg-item";
+
+        const lbl = document.createElement("span");
+        lbl.className = "ee-vg-item-label";
+        lbl.textContent = `${formatAverageDisplay(grade.value, scale)} (weight: ${grade.weight})`;
+
+        const removeBtn = document.createElement("button");
+        removeBtn.className = "ee-vg-remove";
+        removeBtn.textContent = "×";
+        removeBtn.title = "Remove";
+        removeBtn.addEventListener("click", async () => {
+          const arr = virtualGradesData[predmetid] || [];
+          arr.splice(i, 1);
+          if (arr.length === 0) delete virtualGradesData[predmetid];
+          await saveVirtualGrades();
+          updateVirtualDisplay(row, predmetid, scale, originalAvg);
+          updateResetButtonState(row.closest("table.znamkyTable"));
+          buildPopoverContent(popover, row, predmetid, scale, originalAvg);
+        });
+
+        item.appendChild(lbl);
+        item.appendChild(removeBtn);
+        list.appendChild(item);
+      });
+    }
+
+    popover.appendChild(list);
+
+    if (virtual.length > 0) {
+      const projected = getProjectedAverage(row, predmetid, originalAvg);
+      if (Number.isFinite(projected)) {
+        const projRow = document.createElement("div");
+        projRow.className = "ee-vg-projection-row";
+
+        const projLabel = document.createElement("span");
+        projLabel.className = "ee-vg-proj-label";
+        projLabel.textContent = "Projected:";
+
+        const projBadge = createBadgeElement(projected, formatAverageDisplay(projected, scale), { scale });
+
+        projRow.appendChild(projLabel);
+        if (projBadge) projRow.appendChild(projBadge);
+        popover.appendChild(projRow);
+      }
+    }
+
+    const form = document.createElement("div");
+    form.className = "ee-vg-form";
+
+    const gradeInput = document.createElement("input");
+    gradeInput.type = "number";
+    gradeInput.step = "0.1";
+    gradeInput.min = scale === "percent" ? "0" : "1";
+    gradeInput.max = scale === "percent" ? "100" : "5";
+    gradeInput.placeholder = scale === "percent" ? "Grade %" : "Grade (1–5)";
+    gradeInput.className = "ee-vg-input";
+
+    const weightInput = document.createElement("input");
+    weightInput.type = "number";
+    weightInput.step = "0.1";
+    weightInput.min = "0.1";
+    weightInput.value = "1";
+    weightInput.placeholder = "Wt";
+    weightInput.className = "ee-vg-input ee-vg-weight-input";
+
+    const addBtn = document.createElement("button");
+    addBtn.className = "ee-vg-add-btn";
+    addBtn.textContent = "Add";
+    addBtn.addEventListener("click", async () => {
+      const value = Number.parseFloat(gradeInput.value);
+      const weight = Math.max(0.1, Number.parseFloat(weightInput.value) || 1);
+      if (!Number.isFinite(value)) return;
+      if (!virtualGradesData[predmetid]) virtualGradesData[predmetid] = [];
+      virtualGradesData[predmetid].push({ value, weight });
+      await saveVirtualGrades();
+      gradeInput.value = "";
+      weightInput.value = "1";
+      updateVirtualDisplay(row, predmetid, scale, originalAvg);
+      updateResetButtonState(row.closest("table.znamkyTable"));
+      buildPopoverContent(popover, row, predmetid, scale, originalAvg);
+      gradeInput.focus();
+    });
+
+    gradeInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addBtn.click();
+    });
+
+    form.appendChild(gradeInput);
+    form.appendChild(weightInput);
+    form.appendChild(addBtn);
+    popover.appendChild(form);
+  }
+
+  function openVirtualPopover(triggerBtn, row, predmetid, scale, originalAvg) {
+    const popover = document.createElement("div");
+    popover.className = "ee-vg-popover";
+    popover.dataset.eeVgFor = predmetid;
+    buildPopoverContent(popover, row, predmetid, scale, originalAvg);
+    document.body.appendChild(popover);
+    activeVirtualPopover = popover;
+
+    const btnRect = triggerBtn.getBoundingClientRect();
+    const popWidth = popover.offsetWidth || 210;
+    let left = btnRect.left;
+    const top = btnRect.bottom + 4;
+    if (left + popWidth > window.innerWidth - 8) {
+      left = Math.max(4, window.innerWidth - popWidth - 8);
+    }
+    popover.style.top = `${top}px`;
+    popover.style.left = `${left}px`;
+
+    popover.querySelector(".ee-vg-input")?.focus();
+  }
+
+  function updateResetButtonState(table) {
+    const btn = table?.querySelector("thead .ee-vg-reset-btn");
+    if (!btn) return;
+    btn.disabled = Object.keys(virtualGradesData).length === 0;
+  }
+
+  function ensureResetVirtualGradesButton(table) {
+    const headers = Array.from(table.querySelectorAll("thead th"));
+    const priemerHeader = headers.find((th) => th.textContent.trim().toLowerCase().startsWith("priemer"));
+    if (!priemerHeader) return;
+    if (priemerHeader.querySelector(".ee-vg-reset-btn")) {
+      updateResetButtonState(table);
+      return;
+    }
+
+    const btn = document.createElement("button");
+    btn.className = "ee-vg-reset-btn";
+    btn.textContent = "↺";
+    btn.title = "Reset all virtual grades";
+    btn.setAttribute("aria-label", "Reset all virtual grades");
+    btn.disabled = Object.keys(virtualGradesData).length === 0;
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      virtualGradesData = {};
+      await saveVirtualGrades();
+      closeVirtualPopover();
+      Array.from(table.querySelectorAll("tr.predmetRow")).forEach((row) => {
+        const predmetid = String(row.dataset?.predmetid || "").trim();
+        if (!predmetid) return;
+        const priemerCell = row.querySelector(".znPriemerCell");
+        if (!priemerCell) return;
+        const rawText = priemerCell.dataset.eeOriginalAverage || readAverageText(priemerCell);
+        const avg = parseAverage(rawText);
+        if (!Number.isFinite(avg)) return;
+        const scale = detectAverageScale(rawText, avg) || "grade";
+        updateVirtualDisplay(row, predmetid, scale, avg);
+      });
+      btn.disabled = true;
+    });
+
+    priemerHeader.appendChild(btn);
+  }
+
+  function ensureVirtualGradeButtons(table) {
+    Array.from(table.querySelectorAll("tr.predmetRow")).forEach((row) => {
+      const predmetid = String(row.dataset?.predmetid || "").trim();
+      if (!predmetid) return;
+
+      const priemerCell = row.querySelector(".znPriemerCell");
+      if (!priemerCell) return;
+
+      const rawText = priemerCell.dataset.eeOriginalAverage || readAverageText(priemerCell);
+      const avg = parseAverage(rawText);
+      if (!Number.isFinite(avg)) return;
+      const scale = detectAverageScale(rawText, avg) || "grade";
+
+      if (!priemerCell.querySelector(".ee-vg-btn")) {
+        const btn = document.createElement("button");
+        btn.className = "ee-vg-btn";
+        btn.textContent = "+";
+        btn.title = "Virtual grade calculator";
+        btn.setAttribute("aria-label", "Open virtual grade calculator");
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (activeVirtualPopover?.dataset.eeVgFor === predmetid) {
+            closeVirtualPopover();
+            return;
+          }
+          closeVirtualPopover();
+          openVirtualPopover(btn, row, predmetid, scale, avg);
+        });
+
+        priemerCell.appendChild(btn);
+      }
+
+      updateVirtualDisplay(row, predmetid, scale, avg);
+    });
+    ensureResetVirtualGradesButton(table);
   }
 
   function readAverageText(priemerCell) {
@@ -660,6 +1246,7 @@
       delete priemerCell.dataset.eeOriginalAverage;
     });
 
+    closeVirtualPopover();
     table.querySelector("tr.ee-overall-row")?.remove();
     table.removeAttribute(AVERAGE_RENDER_SIGNATURE_ATTR);
   }
@@ -3362,6 +3949,7 @@
         );
         table.setAttribute(AVERAGE_RENDER_SIGNATURE_ATTR, averageSignature);
       }
+      ensureVirtualGradeButtons(table);
     } else {
       restoreAverageCells(table);
     }
@@ -3542,6 +4130,7 @@
       GRADES_ATTENDANCE_DEBUG_KEY,
       HALFYEAR_START_KEY,
       HALFYEAR_END_KEY,
+      VIRTUAL_GRADES_KEY,
     ], (result) => {
       gradeBadgesEnabled = result[GRADE_BADGES_KEY] === true;
       gradeTitleOverrides = result[GRADE_TITLE_OVERRIDES_KEY] && typeof result[GRADE_TITLE_OVERRIDES_KEY] === "object"
@@ -3552,6 +4141,9 @@
       gradesAttendanceDebugEnabled = result[GRADES_ATTENDANCE_DEBUG_KEY] === true;
       halfyearStartOverride = normalizeDateInput(result[HALFYEAR_START_KEY]);
       halfyearEndOverride = normalizeDateInput(result[HALFYEAR_END_KEY]);
+      virtualGradesData = result[VIRTUAL_GRADES_KEY] && typeof result[VIRTUAL_GRADES_KEY] === "object"
+        ? result[VIRTUAL_GRADES_KEY]
+        : {};
       enhanceGradesTable();
     });
 
@@ -3645,6 +4237,7 @@
     injectStyles();
     loadGradeTitleOverrides();
     document.addEventListener("dblclick", handleGradeTitleEdit, true);
+    document.addEventListener("click", handleDocumentClickForPopover, true);
     window.addEventListener("scroll", scheduleHeaderSync, { passive: true });
     window.addEventListener("resize", scheduleHeaderSync, { passive: true });
     initStorage();
