@@ -638,3 +638,57 @@ runTest("readExistingGradeMass falls back to per-cell tooltips when no sub-rows 
   assert.equal(info.totalWeight, 5, "2 + 2 + 1 (default) = 5");
   assert.equal(info.weightsParsed, 2, "two cells exposed an explicit weight in their tooltip");
 });
+
+// Regression for the real EduPage DOM: the category sub-rows ("udalostRow")
+// share the parent's data-predmetid. The old walker treated any sibling with
+// data-predmetid as the next subject and broke out immediately, so weights
+// were silently lost and the projection fell back to a plain cell count.
+runTest("readExistingGradeMass walks udalostRow siblings that share the parent predmetid", () => {
+  const { readExistingGradeMass } = loadGradesEnhancerInternals();
+
+  const predmetid = "34780";
+  const ustna = makeMockSubRow({
+    labelText: "Ústna odpoveď:\nVáha udalosti: 2×",
+    gradeValues: ["1-", "2", "2", "3"],
+  });
+  ustna.dataset = { predmetid };
+  ustna.classList = { contains: (cls) => cls === "udalostRow" };
+  const pisomna = makeMockSubRow({
+    labelText: "Písomná odpoveď:",
+    gradeValues: ["1", "1", "2"],
+  });
+  pisomna.dataset = { predmetid };
+  pisomna.classList = { contains: (cls) => cls === "udalostRow" };
+  const predmetRow = makeMockPredmetRow([ustna, pisomna]);
+  predmetRow.dataset = { predmetid };
+
+  const info = readExistingGradeMass(predmetRow);
+  assert.equal(info.cellCount, 7, "4 ústna + 3 písomná");
+  assert.equal(info.totalWeight, 11, "4 × weight 2 + 3 × weight 1");
+  assert.equal(info.weightsParsed, 4, "all four ústna cells inherit the explicit sub-row weight");
+});
+
+// And confirm the walker still bails when the NEXT sibling really is a
+// different subject (different data-predmetid), so we don't accidentally bleed
+// into the row below.
+runTest("readExistingGradeMass stops at a sibling whose data-predmetid differs", () => {
+  const { readExistingGradeMass } = loadGradesEnhancerInternals();
+
+  const ustna = makeMockSubRow({
+    labelText: "Ústna odpoveď:\nVáha udalosti: 2×",
+    gradeValues: ["2", "3"],
+  });
+  ustna.dataset = { predmetid: "100" };
+  ustna.classList = { contains: (cls) => cls === "udalostRow" };
+  const nextSubject = makeMockSubRow({
+    labelText: "should not be counted",
+    gradeValues: ["5", "5", "5", "5"],
+  });
+  nextSubject.dataset = { predmetid: "200" };
+  const predmetRow = makeMockPredmetRow([ustna, nextSubject]);
+  predmetRow.dataset = { predmetid: "100" };
+
+  const info = readExistingGradeMass(predmetRow);
+  assert.equal(info.cellCount, 2, "only the ústna sub-row of the current subject is counted");
+  assert.equal(info.totalWeight, 4, "2 cells × weight 2");
+});
