@@ -1066,11 +1066,20 @@
     // We collect both so the mass calculation works regardless of layout.
     const subRows = [];
 
+    // EduPage stamps the category sub-rows (class "udalostRow") with the SAME
+    // data-predmetid as their parent subject row, so we can only treat a
+    // sibling as the next subject when (a) it carries the predmetRow class, or
+    // (b) its data-predmetid actually differs from ours. The old check broke
+    // out on any sibling that had data-predmetid at all, which meant sub-rows
+    // were never collected and the per-category "Váha udalosti: 2×" labels
+    // were invisible to the weight parser.
+    const startingPredmetid = predmetRow.dataset ? predmetRow.dataset.predmetid || "" : "";
     let cursor = predmetRow.nextElementSibling;
     while (cursor) {
       const classes = cursor.classList;
+      const cursorPredmetid = cursor.dataset ? cursor.dataset.predmetid || "" : "";
       const isNextSubject = (classes && typeof classes.contains === "function" && classes.contains("predmetRow"))
-        || (cursor.dataset && cursor.dataset.predmetid);
+        || (cursorPredmetid && cursorPredmetid !== startingPredmetid);
       if (isNextSubject) break;
       if (cursor.tagName === "TR") subRows.push(cursor);
       cursor = cursor.nextElementSibling;
