@@ -11,6 +11,7 @@ or any school using Edupage.**
 ### Load unpacked in Chrome or Edge
 
 1. Download or clone this repository. (Do not forget to extract it if downloading directly)
+**Updating with git pull WILL NOT WORK when downloading directly!**
 2. Open `chrome://extensions` in any Chromium browser.
 3. Enable **Developer mode**.
 4. Click **Load unpacked**.
