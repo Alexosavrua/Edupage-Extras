@@ -375,6 +375,20 @@
     void chrome.runtime.lastError;
   });
 
+  // When the user is already on the timetable page, proactively push the current
+  // week's data into the background cache. If grades opens shortly after, the
+  // cache is warm and no hidden background tab needs to be created.
+  if (window.location.href.includes("mode=timetable")) {
+    waitForTimetableReady().then((parsed) => {
+      if (!parsed || !parsed.lessons.length) return;
+      chrome.runtime.sendMessage({
+        type: "ee-timetable-page-preload",
+        origin: window.location.origin,
+        data: serializeParsedWeek(parsed),
+      }, () => { void chrome.runtime.lastError; });
+    }).catch(() => {});
+  }
+
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message?.type !== "ee-extract-timetable-week" && message?.type !== "ee-extract-timetable-week-series") return false;
 

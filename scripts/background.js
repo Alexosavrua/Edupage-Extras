@@ -2263,6 +2263,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 
+  if (message?.type === "ee-timetable-page-preload") {
+    const origin = typeof message.origin === "string" && message.origin.startsWith("https://")
+      ? message.origin
+      : "";
+    const weekData = message.data && typeof message.data === "object" ? message.data : null;
+    if (origin && weekData) {
+      const weekStart = resolveWeekStartDateString(weekData);
+      // Only write if the existing cache is missing or stale — don't downgrade a
+      // full multi-week cache (with a proper adjacentWeek) to a single-week one.
+      readFreshTimetableBundle(origin, weekStart, true).then((existing) => {
+        if (existing?.liveWeek) return;
+        return writeTimetableSyncCache(origin, {
+          liveWeek: weekData,
+          adjacentWeek: weekData,
+          sampleWeeks: [],
+        });
+      }).catch(() => {});
+    }
+    return false;
+  }
+
   if (message?.type === "ee-grades-projected-subject-totals") {
     const origin = typeof message.origin === "string" && message.origin.startsWith("https://")
       ? message.origin

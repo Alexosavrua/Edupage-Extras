@@ -68,6 +68,29 @@
         background-color: rgba(245, 124, 0, 0.3) !important;
         outline-color: rgba(245, 124, 0, 0.9) !important;
       }
+
+      /* Change-type badge injected into the row container above the text layers */
+      .ee-tt-change-badge {
+        position: absolute;
+        font-size: 9px;
+        font-weight: 600;
+        line-height: 1.3;
+        padding: 1px 3px;
+        border-radius: 2px;
+        color: #fff;
+        pointer-events: none;
+        white-space: nowrap;
+        z-index: 5;
+      }
+
+      .ee-tt-change-badge--substitution,
+      .ee-tt-change-badge--changed {
+        background: rgba(230, 81, 0, 0.9);
+      }
+
+      .ee-tt-change-badge--room-change {
+        background: rgba(13, 71, 161, 0.9);
+      }
     `;
 
     (document.head || document.documentElement).appendChild(style);
@@ -115,6 +138,46 @@
     return "changed"; // fallback — orange tint, same as substitution
   }
 
+  // ── Change-type badge ───────────────────────────────────────────────────────
+
+  const BADGE_LABELS = {
+    "substitution": "Supl.",
+    "room-change": "Presun",
+    "changed": "Zmena",
+  };
+
+  function addChangeBadge(cell, type) {
+    const parent = cell.parentElement;
+    if (!parent) return;
+
+    const cellLeft = parseFloat(cell.style.left) || 0;
+    const cellTop = parseFloat(cell.style.top) || 0;
+    const cellWidth = parseFloat(cell.style.width) || 0;
+    const cellHeight = parseFloat(cell.style.height) || 0;
+    if (!cellWidth || !cellHeight) return;
+
+    const posKey = `${cellLeft},${cellTop}`;
+
+    // Remove any stale badge at the same cell position (survives React re-renders)
+    parent.querySelectorAll(".ee-tt-change-badge").forEach((el) => {
+      if (el.dataset.eeTtPos === posKey) el.remove();
+    });
+
+    const badge = document.createElement("span");
+    badge.className = `ee-tt-change-badge ee-tt-change-badge--${type}`;
+    badge.textContent = BADGE_LABELS[type] || "Zmena";
+    badge.setAttribute("aria-hidden", "true");
+    badge.dataset.eeTtPos = posKey;
+
+    // Position in the bottom-right corner of the cell; translate(-100%,-100%)
+    // anchors the badge's bottom-right to that corner, then nudge 2px inward.
+    badge.style.left = `${cellLeft + cellWidth}px`;
+    badge.style.top = `${cellTop + cellHeight}px`;
+    badge.style.transform = "translate(-100%, -100%) translate(-2px, -2px)";
+
+    parent.appendChild(badge);
+  }
+
   // ── Core enhancement ────────────────────────────────────────────────────────
 
   function enhanceTimetable() {
@@ -140,6 +203,8 @@
       } else {
         cell.classList.add("ee-tt-changed");
       }
+
+      addChangeBadge(cell, type);
     });
   }
 
@@ -154,6 +219,7 @@
       el.removeAttribute(PROCESSED_ATTR);
     });
     document.querySelectorAll(`[${PROCESSED_ATTR}]`).forEach((el) => el.removeAttribute(PROCESSED_ATTR));
+    document.querySelectorAll(".ee-tt-change-badge").forEach((el) => el.remove());
   }
 
   // ── Observer ────────────────────────────────────────────────────────────────

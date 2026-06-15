@@ -23,7 +23,7 @@
   const HALFYEAR_START_KEY = "eeHalfyearStartDate";
   const HALFYEAR_END_KEY = "eeSecondHalfEndDate";
   const GRADES_ATTENDANCE_CACHE_KEY = "eeGradesAttendanceStatsCache";
-  const GRADES_ATTENDANCE_CACHE_VERSION = 13;
+  const GRADES_ATTENDANCE_CACHE_VERSION = 14;
   const VIRTUAL_GRADES_KEY = "eeVirtualGrades";
   const EXISTING_MASS_OVERRIDES_KEY = "eeVirtualGradeExistingMassOverrides";
   const CACHE_TTL_MS = 15 * 60 * 1000;
@@ -4155,8 +4155,6 @@
         return cached;
       }
 
-      const projectedTimetablePromise = fetchProjectedTimetableTotals();
-
       const [attendanceHtml, ttdayHtml] = await Promise.all([
         fetchText("/dashboard/eb.php?mode=attendance"),
         fetchText("/dashboard/eb.php?mode=ttday"),
@@ -4275,8 +4273,16 @@
         }
       }
 
-      const projectedTimetableSubjects = await projectedTimetablePromise;
-      subjects = applyProjectedTimetableTotals(subjects, projectedTimetableSubjects);
+      const classbookProjectedTotals = computeProjectedSubjectTotals(mergedClassbookData, subjectMap, halfWindow);
+      subjects = subjects.map((entry) => {
+        const remaining = numberValue(classbookProjectedTotals.get(entry.key));
+        const predictedTotal = entry.total + Math.max(0, remaining);
+        return {
+          ...entry,
+          predictedTotal,
+          predictedPercent: predictedTotal > 0 ? (entry.absent / predictedTotal) * 100 : Number.NaN,
+        };
+      });
 
       const attendanceBreakdown = resolveAttendanceBreakdown(
         renderedAttendanceSummary,
@@ -4313,6 +4319,7 @@
         subjects: summarizeSubjectsForDebug(subjects),
       };
 
+      const predictedAttendanceSummary = summarizePredictedAttendance(subjects, attendanceSummary);
       const baseStats = {
         version: GRADES_ATTENDANCE_CACHE_VERSION,
         fetchedAt: Date.now(),
@@ -4321,9 +4328,9 @@
         halfLabel: halfWindow.halfLabel,
         subjects,
         attendanceSummary,
-        predictedAttendanceSummary: null,
+        predictedAttendanceSummary,
         attendanceBreakdown,
-        predictionState: "loading",
+        predictionState: "ready",
         debug: baseDebug,
       };
 
@@ -4331,9 +4338,7 @@
       syncAttendanceDebug(baseDebug);
 
       attendanceStatsPromise = (async () => {
-        const projectedTimetableSubjects = await projectedTimetablePromise;
-        const predictedSubjects = applyProjectedTimetableTotals(subjects, projectedTimetableSubjects);
-        const predictedAttendanceSummary = summarizePredictedAttendance(predictedSubjects, attendanceSummary);
+        const predictedSubjects = subjects;
         const debug = {
           ...baseDebug,
           subjects: summarizeSubjectsForDebug(predictedSubjects),
