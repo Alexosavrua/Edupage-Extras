@@ -77,8 +77,11 @@
 
   "groupFeatures": { "message": "Features" },
   "timetableHighlights": { "message": "Timetable Change Highlights" },
-  "timetableHighlightsDesc": { "message": "Color-code substitutions (orange) and classroom changes (blue) on the main page timetable widget and full timetable view." },
+  "timetableHighlightsDesc": { "message": "Color-code substitutions (orange) and classroom changes (blue) on the main page schedule widget." },
   "toggleTimetableHighlights": { "message": "Toggle timetable change highlights" },
+  "timetableHighlightColorsLabel": { "message": "Highlight Colors" },
+  "timetableHighlightColorRoomChange": { "message": "Room Change Color" },
+  "timetableHighlightColorSubstitution": { "message": "Substitution Color" },
   "gradeBadges": { "message": "Grade Badges" },
   "gradeBadgesDesc": { "message": "Show average badges, bars, and the overall average row on the grades page." },
   "toggleGradeBadges": { "message": "Toggle grade badges" },

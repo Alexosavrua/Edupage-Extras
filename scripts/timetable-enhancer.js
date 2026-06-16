@@ -1,14 +1,17 @@
 /**
  * timetable-enhancer.js
  *
- * Highlights substitutions and classroom changes in the EduPage timetable
- * widget (the horizontal grid on the main page that uses .tt-cell elements).
+ * Colors the homepage "Rozvrh dnes" widget (ul.rozvrh > li.rozvrhItem) by the
+ * real type of change for each period — teacher substitution, room change,
+ * or a lesson moved in from another day/period — instead of EduPage's
+ * generic "hasChange" flag, which carries no type information.
  *
- * EduPage marks changed cells with a dashed inline border. We read the border
- * color to distinguish between change types:
- *   - Reddish/orange dashed border → substitution  (teacher replaced)
- *   - Bluish/cyan dashed border    → room change    (classroom changed)
- *   - Unknown dashed border        → generic change (orange fallback)
+ * The real type lives on a separate page ("Suplovanie", mode=substitution)
+ * that is fully client-rendered (a plain fetch() only returns the unrendered
+ * app shell), so a hidden background tab is used to read it. That tab is
+ * only opened when the homepage actually has at least one changed period,
+ * and the result is cached for the rest of the day — see background.js's
+ * "ee-substitution-snapshot" handler.
  */
 
 (function () {
@@ -18,10 +21,8 @@
 
   const STYLE_ID = "ee-timetable-enhancer-style";
   const HIGHLIGHTS_KEY = "timetableHighlightsEnabled";
-  const PROCESSED_ATTR = "data-ee-tt-type";
 
   let highlightsEnabled = true;
-  let scheduleTimer = null;
 
   // ── Styles ─────────────────────────────────────────────────────────────────
 
@@ -31,208 +32,356 @@
     const style = document.createElement("style");
     style.id = STYLE_ID;
     style.textContent = `
-      /* Substitution: teacher was replaced (orange) */
-      .tt-cell.ee-tt-substitution {
-        background-color: rgba(245, 124, 0, 0.25) !important;
-        outline: 2px dashed rgba(245, 124, 0, 0.7) !important;
-        outline-offset: -2px !important;
+      /* Homepage "Rozvrh dnes" widget (ul.rozvrh > li.rozvrhItem) — colored by
+         the real change type read from the Suplovanie page, not a guess.
+         Colors come from --ee-rozvrh-* custom properties (set by content.js
+         from user settings, defaulting to blue/orange).
+
+         Uses outline, not background-color/box-shadow: content.js's own
+         dark-mode CSS already paints an !important opaque background on
+         .rozvrhItemAlign and its child spans (the gold "today" period header,
+         etc.) at equal selector specificity, which hid most of a background
+         fill — only whatever gap was left between those children showed
+         through. outline renders entirely outside the border box, so it
+         can never be covered by a child's background regardless of theme. */
+      li.rozvrhItem.ee-rozvrh-substitution,
+      li.rozvrhItem.ee-rozvrh-changed {
+        outline: 3px solid var(--ee-rozvrh-substitution-color, #e65100) !important;
+        outline-offset: 0 !important;
       }
 
-      /* Room change: classroom was changed (blue) */
-      .tt-cell.ee-tt-room-change {
-        background-color: rgba(21, 101, 192, 0.25) !important;
-        outline: 2px dashed rgba(21, 101, 192, 0.7) !important;
-        outline-offset: -2px !important;
+      li.rozvrhItem.ee-rozvrh-room-change {
+        outline: 3px solid var(--ee-rozvrh-room-change-color, #1565c0) !important;
+        outline-offset: 0 !important;
       }
 
-      /* Generic change (when border color doesn't give a clear signal) */
-      .tt-cell.ee-tt-changed {
-        background-color: rgba(245, 124, 0, 0.25) !important;
-        outline: 2px dashed rgba(245, 124, 0, 0.7) !important;
-        outline-offset: -2px !important;
-      }
-
-      /* Dark mode / themes: stronger opacity so outlines stay visible on both
-         dark backgrounds and light-colored themes (e.g. pink). */
-      html.ee-dark .tt-cell.ee-tt-substitution {
-        background-color: rgba(245, 124, 0, 0.3) !important;
-        outline-color: rgba(245, 124, 0, 0.9) !important;
-      }
-
-      html.ee-dark .tt-cell.ee-tt-room-change {
-        background-color: rgba(21, 101, 192, 0.3) !important;
-        outline-color: rgba(21, 101, 192, 0.9) !important;
-      }
-
-      html.ee-dark .tt-cell.ee-tt-changed {
-        background-color: rgba(245, 124, 0, 0.3) !important;
-        outline-color: rgba(245, 124, 0, 0.9) !important;
-      }
-
-      /* Change-type badge injected into the row container above the text layers */
-      .ee-tt-change-badge {
-        position: absolute;
-        font-size: 9px;
-        font-weight: 600;
-        line-height: 1.3;
-        padding: 1px 3px;
-        border-radius: 2px;
-        color: #fff;
-        pointer-events: none;
-        white-space: nowrap;
-        z-index: 5;
-      }
-
-      .ee-tt-change-badge--substitution,
-      .ee-tt-change-badge--changed {
-        background: rgba(230, 81, 0, 0.9);
-      }
-
-      .ee-tt-change-badge--room-change {
-        background: rgba(13, 71, 161, 0.9);
+      li.rozvrhItem.ee-rozvrh-moved {
+        outline: 3px solid #8e24aa !important;
+        outline-offset: 0 !important;
       }
     `;
 
     (document.head || document.documentElement).appendChild(style);
   }
 
-  // ── Border-color classifier ─────────────────────────────────────────────────
+  // ── Homepage "Rozvrh dnes" widget ───────────────────────────────────────────
+  //
+  // The homepage (e.g. https://school.edupage.org/user/?) shows today's lessons
+  // as ul.rozvrh > li.rozvrhItem, flagging changed periods with a generic
+  // "hasChange" class only — EduPage gives no type info in this widget's DOM.
+  // The real type (teacher substitution vs. room change vs. moved-in lesson) is
+  // on the separate "Suplovanie" page (mode=substitution), structured as:
+  //   div.section.print-nobreak              (one per class, e.g. "II.SA")
+  //     div.header                           -> class label
+  //     div.rows > div.row.change|add|remove
+  //       div.period                         -> "2." or a range "1. - 2."
+  //                                              when consecutive periods share
+  //                                              the same change (or "(2.)" if
+  //                                              the period was removed)
+  //       div.info                           -> "ZAE - Učiteľ: FRA, Zameniť učebňu: (...) ➔ (...)"
+  // We match by period number + the homepage item's own .trieda label (which
+  // equals — or, for shared elective groups, comma-lists — the section
+  // heading), then classify the info text:
+  //   "Suplovanie:"       -> substitution (teacher replaced)
+  //   "Zameniť učebňu:"   -> room-change
+  //   row.add              -> moved (lesson moved in from another day/period)
 
-  /**
-   * Parses the R, G, B components from a CSS color value like
-   * "rgb(255, 100, 0)" or "#ff6400". Returns null if unparseable.
-   */
-  function parseRgb(color) {
-    const rgb = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i.exec(color);
-    if (rgb) {
-      return { r: parseInt(rgb[1], 10), g: parseInt(rgb[2], 10), b: parseInt(rgb[3], 10) };
+  const ROZVRH_PROCESSED_ATTR = "data-ee-rozvrh-type";
+  const ROZVRH_CLASS_BY_TYPE = {
+    "substitution": "ee-rozvrh-substitution",
+    "room-change": "ee-rozvrh-room-change",
+    "moved": "ee-rozvrh-moved",
+    "changed": "ee-rozvrh-changed",
+  };
+
+  let substitutionSectionsPromise = null;
+  let rozvrhScheduleTimer = null;
+
+  // .trieda starts out holding the student's own class label (or, for shared
+  // elective groups, a comma list of classes). Matching against Suplovanie
+  // needs that original label, but enhanceRozvrhRooms() below overwrites the
+  // visible text with the room name instead — so the original is captured
+  // once, on whichever of the two enhancers runs first, before either touches it.
+  function getOriginalTrieda(item) {
+    if (item.dataset.eeOriginalTrieda === undefined) {
+      item.dataset.eeOriginalTrieda = (item.querySelector(".trieda")?.textContent || "").trim();
     }
-    const hex = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color.trim());
-    if (hex) {
-      return { r: parseInt(hex[1], 16), g: parseInt(hex[2], 16), b: parseInt(hex[3], 16) };
+    return item.dataset.eeOriginalTrieda;
+  }
+
+  // Single period like ".hodina" text -> "2". Not range-aware; only used for
+  // the homepage's own per-item period number, which is always singular.
+  function periodDigits(text) {
+    const match = /\d+/.exec(text || "");
+    return match ? match[0] : "";
+  }
+
+  // Suplovanie period text can be a single period ("2.") or, when consecutive
+  // periods share one change, a range ("1. - 2."). Expand the range so every
+  // period it covers can be matched individually.
+  function periodNumbers(text) {
+    const matches = String(text || "").match(/\d+/g) || [];
+    if (matches.length <= 1) return matches;
+    const start = Number.parseInt(matches[0], 10);
+    const end = Number.parseInt(matches[matches.length - 1], 10);
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return matches;
+    const range = [];
+    for (let value = start; value <= end; value += 1) range.push(String(value));
+    return range;
+  }
+
+  function classifySubstitutionInfo(info) {
+    if (/Suplovanie:/i.test(info)) return "substitution";
+    if (/Zameni[ťt]\s*u[čc]ebň?u:/i.test(info)) return "room-change";
+    return "changed";
+  }
+
+  // The Suplovanie page is fully client-rendered — a plain fetch() returns
+  // only the unrendered app shell. Background opens a hidden tab to read it
+  // (cached for the rest of the day; see the extraction listener below for
+  // the side that runs inside that hidden tab).
+  function fetchSubstitutionSections() {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({
+        type: "ee-substitution-snapshot",
+        origin: window.location.origin,
+      }, (response) => {
+        if (chrome.runtime.lastError || !response?.ok) {
+          resolve([]);
+          return;
+        }
+        resolve(Array.isArray(response.data?.sections) ? response.data.sections : []);
+      });
+    });
+  }
+
+  function extractSubstitutionSections() {
+    return Array.from(document.querySelectorAll("div.section.print-nobreak")).map((section) => ({
+      heading: (section.querySelector("div.header")?.textContent || "").trim(),
+      rows: Array.from(section.querySelectorAll("div.row.change, div.row.add")).map((row) => ({
+        isAdd: row.classList.contains("add"),
+        periods: periodNumbers(row.querySelector("div.period")?.textContent),
+        info: (row.querySelector("div.info")?.textContent || "").trim(),
+      })),
+    }));
+  }
+
+  function delay(ms) {
+    return new Promise((resolve) => { window.setTimeout(resolve, ms); });
+  }
+
+  // Polls for the rendered section markup. A genuine no-substitutions-anywhere
+  // day will never produce any — once the document is otherwise idle, give up
+  // rather than spinning for the full timeout.
+  async function waitForSubstitutionPageReady(timeoutMs = 8000) {
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < timeoutMs) {
+      if (document.querySelector("div.section.print-nobreak")) return true;
+      if (document.readyState === "complete" && Date.now() - startedAt > 2500) return false;
+      await delay(200);
+    }
+    return false;
+  }
+
+  // This listener only ever matters inside the hidden tab background.js
+  // opens for mode=substitution — chrome.tabs.sendMessage is tab-scoped, so
+  // this content-script instance running on any other page simply never
+  // receives the message.
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message?.type !== "ee-extract-substitution-snapshot") return false;
+
+    (async () => {
+      const ready = await waitForSubstitutionPageReady();
+      sendResponse({
+        ok: true,
+        data: { sections: ready ? extractSubstitutionSections() : [] },
+      });
+    })().catch((error) => {
+      sendResponse({
+        ok: false,
+        error: error?.message || "Could not extract Suplovanie data.",
+      });
+    });
+
+    return true;
+  });
+
+  function getSubstitutionSections() {
+    if (!substitutionSectionsPromise) {
+      substitutionSectionsPromise = fetchSubstitutionSections();
+    }
+    return substitutionSectionsPromise;
+  }
+
+  async function enhanceRozvrhWidget() {
+    const items = Array.from(document.querySelectorAll("ul.rozvrh > li.rozvrhItem.hasChange"))
+      .filter((item) => !item.hasAttribute(ROZVRH_PROCESSED_ATTR));
+    if (items.length === 0) return;
+
+    const sections = await getSubstitutionSections();
+
+    items.forEach((item) => {
+      if (item.hasAttribute(ROZVRH_PROCESSED_ATTR)) return; // re-check after the await
+
+      const period = periodDigits(item.querySelector(".hodina")?.textContent);
+      const triedaList = getOriginalTrieda(item)
+        .split(",")
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+      const section = sections.find((sec) => triedaList.includes(sec.heading));
+      const row = section?.rows.find((candidate) => candidate.periods.includes(period));
+
+      const type = row ? (row.isAdd ? "moved" : classifySubstitutionInfo(row.info)) : "changed";
+
+      item.setAttribute(ROZVRH_PROCESSED_ATTR, type);
+      item.classList.add(ROZVRH_CLASS_BY_TYPE[type]);
+      if (row?.info) item.title = row.info;
+    });
+  }
+
+  // ── Room display ────────────────────────────────────────────────────────────
+  //
+  // Replaces the (mostly redundant — it's almost always the student's own
+  // class) .trieda text with the actual room for that period. Unlike
+  // Suplovanie, the "ttday" page embeds its data directly in the initial
+  // server-rendered HTML (a `classbook.fill(user, data)` call), so a plain
+  // fetch() works — no hidden tab needed. Per period:
+  //   plan[i].flags.dp0.classroomids -> array of classroom ids
+  //   dbi.classrooms[id].short       -> human-readable room code, e.g. "012"
+
+  const ROOM_PROCESSED_ATTR = "data-ee-rozvrh-room-done";
+
+  let roomMapPromise = null;
+
+  function extractBalanced(text, openIndex) {
+    let depth = 0;
+    for (let i = openIndex; i < text.length; i += 1) {
+      if (text[i] === "(") depth += 1;
+      else if (text[i] === ")") {
+        depth -= 1;
+        if (depth === 0) return text.slice(openIndex, i + 1);
+      }
     }
     return null;
   }
 
-  /**
-   * Classifies a dashed-border cell as "substitution", "room-change", or
-   * "changed" (fallback) based on the border's RGB hue.
-   */
-  function classifyByBorderColor(cell) {
-    const border = cell.style.border || "";
-
-    // Pull colour token out of the border shorthand
-    const colorMatch = border.match(/rgb[a]?\([^)]+\)|#[0-9a-f]{3,8}/i);
-    const rgb = colorMatch ? parseRgb(colorMatch[0]) : null;
-
-    if (rgb) {
-      const { r, g, b } = rgb;
-      // Reddish / orange dominant → substitution
-      if (r > 150 && r > g * 1.3 && r > b * 1.3) return "substitution";
-      // Bluish dominant → room change
-      if (b > 100 && b > r * 1.3 && b >= g * 0.7) return "room-change";
-      // Cyan / teal (high G + B, low R) → also room change
-      if (g > 100 && b > 100 && r < 100) return "room-change";
+  function splitTopLevelArguments(text) {
+    const args = [];
+    let depth = 0;
+    let start = 0;
+    for (let i = 0; i < text.length; i += 1) {
+      const ch = text[i];
+      if (ch === "(" || ch === "[" || ch === "{") depth += 1;
+      else if (ch === ")" || ch === "]" || ch === "}") depth -= 1;
+      else if (ch === "," && depth === 0) {
+        args.push(text.slice(start, i));
+        start = i + 1;
+      }
     }
-
-    return "changed"; // fallback — orange tint, same as substitution
+    args.push(text.slice(start));
+    return args.map((arg) => arg.trim());
   }
 
-  // ── Change-type badge ───────────────────────────────────────────────────────
+  function todayDateKey() {
+    const now = new Date();
+    const year = String(now.getFullYear()).padStart(4, "0");
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
 
-  const BADGE_LABELS = {
-    "substitution": "Supl.",
-    "room-change": "Presun",
-    "changed": "Zmena",
-  };
+  async function fetchRoomMap() {
+    try {
+      const response = await fetch("/dashboard/eb.php?mode=ttday", { credentials: "include" });
+      if (!response.ok) return new Map();
+      const html = await response.text();
 
-  function addChangeBadge(cell, type) {
-    const parent = cell.parentElement;
-    if (!parent) return;
+      const marker = "classbook.fill";
+      const markerIndex = html.indexOf(marker);
+      if (markerIndex === -1) return new Map();
+      const openParenIndex = html.indexOf("(", markerIndex + marker.length);
+      const balanced = openParenIndex === -1 ? null : extractBalanced(html, openParenIndex);
+      if (!balanced) return new Map();
+      const args = splitTopLevelArguments(balanced.slice(1, -1));
+      const classbookData = JSON.parse(args[1]);
 
-    const cellLeft = parseFloat(cell.style.left) || 0;
-    const cellTop = parseFloat(cell.style.top) || 0;
-    const cellWidth = parseFloat(cell.style.width) || 0;
-    const cellHeight = parseFloat(cell.style.height) || 0;
-    if (!cellWidth || !cellHeight) return;
+      const plan = classbookData?.dates?.[todayDateKey()]?.plan;
+      if (!Array.isArray(plan)) return new Map();
 
-    const posKey = `${cellLeft},${cellTop}`;
+      const map = new Map();
+      plan.forEach((entry) => {
+        if (entry?.type !== "lesson") return;
+        const period = String(entry.uniperiod || "").trim();
+        if (!/^\d+$/.test(period)) return; // skip combined slots like "14-15"
 
-    // Remove any stale badge at the same cell position (survives React re-renders)
-    parent.querySelectorAll(".ee-tt-change-badge").forEach((el) => {
-      if (el.dataset.eeTtPos === posKey) el.remove();
+        const roomIds = entry.flags?.dp0?.classroomids;
+        if (!Array.isArray(roomIds) || roomIds.length === 0) return;
+        const roomNames = roomIds
+          .map((id) => classbookData.dbi?.classrooms?.[id]?.short || classbookData.dbi?.classrooms?.[id]?.name)
+          .filter(Boolean);
+        if (roomNames.length > 0) map.set(period, roomNames.join(", "));
+      });
+      return map;
+    } catch {
+      return new Map();
+    }
+  }
+
+  function getRoomMap() {
+    if (!roomMapPromise) roomMapPromise = fetchRoomMap();
+    return roomMapPromise;
+  }
+
+  async function enhanceRozvrhRooms() {
+    const items = Array.from(document.querySelectorAll("ul.rozvrh > li.rozvrhItem"))
+      .filter((item) => !item.hasAttribute(ROOM_PROCESSED_ATTR));
+    if (items.length === 0) return;
+
+    const roomMap = await getRoomMap();
+
+    items.forEach((item) => {
+      if (item.hasAttribute(ROOM_PROCESSED_ATTR)) return; // re-check after the await
+      item.setAttribute(ROOM_PROCESSED_ATTR, "1");
+
+      const triedaSpan = item.querySelector(".trieda");
+      if (!triedaSpan) return;
+      getOriginalTrieda(item); // capture the class label before we overwrite it
+
+      const period = periodDigits(item.querySelector(".hodina")?.textContent);
+      const room = roomMap.get(period);
+      if (room) triedaSpan.textContent = room;
     });
-
-    const badge = document.createElement("span");
-    badge.className = `ee-tt-change-badge ee-tt-change-badge--${type}`;
-    badge.textContent = BADGE_LABELS[type] || "Zmena";
-    badge.setAttribute("aria-hidden", "true");
-    badge.dataset.eeTtPos = posKey;
-
-    // Position in the bottom-right corner of the cell; translate(-100%,-100%)
-    // anchors the badge's bottom-right to that corner, then nudge 2px inward.
-    badge.style.left = `${cellLeft + cellWidth}px`;
-    badge.style.top = `${cellTop + cellHeight}px`;
-    badge.style.transform = "translate(-100%, -100%) translate(-2px, -2px)";
-
-    parent.appendChild(badge);
   }
 
-  // ── Core enhancement ────────────────────────────────────────────────────────
+  function scheduleRozvrhEnhance() {
+    window.clearTimeout(rozvrhScheduleTimer);
+    rozvrhScheduleTimer = window.setTimeout(() => {
+      enhanceRozvrhWidget();
+      enhanceRozvrhRooms();
+    }, 200);
+  }
 
-  function enhanceTimetable() {
-    document.querySelectorAll("div.tt-cell").forEach((cell) => {
-      // Only interactive lesson blocks (not the text-overlay layers)
-      if (cell.style.cursor !== "pointer" || cell.style.pointerEvents === "none") return;
-      // Already processed — skip unless EduPage re-rendered it (attr removed)
-      if (cell.hasAttribute(PROCESSED_ATTR)) return;
-
-      const border = cell.style.border || "";
-      if (!border.includes("dashed")) {
-        cell.setAttribute(PROCESSED_ATTR, "none");
-        return;
-      }
-
-      const type = classifyByBorderColor(cell);
-      cell.setAttribute(PROCESSED_ATTR, type);
-
-      if (type === "substitution") {
-        cell.classList.add("ee-tt-substitution");
-      } else if (type === "room-change") {
-        cell.classList.add("ee-tt-room-change");
-      } else {
-        cell.classList.add("ee-tt-changed");
-      }
-
-      addChangeBadge(cell, type);
+  function clearRozvrhHighlights() {
+    document.querySelectorAll("ul.rozvrh > li.rozvrhItem").forEach((item) => {
+      Object.values(ROZVRH_CLASS_BY_TYPE).forEach((cls) => item.classList.remove(cls));
+      item.removeAttribute(ROZVRH_PROCESSED_ATTR);
+      item.removeAttribute("title");
     });
   }
 
-  function scheduleEnhance() {
-    window.clearTimeout(scheduleTimer);
-    scheduleTimer = window.setTimeout(enhanceTimetable, 200);
-  }
-
-  function clearHighlights() {
-    document.querySelectorAll(".ee-tt-substitution, .ee-tt-room-change, .ee-tt-changed").forEach((el) => {
-      el.classList.remove("ee-tt-substitution", "ee-tt-room-change", "ee-tt-changed");
-      el.removeAttribute(PROCESSED_ATTR);
-    });
-    document.querySelectorAll(`[${PROCESSED_ATTR}]`).forEach((el) => el.removeAttribute(PROCESSED_ATTR));
-    document.querySelectorAll(".ee-tt-change-badge").forEach((el) => el.remove());
-  }
-
-  // ── Observer ────────────────────────────────────────────────────────────────
-
-  function initObserver() {
+  function initRozvrhObserver() {
     const observer = new MutationObserver((mutations) => {
       const relevant = mutations.some((mutation) =>
         Array.from(mutation.addedNodes).some((node) => {
           if (!(node instanceof Element)) return false;
-          return node.matches?.(".tt-cell") || Boolean(node.querySelector?.(".tt-cell"));
+          return node.matches?.("ul.rozvrh, li.rozvrhItem") || Boolean(node.querySelector?.("li.rozvrhItem"));
         }),
       );
-      if (relevant) scheduleEnhance();
+      if (relevant) {
+        substitutionSectionsPromise = null; // widget re-rendered — refetch in case the day rolled over
+        scheduleRozvrhEnhance();
+      }
     });
 
     observer.observe(document.body || document.documentElement, {
@@ -246,16 +395,16 @@
   function initStorage() {
     chrome.storage.local.get([HIGHLIGHTS_KEY], (result) => {
       highlightsEnabled = result[HIGHLIGHTS_KEY] !== false;
-      if (highlightsEnabled) enhanceTimetable();
+      if (highlightsEnabled) enhanceRozvrhWidget();
     });
 
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== "local" || !changes[HIGHLIGHTS_KEY]) return;
       highlightsEnabled = changes[HIGHLIGHTS_KEY].newValue !== false;
       if (highlightsEnabled) {
-        enhanceTimetable();
+        enhanceRozvrhWidget();
       } else {
-        clearHighlights();
+        clearRozvrhHighlights();
       }
     });
   }
@@ -268,12 +417,12 @@
 
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", () => {
-        enhanceTimetable();
-        initObserver();
+        enhanceRozvrhWidget();
+        initRozvrhObserver();
       }, { once: true });
     } else {
-      enhanceTimetable();
-      initObserver();
+      enhanceRozvrhWidget();
+      initRozvrhObserver();
     }
   }
 

@@ -21,6 +21,10 @@ const exportCustomThemeButton = document.getElementById("ExportCustomThemeButton
 const importCustomThemeButton = document.getElementById("ImportCustomThemeButton");
 const resetCustomThemeButton = document.getElementById("ResetCustomThemeButton");
 const customThemeStatus = document.getElementById("CustomThemeStatus");
+const rozvrhRoomChangeColorInput = document.getElementById("RozvrhRoomChangeColor");
+const rozvrhSubstitutionColorInput = document.getElementById("RozvrhSubstitutionColor");
+const customRozvrhRoomChangeInput = document.getElementById("CustomRozvrhRoomChange");
+const customRozvrhSubstitutionInput = document.getElementById("CustomRozvrhSubstitution");
 const updateReminderToggle = document.getElementById("UpdateReminderCheckbox");
 const checkUpdatesButton = document.getElementById("CheckUpdatesButton");
 const openRepositoryButton = document.getElementById("OpenRepositoryButton");
@@ -55,6 +59,10 @@ const CUSTOM_THEME_KEY = "customThemeColors";
 const CLEAN_UI_KEY = "cleanUiEnabled";
 const HIDE_HELP_TEXT_KEY = "hideHelpTextEnabled";
 const TIMETABLE_HIGHLIGHTS_KEY = "timetableHighlightsEnabled";
+const ROZVRH_ROOM_CHANGE_COLOR_KEY = "eeRozvrhRoomChangeColor";
+const ROZVRH_SUBSTITUTION_COLOR_KEY = "eeRozvrhSubstitutionColor";
+const DEFAULT_ROZVRH_ROOM_CHANGE_COLOR = "#1565c0";
+const DEFAULT_ROZVRH_SUBSTITUTION_COLOR = "#e65100";
 const GRADE_BADGES_KEY = "gradeBadgesEnabled";
 const GRADES_ATTENDANCE_KEY = "gradesAttendanceStatsEnabled";
 const ACCURATE_PREDICTED_ATTENDANCE_KEY = "eeAccuratePredictedAttendanceEnabled";
@@ -118,6 +126,8 @@ const customInputs = {
 };
 
 let customTheme = { ...DEFAULT_CUSTOM_THEME };
+let rozvrhRoomChangeColor = DEFAULT_ROZVRH_ROOM_CHANGE_COLOR;
+let rozvrhSubstitutionColor = DEFAULT_ROZVRH_SUBSTITUTION_COLOR;
 
 function t(key, substitutions) {
 	return window.eeI18n.msg(key, substitutions);
@@ -200,6 +210,15 @@ function syncCustomThemeInputs(colors = customTheme) {
 	});
 }
 
+function syncRozvrhColorInputs() {
+	[rozvrhRoomChangeColorInput, customRozvrhRoomChangeInput].forEach((input) => {
+		if (input) input.value = rozvrhRoomChangeColor;
+	});
+	[rozvrhSubstitutionColorInput, customRozvrhSubstitutionInput].forEach((input) => {
+		if (input) input.value = rozvrhSubstitutionColor;
+	});
+}
+
 function updateDependentControls() {
 	themeSelect.disabled = !toggle.checked;
 	const customVisible = toggle.checked && themeSelect.value === "custom";
@@ -213,6 +232,12 @@ function updateDependentControls() {
 	exportCustomThemeButton.disabled = !customVisible;
 	importCustomThemeButton.disabled = !customVisible;
 	resetCustomThemeButton.disabled = !customVisible;
+
+	const rozvrhColorsEnabled = timetableHighlightsToggle.checked;
+	if (rozvrhRoomChangeColorInput) rozvrhRoomChangeColorInput.disabled = !rozvrhColorsEnabled;
+	if (rozvrhSubstitutionColorInput) rozvrhSubstitutionColorInput.disabled = !rozvrhColorsEnabled;
+	if (customRozvrhRoomChangeInput) customRozvrhRoomChangeInput.disabled = !(rozvrhColorsEnabled && customVisible);
+	if (customRozvrhSubstitutionInput) customRozvrhSubstitutionInput.disabled = !(rozvrhColorsEnabled && customVisible);
 }
 
 function notifyEdupageTabs() {
@@ -231,6 +256,8 @@ function notifyEdupageTabs() {
 					customTheme,
 					cleanUiEnabled,
 					hideHelpTextEnabled,
+					rozvrhRoomChangeColor,
+					rozvrhSubstitutionColor,
 				}, () => {
 					void chrome.runtime.lastError;
 				});
@@ -484,6 +511,8 @@ chrome.storage.local.get(
 		CLEAN_UI_KEY,
 		HIDE_HELP_TEXT_KEY,
 		TIMETABLE_HIGHLIGHTS_KEY,
+		ROZVRH_ROOM_CHANGE_COLOR_KEY,
+		ROZVRH_SUBSTITUTION_COLOR_KEY,
 		GRADE_BADGES_KEY,
 		GRADES_ATTENDANCE_KEY,
 		ACCURATE_PREDICTED_ATTENDANCE_KEY,
@@ -518,6 +547,9 @@ chrome.storage.local.get(
 		cleanUiToggle.checked = result[CLEAN_UI_KEY] === true;
 		hideHelpTextToggle.checked = result[HIDE_HELP_TEXT_KEY] === true;
 		timetableHighlightsToggle.checked = result[TIMETABLE_HIGHLIGHTS_KEY] !== false;
+		rozvrhRoomChangeColor = normalizeColor(result[ROZVRH_ROOM_CHANGE_COLOR_KEY], DEFAULT_ROZVRH_ROOM_CHANGE_COLOR);
+		rozvrhSubstitutionColor = normalizeColor(result[ROZVRH_SUBSTITUTION_COLOR_KEY], DEFAULT_ROZVRH_SUBSTITUTION_COLOR);
+		syncRozvrhColorInputs();
 		gradeBadgesToggle.checked = result[GRADE_BADGES_KEY] === true;
 		gradesAttendanceToggle.checked = result[GRADES_ATTENDANCE_KEY] !== false;
 		accuratePredictedAttendanceToggle.checked = result[ACCURATE_PREDICTED_ATTENDANCE_KEY] === true;
@@ -630,6 +662,27 @@ hideHelpTextToggle.addEventListener("change", () => {
 
 timetableHighlightsToggle.addEventListener("change", () => {
 	chrome.storage.local.set({ [TIMETABLE_HIGHLIGHTS_KEY]: timetableHighlightsToggle.checked });
+	updateDependentControls();
+});
+
+[rozvrhRoomChangeColorInput, customRozvrhRoomChangeInput].forEach((input) => {
+	if (!input) return;
+	input.addEventListener("input", () => {
+		rozvrhRoomChangeColor = normalizeColor(input.value, DEFAULT_ROZVRH_ROOM_CHANGE_COLOR);
+		syncRozvrhColorInputs();
+		chrome.storage.local.set({ [ROZVRH_ROOM_CHANGE_COLOR_KEY]: rozvrhRoomChangeColor });
+		notifyEdupageTabs();
+	});
+});
+
+[rozvrhSubstitutionColorInput, customRozvrhSubstitutionInput].forEach((input) => {
+	if (!input) return;
+	input.addEventListener("input", () => {
+		rozvrhSubstitutionColor = normalizeColor(input.value, DEFAULT_ROZVRH_SUBSTITUTION_COLOR);
+		syncRozvrhColorInputs();
+		chrome.storage.local.set({ [ROZVRH_SUBSTITUTION_COLOR_KEY]: rozvrhSubstitutionColor });
+		notifyEdupageTabs();
+	});
 });
 
 gradeBadgesToggle.addEventListener("change", () => {
