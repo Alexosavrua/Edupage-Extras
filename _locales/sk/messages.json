@@ -77,8 +77,11 @@
 
   "groupFeatures": { "message": "Funkcie" },
   "timetableHighlights": { "message": "Zvýraznenie zmien v rozvrhu" },
-  "timetableHighlightsDesc": { "message": "Farebne odlíšiť suplovanie (oranžová) a zmeny učební (modrá) vo widgete rozvrhu na hlavnej stránke aj v celom zobrazení rozvrhu." },
+  "timetableHighlightsDesc": { "message": "Farebne odlíšiť suplovanie (oranžová) a zmeny učební (modrá) vo widgete rozvrhu na hlavnej stránke." },
   "toggleTimetableHighlights": { "message": "Prepnúť zvýraznenie zmien v rozvrhu" },
+  "timetableHighlightColorsLabel": { "message": "Farby zvýraznenia" },
+  "timetableHighlightColorRoomChange": { "message": "Farba zmeny učebne" },
+  "timetableHighlightColorSubstitution": { "message": "Farba suplovania" },
   "gradeBadges": { "message": "Odznaky známok" },
   "gradeBadgesDesc": { "message": "Zobraziť odznaky priemerov, pruhy a riadok s celkovým priemerom na stránke známok." },
   "toggleGradeBadges": { "message": "Prepnúť odznaky známok" },

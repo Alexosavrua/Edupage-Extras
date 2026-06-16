@@ -1887,6 +1887,57 @@ async function extractSchoolEventsFromHiddenTab(tabId, types = {}) {
   return response.data.events;
 }
 
+// ── Suplovanie (substitution) snapshot ──────────────────────────────────────
+//
+// The homepage's "Rozvrh dnes" widget only flags changed periods with a
+// generic class — the real type (teacher substitution vs. room change vs.
+// moved-in lesson) lives on a separate, fully client-rendered page
+// (mode=substitution) that returns no usable data over a plain fetch(). A
+// hidden tab is the only reliable way to read it. To keep this from
+// repeating issue #15 (a hidden tab opening on every page load), this is
+// cached for the rest of the day and is only ever requested by the content
+// script when the homepage actually has at least one changed period.
+
+const SUBSTITUTION_SNAPSHOT_CACHE_KEY = "eeSubstitutionSnapshotCacheV2";
+
+async function readFreshSubstitutionSnapshot(origin) {
+  const result = await storageGet([SUBSTITUTION_SNAPSHOT_CACHE_KEY]);
+  const cached = (result[SUBSTITUTION_SNAPSHOT_CACHE_KEY] || {})[origin];
+  if (!cached || cached.date !== formatDate(new Date())) return null;
+  return cached.sections;
+}
+
+async function writeSubstitutionSnapshot(origin, sections) {
+  const result = await storageGet([SUBSTITUTION_SNAPSHOT_CACHE_KEY]);
+  const byOrigin = result[SUBSTITUTION_SNAPSHOT_CACHE_KEY] || {};
+  byOrigin[origin] = { date: formatDate(new Date()), sections };
+  await storageSet({ [SUBSTITUTION_SNAPSHOT_CACHE_KEY]: byOrigin });
+}
+
+async function extractSubstitutionSnapshotFromHiddenTab(tabId) {
+  const response = await sendTabMessageRetry(tabId, { type: "ee-extract-substitution-snapshot" });
+  if (!response?.ok || !Array.isArray(response.data?.sections)) {
+    throw new Error(response?.error || "EduPage Suplovanie extraction failed.");
+  }
+  return response.data.sections;
+}
+
+async function collectSubstitutionSnapshot(origin) {
+  const cached = await readFreshSubstitutionSnapshot(origin);
+  if (cached) return cached;
+
+  const eqa = encodeURIComponent(btoa("mode=substitution"));
+  const tab = await createTab(`${origin}/dashboard/eb.php?eqa=${eqa}`);
+  try {
+    await waitForTabComplete(tab.id);
+    const sections = await extractSubstitutionSnapshotFromHiddenTab(tab.id);
+    await writeSubstitutionSnapshot(origin, sections);
+    return sections;
+  } finally {
+    await removeTab(tab.id);
+  }
+}
+
 async function collectUpcomingSchoolEvents(config) {
   if (!config.lastEdupageOrigin || !config.schoolEventsEnabled || !config.testEventsEnabled) {
     return [];
@@ -2331,6 +2382,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       .catch((error) => sendResponse({
         ok: false,
         error: error?.message || "Could not build projected subject totals.",
+      }));
+    return true;
+  }
+
+  if (message?.type === "ee-substitution-snapshot") {
+    const origin = typeof message.origin === "string" && message.origin.startsWith("https://")
+      ? message.origin
+      : "";
+    if (!origin) {
+      sendResponse({ ok: false, error: "Missing EduPage origin." });
+      return false;
+    }
+
+    collectSubstitutionSnapshot(origin)
+      .then((sections) => sendResponse({ ok: true, data: { sections } }))
+      .catch((error) => sendResponse({
+        ok: false,
+        error: error?.message || "Could not load Suplovanie data.",
       }));
     return true;
   }

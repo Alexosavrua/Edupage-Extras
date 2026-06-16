@@ -11,6 +11,10 @@ const THEME_KEY = "themeMode";
 const CUSTOM_THEME_KEY = "customThemeColors";
 const CLEAN_UI_KEY = "cleanUiEnabled";
 const HIDE_HELP_TEXT_KEY = "hideHelpTextEnabled";
+const ROZVRH_ROOM_CHANGE_COLOR_KEY = "eeRozvrhRoomChangeColor";
+const ROZVRH_SUBSTITUTION_COLOR_KEY = "eeRozvrhSubstitutionColor";
+const DEFAULT_ROZVRH_ROOM_CHANGE_COLOR = "#1565c0";
+const DEFAULT_ROZVRH_SUBSTITUTION_COLOR = "#e65100";
 const CLASS_NAME = "ee-dark";
 const THEME_CLASSES = [
   "ee-theme-dark",
@@ -41,6 +45,8 @@ let currentTheme = "dark";
 let currentCustomTheme = null;
 let cleanUiEnabled = false;
 let hideHelpTextEnabled = false;
+let currentRozvrhRoomChangeColor = DEFAULT_ROZVRH_ROOM_CHANGE_COLOR;
+let currentRozvrhSubstitutionColor = DEFAULT_ROZVRH_SUBSTITUTION_COLOR;
 const DEFAULT_CUSTOM_THEME = {
   bgBase: "#11111b",
   bgRaised: "#181825",
@@ -799,6 +805,15 @@ function applyCustomThemeProperties(theme) {
   root.style.setProperty("--ee-custom-danger", colors.danger);
 }
 
+// Applied unconditionally (not gated behind html.ee-dark or any ee-theme-*
+// class) so the homepage schedule highlight colors stay correct in every
+// theme, including "light" — where ee-dark is never added at all.
+function applyRozvrhColorProperties(roomChangeColor, substitutionColor) {
+  const root = document.documentElement;
+  root.style.setProperty("--ee-rozvrh-room-change-color", normalizeColor(roomChangeColor, DEFAULT_ROZVRH_ROOM_CHANGE_COLOR));
+  root.style.setProperty("--ee-rozvrh-substitution-color", normalizeColor(substitutionColor, DEFAULT_ROZVRH_SUBSTITUTION_COLOR));
+}
+
 function setThemeClasses(theme, cleanEnabled, helpHidden) {
   const root = document.documentElement;
   root.classList.remove(...THEME_CLASSES);
@@ -814,6 +829,8 @@ function applyTheme({
   customTheme = currentCustomTheme,
   cleanEnabled = cleanUiEnabled,
   helpHidden = hideHelpTextEnabled,
+  rozvrhRoomChangeColor = currentRozvrhRoomChangeColor,
+  rozvrhSubstitutionColor = currentRozvrhSubstitutionColor,
 } = {}) {
   const normalizedTheme = normalizeTheme(theme);
   const selectedTheme = resolveAppliedTheme({
@@ -825,7 +842,10 @@ function applyTheme({
   currentCustomTheme = normalizeCustomTheme(customTheme);
   cleanUiEnabled = cleanEnabled;
   hideHelpTextEnabled = helpHidden;
+  currentRozvrhRoomChangeColor = normalizeColor(rozvrhRoomChangeColor, DEFAULT_ROZVRH_ROOM_CHANGE_COLOR);
+  currentRozvrhSubstitutionColor = normalizeColor(rozvrhSubstitutionColor, DEFAULT_ROZVRH_SUBSTITUTION_COLOR);
   applyCustomThemeProperties(currentCustomTheme);
+  applyRozvrhColorProperties(currentRozvrhRoomChangeColor, currentRozvrhSubstitutionColor);
   ensureStylesheet();
   setThemeClasses(selectedTheme, cleanEnabled, helpHidden);
 
@@ -856,14 +876,19 @@ function initDarkMode() {
     applyTheme({ darkModeEnabled: false, theme: "dark", cleanEnabled: false, helpHidden: false });
   }
 
-  chrome.storage.local.get([STORAGE_KEY, THEME_KEY, CUSTOM_THEME_KEY, CLEAN_UI_KEY, HIDE_HELP_TEXT_KEY], (result) => {
-    const enabled = result[STORAGE_KEY] === true;
-    const theme = normalizeTheme(result[THEME_KEY]);
-    const customTheme = normalizeCustomTheme(result[CUSTOM_THEME_KEY]);
-    const cleanEnabled = result[CLEAN_UI_KEY] === true;
-    const helpHidden = result[HIDE_HELP_TEXT_KEY] === true;
-    applyTheme({ darkModeEnabled: enabled, theme, customTheme, cleanEnabled, helpHidden });
-  });
+  chrome.storage.local.get(
+    [STORAGE_KEY, THEME_KEY, CUSTOM_THEME_KEY, CLEAN_UI_KEY, HIDE_HELP_TEXT_KEY, ROZVRH_ROOM_CHANGE_COLOR_KEY, ROZVRH_SUBSTITUTION_COLOR_KEY],
+    (result) => {
+      const enabled = result[STORAGE_KEY] === true;
+      const theme = normalizeTheme(result[THEME_KEY]);
+      const customTheme = normalizeCustomTheme(result[CUSTOM_THEME_KEY]);
+      const cleanEnabled = result[CLEAN_UI_KEY] === true;
+      const helpHidden = result[HIDE_HELP_TEXT_KEY] === true;
+      const rozvrhRoomChangeColor = normalizeColor(result[ROZVRH_ROOM_CHANGE_COLOR_KEY], DEFAULT_ROZVRH_ROOM_CHANGE_COLOR);
+      const rozvrhSubstitutionColor = normalizeColor(result[ROZVRH_SUBSTITUTION_COLOR_KEY], DEFAULT_ROZVRH_SUBSTITUTION_COLOR);
+      applyTheme({ darkModeEnabled: enabled, theme, customTheme, cleanEnabled, helpHidden, rozvrhRoomChangeColor, rozvrhSubstitutionColor });
+    },
+  );
 }
 
 initDarkMode();
@@ -876,17 +901,24 @@ chrome.storage.onChanged.addListener((changes, area) => {
     && !changes[CUSTOM_THEME_KEY]
     && !changes[CLEAN_UI_KEY]
     && !changes[HIDE_HELP_TEXT_KEY]
+    && !changes[ROZVRH_ROOM_CHANGE_COLOR_KEY]
+    && !changes[ROZVRH_SUBSTITUTION_COLOR_KEY]
   ) return;
 
-  chrome.storage.local.get([STORAGE_KEY, THEME_KEY, CUSTOM_THEME_KEY, CLEAN_UI_KEY, HIDE_HELP_TEXT_KEY], (result) => {
-    applyTheme({
-      darkModeEnabled: result[STORAGE_KEY] === true,
-      theme: normalizeTheme(result[THEME_KEY]),
-      customTheme: normalizeCustomTheme(result[CUSTOM_THEME_KEY]),
-      cleanEnabled: result[CLEAN_UI_KEY] === true,
-      helpHidden: result[HIDE_HELP_TEXT_KEY] === true,
-    });
-  });
+  chrome.storage.local.get(
+    [STORAGE_KEY, THEME_KEY, CUSTOM_THEME_KEY, CLEAN_UI_KEY, HIDE_HELP_TEXT_KEY, ROZVRH_ROOM_CHANGE_COLOR_KEY, ROZVRH_SUBSTITUTION_COLOR_KEY],
+    (result) => {
+      applyTheme({
+        darkModeEnabled: result[STORAGE_KEY] === true,
+        theme: normalizeTheme(result[THEME_KEY]),
+        customTheme: normalizeCustomTheme(result[CUSTOM_THEME_KEY]),
+        cleanEnabled: result[CLEAN_UI_KEY] === true,
+        helpHidden: result[HIDE_HELP_TEXT_KEY] === true,
+        rozvrhRoomChangeColor: normalizeColor(result[ROZVRH_ROOM_CHANGE_COLOR_KEY], DEFAULT_ROZVRH_ROOM_CHANGE_COLOR),
+        rozvrhSubstitutionColor: normalizeColor(result[ROZVRH_SUBSTITUTION_COLOR_KEY], DEFAULT_ROZVRH_SUBSTITUTION_COLOR),
+      });
+    },
+  );
 });
 
 function normalizeSchoolEventText(value) {
@@ -987,6 +1019,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       customTheme: message.customTheme || currentCustomTheme,
       cleanEnabled: message.cleanUiEnabled === true,
       helpHidden: message.hideHelpTextEnabled === true,
+      rozvrhRoomChangeColor: message.rozvrhRoomChangeColor || currentRozvrhRoomChangeColor,
+      rozvrhSubstitutionColor: message.rozvrhSubstitutionColor || currentRozvrhSubstitutionColor,
     });
   }
   if (message && message.type === "ee-extract-school-events") {

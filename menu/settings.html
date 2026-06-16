@@ -114,6 +114,14 @@
                 <span data-i18n="customColorDanger">Danger</span>
                 <input type="color" id="CustomDanger">
               </label>
+              <label>
+                <span data-i18n="timetableHighlightColorRoomChange">Room Change Color</span>
+                <input type="color" id="CustomRozvrhRoomChange">
+              </label>
+              <label>
+                <span data-i18n="timetableHighlightColorSubstitution">Substitution Color</span>
+                <input type="color" id="CustomRozvrhSubstitution">
+              </label>
             </div>
             <label class="custom-theme-import" for="CustomThemeImport">
               <span data-i18n="importExport">Import / Export</span>
@@ -164,13 +172,29 @@
         <div class="setting-row">
           <div>
             <h3 data-i18n="timetableHighlights">Timetable Change Highlights</h3>
-            <p data-i18n="timetableHighlightsDesc">Color-code substitutions (orange) and classroom changes (blue) on the main page timetable widget and full timetable view.</p>
+            <p data-i18n="timetableHighlightsDesc">Color-code substitutions (orange) and classroom changes (blue) on the main page schedule widget.</p>
           </div>
           <label class="switch switch-compact" for="TimetableHighlightsCheckbox">
             <input type="checkbox" id="TimetableHighlightsCheckbox">
             <span class="switch-track" aria-hidden="true"></span>
             <span class="sr-only" data-i18n="toggleTimetableHighlights">Toggle timetable change highlights</span>
           </label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3 data-i18n="timetableHighlightColorsLabel">Highlight Colors</h3>
+          </div>
+          <div class="custom-theme-grid timetable-highlight-colors">
+            <label>
+              <span data-i18n="timetableHighlightColorRoomChange">Room Change Color</span>
+              <input type="color" id="RozvrhRoomChangeColor">
+            </label>
+            <label>
+              <span data-i18n="timetableHighlightColorSubstitution">Substitution Color</span>
+              <input type="color" id="RozvrhSubstitutionColor">
+            </label>
+          </div>
         </div>
 
         <div class="setting-row">
