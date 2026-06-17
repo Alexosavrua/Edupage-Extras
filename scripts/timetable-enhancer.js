@@ -103,6 +103,8 @@
 
   let substitutionSectionsPromise = null;
   let substitutionNeedsRefresh = false;
+  let substitutionLastFetchedAt = 0;
+  const SUBSTITUTION_REFRESH_COOLDOWN_MS = 30 * 60 * 1000;
   let rozvrhScheduleTimer = null;
 
   // .trieda starts out holding the student's own class label (or, for shared
@@ -221,6 +223,7 @@
     if (!substitutionSectionsPromise) {
       const forceRefresh = substitutionNeedsRefresh;
       substitutionNeedsRefresh = false;
+      substitutionLastFetchedAt = Date.now();
       substitutionSectionsPromise = fetchSubstitutionSections(forceRefresh);
     }
     return substitutionSectionsPromise;
@@ -392,7 +395,11 @@
         }),
       );
       if (relevant) {
-        substitutionNeedsRefresh = true; // widget re-rendered — bypass day-cache so cancelled substitutions clear
+        // Only bypass background's day-cache if enough time has passed — avoids
+        // opening a new hidden tab on every frequent widget re-render.
+        if (Date.now() - substitutionLastFetchedAt > SUBSTITUTION_REFRESH_COOLDOWN_MS) {
+          substitutionNeedsRefresh = true;
+        }
         substitutionSectionsPromise = null;
         roomMapPromise = null;
         scheduleRozvrhEnhance();
