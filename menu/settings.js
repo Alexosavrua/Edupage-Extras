@@ -9,6 +9,13 @@ const gradeBadgesToggle = document.getElementById("GradeBadgesCheckbox");
 const gradesAttendanceToggle = document.getElementById("GradesAttendanceCheckbox");
 const accuratePredictedAttendanceToggle = document.getElementById("AccuratePredictedAttendanceCheckbox");
 const gradesAttendanceDebugToggle = document.getElementById("GradesAttendanceDebugCheckbox");
+const reportRedactToggle = document.getElementById("ReportRedactCheckbox");
+const generateReportButton = document.getElementById("GenerateReportButton");
+const copyReportButton = document.getElementById("CopyReportButton");
+const downloadReportButton = document.getElementById("DownloadReportButton");
+const openIssueButton = document.getElementById("OpenIssueButton");
+const reportOutput = document.getElementById("ReportOutput");
+const reportStatus = document.getElementById("ReportStatus");
 const attendancePercentagesToggle = document.getElementById("AttendancePercentagesCheckbox");
 const halfyearStartInput = document.getElementById("HalfyearStartDateInput");
 const resetHalfyearStartButton = document.getElementById("ResetHalfyearStartDateButton");
@@ -888,6 +895,120 @@ checkUpdatesButton.addEventListener("click", checkForUpdates);
 
 openRepositoryButton.addEventListener("click", () => {
 	chrome.tabs.create({ url: REPO_URL });
+});
+
+// ---- Report a Problem ------------------------------------------------------
+
+let latestReport = null;
+
+function setReportButtonsEnabled(enabled) {
+	copyReportButton.disabled = !enabled;
+	downloadReportButton.disabled = !enabled;
+	openIssueButton.disabled = !enabled;
+}
+
+function buildIssueBody(report) {
+	const env = report?.extension || {};
+	const sys = report?.environment || {};
+	const frames = (report?.page?.pages || []).flatMap((page) => page?.frames || []);
+	const uniq = (values) => values.filter((value, index, all) => all.indexOf(value) === index);
+	const pageTypes = uniq(
+		(report?.page?.summary?.pageTypes || []).concat(frames.flatMap((frame) => frame?.data?.pageType || [])),
+	).filter((type) => type && type !== "unknown");
+	const origins = uniq(frames.map((frame) => frame?.data?.frame?.origin).filter(Boolean));
+	return [
+		"### What went wrong",
+		"<!-- Describe what you expected and what actually happened. -->",
+		"",
+		"### Steps to reproduce",
+		"1. ",
+		"",
+		"### Environment",
+		`- Extension version: ${env.version || "?"}`,
+		`- UI language: ${env.uiLanguage || "?"}`,
+		`- Affected page type(s): ${pageTypes.length ? pageTypes.join(", ") : "?"}`,
+		`- Grade scale (detected): ${report?.page?.summary?.gradesScale || "n/a"}`,
+		`- EduPage origin(s): ${origins.length ? origins.join(", ") : "?"}`,
+		`- Browser: ${sys.userAgent || "?"}`,
+		`- Personal data hidden: ${report?.redacted ? "yes" : "no"}`,
+		"",
+		"### Diagnostic report",
+		"<!-- Attach the downloaded .json file, or paste its contents below. -->",
+		"",
+		"```json",
+		"(attach or paste the report here)",
+		"```",
+	].join("\n");
+}
+
+generateReportButton.addEventListener("click", () => {
+	generateReportButton.disabled = true;
+	setReportButtonsEnabled(false);
+	reportStatus.textContent = t("reportGenerating") || "Generating report…";
+	chrome.runtime.sendMessage(
+		{ type: "ee-collect-report", redact: reportRedactToggle.checked },
+		(response) => {
+			generateReportButton.disabled = false;
+			if (chrome.runtime.lastError || !response?.ok) {
+				reportStatus.textContent = (t("reportError") || "Could not generate report:") +
+					" " + (response?.error || chrome.runtime.lastError?.message || "unknown error");
+				return;
+			}
+			latestReport = response.report;
+			reportOutput.value = JSON.stringify(latestReport, null, 2);
+			reportOutput.hidden = false;
+			setReportButtonsEnabled(true);
+			const page = latestReport?.page;
+			if (!page?.tabFound) {
+				reportStatus.textContent = t("reportNoTab") ||
+					"Report ready, but no EduPage tab was found — open the affected page in another tab and regenerate for page details.";
+			} else if (page?.summary?.empty) {
+				reportStatus.textContent = t("reportEmpty") ||
+					"Report ready, but no recognizable EduPage content was captured — open the page that is actually broken (grades, timetable, attendance) and regenerate.";
+			} else {
+				reportStatus.textContent = t("reportReady") ||
+					"Report ready. Review it, then copy, download, or open an issue.";
+			}
+		}
+	);
+});
+
+copyReportButton.addEventListener("click", async () => {
+	if (!reportOutput.value) return;
+	try {
+		await navigator.clipboard.writeText(reportOutput.value);
+		reportStatus.textContent = t("reportCopied") || "Report copied to clipboard.";
+	} catch (error) {
+		reportOutput.select();
+		reportStatus.textContent = t("reportCopyManual") || "Could not copy automatically — the report is selected, press Ctrl/Cmd+C.";
+	}
+});
+
+downloadReportButton.addEventListener("click", () => {
+	if (!reportOutput.value) return;
+	const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+	const blob = new Blob([reportOutput.value], { type: "application/json" });
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement("a");
+	link.href = url;
+	link.download = `edupage-extras-report-${stamp}.json`;
+	document.body.appendChild(link);
+	link.click();
+	link.remove();
+	setTimeout(() => URL.revokeObjectURL(url), 1000);
+	reportStatus.textContent = t("reportDownloaded") || "Report downloaded.";
+});
+
+openIssueButton.addEventListener("click", () => {
+	if (!latestReport) return;
+	const version = latestReport?.extension?.version || "?";
+	chrome.runtime.sendMessage({
+		type: "ee-report-open-issue",
+		title: `[Bug] (v${version}) `,
+		body: buildIssueBody(latestReport),
+	});
+	reportStatus.textContent = t("reportIssueOpened") ||
+		"Opened a new GitHub issue — attach the downloaded report or paste it in.";
 });
 
 openShortcutSettingsButton.addEventListener("click", () => {

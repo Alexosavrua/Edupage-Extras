@@ -359,6 +359,38 @@ p {
     gap: 10px;
 }
 
+.setting-stack-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.inline-checkbox {
+    align-items: center;
+    color: var(--text-main);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 14px;
+    gap: 8px;
+}
+
+.report-output {
+    background: var(--control-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-main);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    max-height: 320px;
+    min-height: 160px;
+    padding: 10px;
+    resize: vertical;
+    white-space: pre;
+    width: 100%;
+}
+
 .shortcut-controls {
     display: grid;
     gap: 8px;
