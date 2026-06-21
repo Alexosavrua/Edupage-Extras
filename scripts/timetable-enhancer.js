@@ -7,12 +7,10 @@
  * 1. Colors each changed period by its real type — teacher substitution,
  *    room change, or a lesson moved in from another day/period — instead of
  *    EduPage's generic "hasChange" flag, which carries no type information.
- *    The real type lives on a separate page ("Suplovanie", mode=substitution)
- *    that is fully client-rendered (a plain fetch() only returns the
- *    unrendered app shell), so a hidden background tab is used to read it.
- *    That tab is only opened when the homepage actually has at least one
- *    changed period, and the result is cached for the rest of the day — see
- *    background.js's "ee-substitution-snapshot" handler.
+ *    The real type lives on a separate page ("Suplovanie"), read here via the
+ *    Suplovanie viewer.js POST — a direct fetch() using the page's gsechash
+ *    that returns the section HTML without opening a tab (see
+ *    fetchSubstitutionSectionsDirect).
  *
  * 2. Replaces the .trieda text (normally just the student's own class, e.g.
  *    "II.SA" on nearly every period — not useful information to the student
@@ -103,7 +101,6 @@
 
   let substitutionSectionsPromise = null;
   let substitutionSectionsResolved = null; // the already-resolved sections — applied synchronously on re-renders
-  let substitutionNeedsRefresh = false;
   let substitutionLastFetchedAt = 0;
   const SUBSTITUTION_REFRESH_COOLDOWN_MS = 30 * 60 * 1000;
   let rozvrhScheduleTimer = null;
@@ -172,35 +169,10 @@
     return (item.querySelector(".predmet")?.textContent || "").trim();
   }
 
-  // The Suplovanie page is fully client-rendered — a plain fetch() returns
-  // only the unrendered app shell. Background opens a hidden tab to read it
-  // (cached for the rest of the day; see the extraction listener below for
-  // the side that runs inside that hidden tab).
-  // forceRefresh bypasses background's day-cache and re-opens the hidden tab,
-  // used when the widget re-renders mid-day (e.g. a substitution was cancelled).
-  function fetchSubstitutionSections(forceRefresh = false) {
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage({
-        type: "ee-substitution-snapshot",
-        origin: window.location.origin,
-        // The "Rozvrh dnes" widget rolls forward to the next school day on
-        // weekends/holidays, so the substitution data must be fetched for the
-        // *displayed* date, not today — otherwise outlines are computed against
-        // the wrong day's Suplovanie. (Mirrors fetchRoomMap's widget-date use.)
-        dateKey: getWidgetDateKey(),
-        forceRefresh,
-      }, (response) => {
-        if (chrome.runtime.lastError || !response?.ok) {
-          resolve([]);
-          return;
-        }
-        resolve(Array.isArray(response.data?.sections) ? response.data.sections : []);
-      });
-    });
-  }
-
-  function extractSubstitutionSections() {
-    return Array.from(document.querySelectorAll("div.section.print-nobreak")).map((section) => ({
+  // Parse the Suplovanie section markup out of the document parsed from the
+  // viewer.js POST's HTML payload.
+  function parseSubstitutionSections(root) {
+    return Array.from(root.querySelectorAll("div.section.print-nobreak")).map((section) => ({
       heading: (section.querySelector("div.header")?.textContent || "").trim(),
       rows: Array.from(section.querySelectorAll("div.row.change, div.row.add")).map((row) => ({
         isAdd: row.classList.contains("add"),
@@ -210,55 +182,56 @@
     }));
   }
 
-  function delay(ms) {
-    return new Promise((resolve) => { window.setTimeout(resolve, ms); });
+  // EduPage's per-request security hash, set inline as `ASC.gsechash="…"` on
+  // every authenticated page. Content scripts can't read the page's JS globals
+  // directly, but the assignment is in the page HTML, so scrape it from there.
+  function getGsecHash() {
+    const match = /gsechash["'\s:=]+([A-Za-z0-9]{6,})/.exec(document.documentElement.innerHTML);
+    return match ? match[1] : null;
   }
 
-  // Polls for the rendered section markup. A genuine no-substitutions-anywhere
-  // day will never produce any — once the document is otherwise idle, give up
-  // rather than spinning for the full timeout.
-  async function waitForSubstitutionPageReady(timeoutMs = 8000) {
-    const startedAt = Date.now();
-    while (Date.now() - startedAt < timeoutMs) {
-      if (document.querySelector("div.section.print-nobreak")) return true;
-      if (document.readyState === "complete" && Date.now() - startedAt > 2500) return false;
-      await delay(200);
+  // The Suplovanie page is fully client-rendered, but its viewer.js POST returns
+  // the same section HTML over a plain fetch() when given the gsechash (verified
+  // live 2026-06-18). Returns parsed sections, or null on failure (no hash,
+  // network error, or an expired hash — EduPage answers those with
+  // `{ reload: true }`), which the caller treats as "no substitutions".
+  async function fetchSubstitutionSectionsDirect(dateKey) {
+    const gsh = getGsecHash();
+    if (!gsh) return null;
+    try {
+      const response = await fetch(
+        "/substitution/server/viewer.js?__func=getSubstViewerDayDataHtml",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            __args: [null, { date: dateKey, mode: "classes" }],
+            __gsh: gsh,
+          }),
+        },
+      );
+      if (!response.ok) return null;
+      const payload = await response.json();
+      if (payload?.reload) return null; // stale gsechash → fall back
+      const html = typeof payload?.r === "string" ? payload.r : "";
+      if (!html) return null;
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      return parseSubstitutionSections(doc);
+    } catch {
+      return null;
     }
-    return false;
   }
-
-  // This listener only ever matters inside the hidden tab background.js
-  // opens for mode=substitution — chrome.tabs.sendMessage is tab-scoped, so
-  // this content-script instance running on any other page simply never
-  // receives the message.
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message?.type !== "ee-extract-substitution-snapshot") return false;
-
-    (async () => {
-      const ready = await waitForSubstitutionPageReady();
-      sendResponse({
-        ok: true,
-        data: { sections: ready ? extractSubstitutionSections() : [] },
-      });
-    })().catch((error) => {
-      sendResponse({
-        ok: false,
-        error: error?.message || "Could not extract Suplovanie data.",
-      });
-    });
-
-    return true;
-  });
 
   function getSubstitutionSections() {
     if (!substitutionSectionsPromise) {
-      const forceRefresh = substitutionNeedsRefresh;
-      substitutionNeedsRefresh = false;
       substitutionLastFetchedAt = Date.now();
-      substitutionSectionsPromise = fetchSubstitutionSections(forceRefresh).then((sections) => {
+      substitutionSectionsPromise = (async () => {
+        const direct = await fetchSubstitutionSectionsDirect(getWidgetDateKey());
+        const sections = direct !== null ? direct : [];
         substitutionSectionsResolved = sections;
         return sections;
-      });
+      })();
     }
     return substitutionSectionsPromise;
   }
@@ -579,10 +552,9 @@
         // Apply cached data immediately so the new items render with outlines
         // and rooms in the same frame Edupage swaps them in — no ~10s flash.
         applyCachedRozvrhData();
-        // Only bypass background's day-cache if enough time has passed — avoids
-        // opening a new hidden tab on every frequent widget re-render.
+        // Only re-fetch the Suplovanie data if enough time has passed — avoids
+        // a viewer.js POST on every frequent widget re-render.
         if (Date.now() - substitutionLastFetchedAt > SUBSTITUTION_REFRESH_COOLDOWN_MS) {
-          substitutionNeedsRefresh = true;
           substitutionSectionsPromise = null;
           // substitutionSectionsResolved intentionally retained — it keeps
           // serving the old outlines until the next fetch resolves.
