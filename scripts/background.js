@@ -1898,19 +1898,23 @@ async function extractSchoolEventsFromHiddenTab(tabId, types = {}) {
 // cached for the rest of the day and is only ever requested by the content
 // script when the homepage actually has at least one changed period.
 
-const SUBSTITUTION_SNAPSHOT_CACHE_KEY = "eeSubstitutionSnapshotCacheV2";
+// V3: cache is now keyed by the *target* day (the day the substitutions are
+// for), with fetchedOn tracking when we scraped it so it still expires daily.
+const SUBSTITUTION_SNAPSHOT_CACHE_KEY = "eeSubstitutionSnapshotCacheV3";
 
-async function readFreshSubstitutionSnapshot(origin) {
+async function readFreshSubstitutionSnapshot(origin, targetDate) {
   const result = await storageGet([SUBSTITUTION_SNAPSHOT_CACHE_KEY]);
-  const cached = (result[SUBSTITUTION_SNAPSHOT_CACHE_KEY] || {})[origin];
-  if (!cached || cached.date !== formatDate(new Date())) return null;
+  const cached = ((result[SUBSTITUTION_SNAPSHOT_CACHE_KEY] || {})[origin] || {})[targetDate];
+  if (!cached || cached.fetchedOn !== formatDate(new Date())) return null;
   return cached.sections;
 }
 
-async function writeSubstitutionSnapshot(origin, sections) {
+async function writeSubstitutionSnapshot(origin, targetDate, sections) {
   const result = await storageGet([SUBSTITUTION_SNAPSHOT_CACHE_KEY]);
   const byOrigin = result[SUBSTITUTION_SNAPSHOT_CACHE_KEY] || {};
-  byOrigin[origin] = { date: formatDate(new Date()), sections };
+  const byDate = byOrigin[origin] || {};
+  byDate[targetDate] = { fetchedOn: formatDate(new Date()), sections };
+  byOrigin[origin] = byDate;
   await storageSet({ [SUBSTITUTION_SNAPSHOT_CACHE_KEY]: byOrigin });
 }
 
@@ -1922,18 +1926,20 @@ async function extractSubstitutionSnapshotFromHiddenTab(tabId) {
   return response.data.sections;
 }
 
-async function collectSubstitutionSnapshot(origin, forceRefresh = false) {
+async function collectSubstitutionSnapshot(origin, forceRefresh = false, targetDate = formatDate(new Date())) {
   if (!forceRefresh) {
-    const cached = await readFreshSubstitutionSnapshot(origin);
+    const cached = await readFreshSubstitutionSnapshot(origin, targetDate);
     if (cached) return cached;
   }
 
-  const eqa = encodeURIComponent(btoa("mode=substitution"));
+  // Pin the Suplovanie viewer to the widget's displayed date so the outlines
+  // match the lessons actually shown (see ee-substitution-snapshot handler).
+  const eqa = encodeURIComponent(btoa(`mode=substitution&dat=${targetDate}`));
   const tab = await createTab(`${origin}/dashboard/eb.php?eqa=${eqa}`);
   try {
     await waitForTabComplete(tab.id);
     const sections = await extractSubstitutionSnapshotFromHiddenTab(tab.id);
-    await writeSubstitutionSnapshot(origin, sections);
+    await writeSubstitutionSnapshot(origin, targetDate, sections);
     return sections;
   } finally {
     await removeTab(tab.id);
@@ -2397,7 +2403,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return false;
     }
 
-    collectSubstitutionSnapshot(origin, message.forceRefresh === true)
+    const dateKey = /^\d{4}-\d{2}-\d{2}$/.test(message.dateKey)
+      ? message.dateKey
+      : formatDate(new Date());
+
+    collectSubstitutionSnapshot(origin, message.forceRefresh === true, dateKey)
       .then((sections) => sendResponse({ ok: true, data: { sections } }))
       .catch((error) => sendResponse({
         ok: false,

@@ -183,6 +183,11 @@
       chrome.runtime.sendMessage({
         type: "ee-substitution-snapshot",
         origin: window.location.origin,
+        // The "Rozvrh dnes" widget rolls forward to the next school day on
+        // weekends/holidays, so the substitution data must be fetched for the
+        // *displayed* date, not today — otherwise outlines are computed against
+        // the wrong day's Suplovanie. (Mirrors fetchRoomMap's widget-date use.)
+        dateKey: getWidgetDateKey(),
         forceRefresh,
       }, (response) => {
         if (chrome.runtime.lastError || !response?.ok) {
