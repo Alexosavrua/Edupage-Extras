@@ -79,6 +79,231 @@ function storageRemove(keys) {
   });
 }
 
+// ---- Diagnostics ("Report a Problem") --------------------------------------
+//
+// Keep a small ring buffer of errors that happen inside the service worker so a
+// user on another school's EduPage can hand us the context we need to fix a
+// problem we cannot reproduce locally. Nothing here is ever sent automatically;
+// it is only assembled into a report when the user clicks "Generate report".
+
+const DIAGNOSTICS_MAX_LOG = 60;
+const diagnosticsErrorLog = [];
+
+function recordBackgroundError(level, args) {
+  try {
+    const message = args
+      .map((value) => {
+        if (value instanceof Error) return `${value.name}: ${value.message}\n${value.stack || ""}`.trim();
+        if (typeof value === "string") return value;
+        try { return JSON.stringify(value); } catch (_) { return String(value); }
+      })
+      .join(" ")
+      .slice(0, 2000);
+    diagnosticsErrorLog.push({ level, time: new Date().toISOString(), message });
+    if (diagnosticsErrorLog.length > DIAGNOSTICS_MAX_LOG) diagnosticsErrorLog.shift();
+  } catch (_) { /* diagnostics must never throw */ }
+}
+
+(function installBackgroundErrorCapture() {
+  const originalError = console.error;
+  console.error = function (...args) {
+    recordBackgroundError("error", args);
+    return originalError.apply(this, args);
+  };
+  if (typeof self !== "undefined" && typeof self.addEventListener === "function") {
+    self.addEventListener("error", (event) => {
+      recordBackgroundError("uncaught", [event?.message || "Uncaught error", event?.error || ""]);
+    });
+    self.addEventListener("unhandledrejection", (event) => {
+      recordBackgroundError("unhandledrejection", [event?.reason || "Unhandled rejection"]);
+    });
+  }
+})();
+
+// Storage keys whose values must never appear in a diagnostics report.
+const DIAGNOSTICS_SECRET_PATTERN = /secret|token|client|oauth|password|credential/i;
+
+async function buildSettingsSummary() {
+  const all = await storageGet(null);
+  const summary = {};
+  for (const [key, value] of Object.entries(all || {})) {
+    if (DIAGNOSTICS_SECRET_PATTERN.test(key)) continue;
+    if (key === TIMETABLE_SYNC_CACHE_KEY) continue; // summarised separately
+    if (value === null || value === undefined) continue;
+    const type = typeof value;
+    if (type === "boolean" || type === "number") {
+      summary[key] = value;
+    } else if (type === "string") {
+      summary[key] = value.length > 120 ? `${value.slice(0, 120)}…` : value;
+    } else {
+      summary[key] = `[${Array.isArray(value) ? "array" : type}]`;
+    }
+  }
+  return summary;
+}
+
+async function buildTimetableSyncSummary() {
+  const result = await storageGet([TIMETABLE_SYNC_CACHE_KEY]);
+  const root = result?.[TIMETABLE_SYNC_CACHE_KEY];
+  if (!root || typeof root !== "object") return { present: false };
+  const byOrigin = root.byOrigin && typeof root.byOrigin === "object" ? root.byOrigin : {};
+  const origins = Object.entries(byOrigin).map(([origin, bucket]) => ({
+    origin,
+    fetchedAt: bucket?.fetchedAt ? new Date(bucket.fetchedAt).toISOString() : null,
+    targetWeekStart: bucket?.targetWeekStart || null,
+    hasLiveWeek: Boolean(bucket?.liveWeek),
+    hasAdjacentWeek: Boolean(bucket?.adjacentWeek),
+    sampleWeekCount: Array.isArray(bucket?.sampleWeeks) ? bucket.sampleWeeks.length : 0,
+  }));
+  return { present: true, version: root.version, origins };
+}
+
+// requestId -> { frames: [...] }. Each frame in a tab reports its own snapshot
+// here, so iframe-embedded EduPage views are captured, not just the top frame.
+const pendingPageDiagnostics = new Map();
+
+chrome.runtime.onMessage.addListener((message, sender) => {
+  if (message?.type === "ee-page-diagnostics-result" && message.requestId) {
+    const entry = pendingPageDiagnostics.get(message.requestId);
+    if (entry) {
+      const data = message.data || null;
+      entry.frames.push({
+        frameId: sender?.frameId ?? null,
+        isTop: Boolean(data?.frame?.isTop),
+        frameUrl: data?.frame?.url || null,
+        data,
+      });
+    }
+  }
+  // Fire-and-forget: never returns a response, leaves other listeners untouched.
+});
+
+function diagnosticsDelay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function stripUrlQuery(url) {
+  try { const u = new URL(url); return `${u.origin}${u.pathname}`; } catch (_) { return url; }
+}
+
+function summarizePageDiagnostics(pages) {
+  let frameCount = 0;
+  let framesWithContent = 0;
+  const pageTypes = new Set();
+  let gradesScale = null;
+  for (const page of pages) {
+    for (const frame of page.frames || []) {
+      frameCount += 1;
+      const containerCount = frame.data?.containers?.length || 0;
+      const sampledSubjects = frame.data?.gradesSample?.subjectCount || 0;
+      if (containerCount > 0 || sampledSubjects > 0) framesWithContent += 1;
+      for (const type of frame.data?.pageType || []) {
+        if (type && type !== "unknown") pageTypes.add(type);
+      }
+      if (frame.data?.gradesSample?.scaleGuess) gradesScale = frame.data.gradesSample.scaleGuess;
+    }
+  }
+  const empty = framesWithContent === 0;
+  return {
+    frameCount,
+    framesWithContent,
+    pageTypes: Array.from(pageTypes),
+    gradesScale,
+    empty,
+    warning: empty
+      ? "No recognizable EduPage feature content was captured. Open the page that is actually broken (grades, timetable, attendance) in a tab and generate the report again."
+      : null,
+  };
+}
+
+async function collectPageDiagnostics(redact) {
+  let tabs = [];
+  try {
+    tabs = await new Promise((resolve) => {
+      chrome.tabs.query({ url: "https://*.edupage.org/*" }, (result) => resolve(result || []));
+    });
+  } catch (_) {
+    tabs = [];
+  }
+
+  if (!tabs.length) {
+    return { tabFound: false, pages: [], summary: summarizePageDiagnostics([]) };
+  }
+
+  // Prefer the active tab, then most recently accessed, and only query a few.
+  tabs.sort((a, b) => (b.active === a.active ? (b.lastAccessed || 0) - (a.lastAccessed || 0) : (b.active ? 1 : -1)));
+  const targets = tabs.slice(0, 3);
+
+  const pages = [];
+  for (const tab of targets) {
+    const requestId = `ee-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    pendingPageDiagnostics.set(requestId, { frames: [] });
+    try {
+      // No frameId -> broadcast to every frame in the tab.
+      chrome.tabs.sendMessage(
+        tab.id,
+        { type: "ee-collect-page-diagnostics", redact, requestId },
+        () => void chrome.runtime.lastError,
+      );
+    } catch (_) { /* tab has no content script; nothing will report */ }
+
+    await diagnosticsDelay(900); // let every frame report back
+
+    const entry = pendingPageDiagnostics.get(requestId);
+    pendingPageDiagnostics.delete(requestId);
+    const frames = entry?.frames || [];
+
+    // Keep the top frame plus any frame that actually captured content, deduped.
+    const keepIds = new Set();
+    const kept = [];
+    for (const frame of frames) {
+      const useful = frame.isTop || (frame.data?.containers?.length || 0) > 0;
+      const id = frame.frameId ?? `top-${frame.isTop}`;
+      if (useful && !keepIds.has(id)) {
+        keepIds.add(id);
+        kept.push(frame);
+      }
+    }
+
+    pages.push({
+      tabUrl: redact ? stripUrlQuery(tab.url) : tab.url,
+      active: Boolean(tab.active),
+      frameCount: frames.length,
+      frames: kept.length ? kept : frames,
+    });
+  }
+
+  return { tabFound: true, pages, summary: summarizePageDiagnostics(pages) };
+}
+
+async function buildDiagnosticsReport(options = {}) {
+  const redact = options.redact !== false;
+  const manifest = chrome.runtime.getManifest();
+  const updateResult = await storageGet([UPDATE_STATUS_KEY]);
+
+  return {
+    reportVersion: 1,
+    generatedAt: new Date().toISOString(),
+    redacted: redact,
+    extension: {
+      name: manifest.name,
+      version: manifest.version,
+      uiLanguage: typeof chrome.i18n?.getUILanguage === "function" ? chrome.i18n.getUILanguage() : null,
+    },
+    environment: {
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      languages: navigator.languages,
+      timeZone: (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (_) { return null; } })(),
+    },
+    settings: await buildSettingsSummary(),
+    updateStatus: updateResult?.[UPDATE_STATUS_KEY] || null,
+    timetableSync: await buildTimetableSyncSummary(),
+    backgroundErrors: diagnosticsErrorLog.slice(),
+    page: await collectPageDiagnostics(redact),
+  };
+}
+
 function alarmClear(name) {
   return new Promise((resolve) => {
     chrome.alarms.clear(name, resolve);
@@ -2253,6 +2478,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message?.type === "ee-open-repo") {
     openRepository();
+    sendResponse({ ok: true });
+    return false;
+  }
+
+  if (message?.type === "ee-collect-report") {
+    buildDiagnosticsReport({ redact: message.redact !== false })
+      .then((report) => sendResponse({ ok: true, report }))
+      .catch((error) => sendResponse({
+        ok: false,
+        error: error?.message || "Could not build diagnostics report",
+      }));
+    return true;
+  }
+
+  if (message?.type === "ee-report-open-issue") {
+    const title = typeof message.title === "string" ? message.title : "Bug report";
+    const body = typeof message.body === "string" ? message.body : "";
+    const url = `${REPO_URL}/issues/new?` +
+      `title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
+    chrome.tabs.create({ url });
     sendResponse({ ok: true });
     return false;
   }

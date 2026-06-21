@@ -461,6 +461,28 @@
             <span class="sr-only" data-i18n="toggleGradesDebug">Toggle grades attendance debug</span>
           </label>
         </div>
+
+        <div class="setting-row setting-row-stack">
+          <div>
+            <h3 data-i18n="reportProblem">Report a Problem</h3>
+            <p data-i18n="reportProblemDesc">If a feature misbehaves on your school's EduPage, generate a diagnostic report so the issue can be fixed without access to your account. Open the affected EduPage page in another tab first, then generate the report.</p>
+          </div>
+          <div class="setting-stack-controls">
+            <label class="inline-checkbox" for="ReportRedactCheckbox">
+              <input type="checkbox" id="ReportRedactCheckbox" checked>
+              <span data-i18n="reportRedact">Hide personal data (recommended)</span>
+            </label>
+            <p class="setting-note" data-i18n="reportRedactNote">When enabled, the report includes page structure (tags, classes, layout) but no grades, names, marks, or other text values.</p>
+            <div class="actions-row">
+              <button class="secondary-button" id="GenerateReportButton" type="button" data-i18n="generateReport">Generate Report</button>
+              <button class="secondary-button" id="CopyReportButton" type="button" data-i18n="copyReport" disabled>Copy</button>
+              <button class="secondary-button" id="DownloadReportButton" type="button" data-i18n="downloadReport" disabled>Download .json</button>
+              <button class="secondary-button" id="OpenIssueButton" type="button" data-i18n="openIssue" disabled>Open GitHub Issue</button>
+            </div>
+            <p id="ReportStatus" class="setting-note" role="status" aria-live="polite"></p>
+            <textarea id="ReportOutput" class="report-output" readonly hidden aria-label="Diagnostic report"></textarea>
+          </div>
+        </div>
       </section>
 
       <section class="setting-group" aria-labelledby="updates-heading">
