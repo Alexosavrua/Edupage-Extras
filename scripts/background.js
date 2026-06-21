@@ -1887,64 +1887,10 @@ async function extractSchoolEventsFromHiddenTab(tabId, types = {}) {
   return response.data.events;
 }
 
-// ── Suplovanie (substitution) snapshot ──────────────────────────────────────
-//
-// The homepage's "Rozvrh dnes" widget only flags changed periods with a
-// generic class — the real type (teacher substitution vs. room change vs.
-// moved-in lesson) lives on a separate, fully client-rendered page
-// (mode=substitution) that returns no usable data over a plain fetch(). A
-// hidden tab is the only reliable way to read it. To keep this from
-// repeating issue #15 (a hidden tab opening on every page load), this is
-// cached for the rest of the day and is only ever requested by the content
-// script when the homepage actually has at least one changed period.
-
-// V3: cache is now keyed by the *target* day (the day the substitutions are
-// for), with fetchedOn tracking when we scraped it so it still expires daily.
-const SUBSTITUTION_SNAPSHOT_CACHE_KEY = "eeSubstitutionSnapshotCacheV3";
-
-async function readFreshSubstitutionSnapshot(origin, targetDate) {
-  const result = await storageGet([SUBSTITUTION_SNAPSHOT_CACHE_KEY]);
-  const cached = ((result[SUBSTITUTION_SNAPSHOT_CACHE_KEY] || {})[origin] || {})[targetDate];
-  if (!cached || cached.fetchedOn !== formatDate(new Date())) return null;
-  return cached.sections;
-}
-
-async function writeSubstitutionSnapshot(origin, targetDate, sections) {
-  const result = await storageGet([SUBSTITUTION_SNAPSHOT_CACHE_KEY]);
-  const byOrigin = result[SUBSTITUTION_SNAPSHOT_CACHE_KEY] || {};
-  const byDate = byOrigin[origin] || {};
-  byDate[targetDate] = { fetchedOn: formatDate(new Date()), sections };
-  byOrigin[origin] = byDate;
-  await storageSet({ [SUBSTITUTION_SNAPSHOT_CACHE_KEY]: byOrigin });
-}
-
-async function extractSubstitutionSnapshotFromHiddenTab(tabId) {
-  const response = await sendTabMessageRetry(tabId, { type: "ee-extract-substitution-snapshot" });
-  if (!response?.ok || !Array.isArray(response.data?.sections)) {
-    throw new Error(response?.error || "EduPage Suplovanie extraction failed.");
-  }
-  return response.data.sections;
-}
-
-async function collectSubstitutionSnapshot(origin, forceRefresh = false, targetDate = formatDate(new Date())) {
-  if (!forceRefresh) {
-    const cached = await readFreshSubstitutionSnapshot(origin, targetDate);
-    if (cached) return cached;
-  }
-
-  // Pin the Suplovanie viewer to the widget's displayed date so the outlines
-  // match the lessons actually shown (see ee-substitution-snapshot handler).
-  const eqa = encodeURIComponent(btoa(`mode=substitution&dat=${targetDate}`));
-  const tab = await createTab(`${origin}/dashboard/eb.php?eqa=${eqa}`);
-  try {
-    await waitForTabComplete(tab.id);
-    const sections = await extractSubstitutionSnapshotFromHiddenTab(tab.id);
-    await writeSubstitutionSnapshot(origin, targetDate, sections);
-    return sections;
-  } finally {
-    await removeTab(tab.id);
-  }
-}
+// Note: the Suplovanie (substitution) snapshot is now fetched directly by
+// timetable-enhancer.js via the viewer.js POST (using the page's gsechash) — no
+// hidden tab or background round-trip. The old ee-substitution-snapshot handler
+// and its day-cache were removed once the direct fetch was verified live.
 
 async function collectUpcomingSchoolEvents(config) {
   if (!config.lastEdupageOrigin || !config.schoolEventsEnabled || !config.testEventsEnabled) {
@@ -2390,28 +2336,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       .catch((error) => sendResponse({
         ok: false,
         error: error?.message || "Could not build projected subject totals.",
-      }));
-    return true;
-  }
-
-  if (message?.type === "ee-substitution-snapshot") {
-    const origin = typeof message.origin === "string" && message.origin.startsWith("https://")
-      ? message.origin
-      : "";
-    if (!origin) {
-      sendResponse({ ok: false, error: "Missing EduPage origin." });
-      return false;
-    }
-
-    const dateKey = /^\d{4}-\d{2}-\d{2}$/.test(message.dateKey)
-      ? message.dateKey
-      : formatDate(new Date());
-
-    collectSubstitutionSnapshot(origin, message.forceRefresh === true, dateKey)
-      .then((sections) => sendResponse({ ok: true, data: { sections } }))
-      .catch((error) => sendResponse({
-        ok: false,
-        error: error?.message || "Could not load Suplovanie data.",
       }));
     return true;
   }
