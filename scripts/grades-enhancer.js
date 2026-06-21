@@ -1310,9 +1310,97 @@
     });
   }
 
+  // EduPage stores grade weights as `p_vaha`, scaled ×20 (p_vaha 20 = the "1×"
+  // weight the UI shows). Verified live 2026-06-21 by cross-checking the rendered
+  // "Váha udalosti: N×" labels against p_vaha (labels 2 / 2.5 / 0.5 ↔ p_vaha
+  // 40 / 50 / 10). Dividing by this keeps blob-derived mass in the same units
+  // users type for virtual grades.
+  const PVAHA_PER_WEIGHT_UNIT = 20;
+
+  // undefined = not parsed yet; null = unavailable on this page;
+  // Map(predmetid → { mass, count }) otherwise.
+  let blobGradeWeightModel;
+
+  // Reads grade weights straight from the embedded `.znamkyStudentViewer(` blob:
+  // `vsetkyUdalosti.edupage[].p_vaha` joined to `vsetkyZnamky` by `udalostid`,
+  // summed per subject. This replaces the fragile, language-dependent
+  // "Váha udalosti: N×" tooltip-text parsing with structured data — the tooltip
+  // path stays as a fallback when the blob is absent (older skins, or pages that
+  // don't embed it). Memoized for the page load.
+  function getBlobGradeWeightModel() {
+    if (blobGradeWeightModel !== undefined) return blobGradeWeightModel;
+    blobGradeWeightModel = null;
+    try {
+      let blobText = null;
+      for (const script of document.querySelectorAll("script:not([src])")) {
+        const text = script.textContent || "";
+        const marker = ".znamkyStudentViewer(";
+        const markerIndex = text.indexOf(marker);
+        if (markerIndex === -1) continue;
+        const braceIndex = text.indexOf("{", markerIndex + marker.length);
+        if (braceIndex === -1) continue;
+        blobText = extractBalanced(text, braceIndex);
+        if (blobText) break;
+      }
+      if (!blobText) return blobGradeWeightModel;
+
+      const blob = JSON.parse(blobText);
+      const eventsRaw = blob && blob.vsetkyUdalosti && blob.vsetkyUdalosti.edupage;
+      const events = Array.isArray(eventsRaw) ? eventsRaw : eventsRaw ? Object.values(eventsRaw) : [];
+      blobGradeWeightModel = buildGradeWeightModel(blob && blob.vsetkyZnamky, events);
+    } catch (error) {
+      console.warn("[Edupage Extras] Could not read grade weights from the znamky blob.", error);
+    }
+    return blobGradeWeightModel;
+  }
+
+  // Pure join: sum each subject's grade weights from `p_vaha` (÷20 → display
+  // units), matching grades to events by udalostid. Returns Map(predmetid →
+  // { mass, count }), or null when no grade resolves to a weight. Kept separate
+  // from the DOM extraction above so it can be unit-tested.
+  function buildGradeWeightModel(grades, events) {
+    if (!Array.isArray(grades) || !Array.isArray(events)) return null;
+
+    const weightByUdalost = new Map();
+    events.forEach((event) => {
+      const weight = Number(event && event.p_vaha);
+      if (Number.isFinite(weight)) weightByUdalost.set(String(event.UdalostID), weight);
+    });
+
+    const model = new Map();
+    let matched = false;
+    grades.forEach((grade) => {
+      const predmetid = String((grade && grade.predmetid) || "").trim();
+      const weight = weightByUdalost.get(String(grade && grade.udalostid));
+      if (!predmetid || !Number.isFinite(weight)) return;
+      matched = true;
+      const entry = model.get(predmetid) || { mass: 0, count: 0 };
+      entry.mass += weight / PVAHA_PER_WEIGHT_UNIT;
+      entry.count += 1;
+      model.set(predmetid, entry);
+    });
+
+    return matched ? model : null;
+  }
+
+  // The blob's per-subject { mass, count } when the structured weights cover this
+  // subject — the authoritative source, preferred over tooltip parsing.
+  function getBlobMassInfo(predmetid) {
+    const key = String(predmetid || "").trim();
+    if (!key) return null;
+    const model = getBlobGradeWeightModel();
+    const entry = model && model.get(key);
+    return entry && entry.mass > 0 ? entry : null;
+  }
+
   function getEffectiveExistingMass(row, predmetid) {
     const override = readExistingMassOverride(predmetid);
     if (override !== null) return { mass: override, source: "override" };
+    // Structured weights from the embedded blob beat the tooltip-text parse —
+    // exact and language-independent. Fall through to the DOM paths if the blob
+    // isn't present or doesn't cover this subject.
+    const blob = getBlobMassInfo(predmetid);
+    if (blob) return { mass: blob.mass, source: "blob", info: blob };
     if (predmetid && autoDetectedMassCache.has(predmetid)) {
       const cached = autoDetectedMassCache.get(predmetid);
       if (cached.weightsParsed > 0) {
@@ -1449,12 +1537,16 @@
         // row when the popover opens, or filled in manually if detection
         // can't see the per-category weights for some reason.
         const override = readExistingMassOverride(predmetid);
+        const blobInfo = getBlobMassInfo(predmetid);
         const cached = autoDetectedMassCache.get(predmetid);
         const liveInfo = readExistingGradeMass(row);
-        // The detected mass for display is the cached one when available
-        // (it's authoritative — captured while sub-rows were in the DOM),
-        // otherwise whatever the live DOM currently shows.
-        const usableInfo = (cached && cached.weightsParsed > 0) ? cached : liveInfo;
+        // Prefer the blob's structured weights (authoritative, language-neutral);
+        // then the cached sub-row parse (captured while sub-rows were in the
+        // DOM); then whatever the live DOM currently shows. This must match the
+        // source getEffectiveExistingMass uses, so the box and the projection agree.
+        const usableInfo = blobInfo
+          ? { totalWeight: blobInfo.mass, cellCount: blobInfo.count, weightsParsed: blobInfo.count }
+          : (cached && cached.weightsParsed > 0) ? cached : liveInfo;
         const detectedMass = usableInfo.totalWeight;
         const detectedCellCount = usableInfo.cellCount;
         const effectiveMass = override !== null ? override : detectedMass;
@@ -1479,7 +1571,9 @@
         massInput.title = override !== null
           ? `Manual override (auto-detected: ${detectedMass}). Clear or set to ${detectedMass} to use auto-detection.`
           : detectionSucceeded
-            ? "Auto-detected from EduPage's category sub-rows (Váha udalosti). Edit if it's wrong."
+            ? (blobInfo
+                ? "Read from EduPage's own grade weights (p_váha). Edit if it's wrong."
+                : "Auto-detected from EduPage's category sub-rows (Váha udalosti). Edit if it's wrong.")
             : "Auto-detection still running, or couldn't find weight info on this skin. Type the correct weight to override.";
         massInput.addEventListener("change", async () => {
           const typed = Number.parseFloat(massInput.value);

@@ -8,7 +8,7 @@ function loadGradesEnhancerInternals() {
   const source = fs.readFileSync(scriptPath, "utf8");
   const instrumentedSource = source.replace(
     'if (document.readyState === "loading") {',
-    'globalThis.__eeTest = { parseAverage, gradeColor, gradePercentage, parseDateOnly, normalizeDateInput, parseSubjectMap, computeSubjectAbsences, summarizeAttendance, summarizeRenderableAttendance, finalizeSubjectStats, resolveAttendanceBreakdown, resolveOfficialHalfSummary, matchSubjectStats, parseGradeTitleSegments, buildGradeOriginalTitleHtml, buildGradeTitleOverrideKey, gradeTableRowCount, resolveCurrentHalfWindow, computeProjectedSubjectTotals, buildAttendancePlaceholderState, shouldRenderPredictedAttendance, computeSummaryColumnLayout, calcWeightedAvg, projectAverageWithVirtualGrades, parseGradeWeight, readExistingGradeMass }; if (document.readyState === "loading") {',
+    'globalThis.__eeTest = { parseAverage, gradeColor, gradePercentage, parseDateOnly, normalizeDateInput, parseSubjectMap, computeSubjectAbsences, summarizeAttendance, summarizeRenderableAttendance, finalizeSubjectStats, resolveAttendanceBreakdown, resolveOfficialHalfSummary, matchSubjectStats, parseGradeTitleSegments, buildGradeOriginalTitleHtml, buildGradeTitleOverrideKey, gradeTableRowCount, resolveCurrentHalfWindow, computeProjectedSubjectTotals, buildAttendancePlaceholderState, shouldRenderPredictedAttendance, computeSummaryColumnLayout, calcWeightedAvg, projectAverageWithVirtualGrades, parseGradeWeight, readExistingGradeMass, buildGradeWeightModel }; if (document.readyState === "loading") {',
   );
 
   const context = {
@@ -691,6 +691,41 @@ runTest("readExistingGradeMass stops at a sibling whose data-predmetid differs",
   const info = readExistingGradeMass(predmetRow);
   assert.equal(info.cellCount, 2, "only the ústna sub-row of the current subject is counted");
   assert.equal(info.totalWeight, 4, "2 cells × weight 2");
+});
+
+// The structured-weight path: instead of parsing "Váha udalosti: N×" labels,
+// read each grade's weight from the znamky blob (vsetkyUdalosti.edupage[].p_vaha,
+// stored ×20) joined to grades by udalostid, summed per subject.
+runTest("buildGradeWeightModel sums p_vaha per subject (÷20) and joins by udalostid", () => {
+  const { buildGradeWeightModel } = loadGradesEnhancerInternals();
+
+  const events = [
+    { UdalostID: "1", PredmetID: "100", p_vaha: 20 }, // weight 1
+    { UdalostID: "2", PredmetID: "100", p_vaha: 40 }, // weight 2
+    { UdalostID: "3", PredmetID: "200", p_vaha: 10 }, // weight 0.5
+  ];
+  const grades = [
+    { predmetid: "100", udalostid: "1" },
+    { predmetid: "100", udalostid: "2" },
+    { predmetid: "100", udalostid: "2" }, // a second grade on the weight-2 event
+    { predmetid: "200", udalostid: "3" },
+    { predmetid: "200", udalostid: "999" }, // unknown event → not counted
+  ];
+
+  const model = buildGradeWeightModel(grades, events);
+  assert.equal(model.get("100").mass, 5, "1 + 2 + 2");
+  assert.equal(model.get("100").count, 3);
+  assert.equal(model.get("200").mass, 0.5, "only the grade whose event resolved");
+  assert.equal(model.get("200").count, 1);
+});
+
+runTest("buildGradeWeightModel returns null when no grade joins to a weight", () => {
+  const { buildGradeWeightModel } = loadGradesEnhancerInternals();
+  assert.equal(
+    buildGradeWeightModel([{ predmetid: "1", udalostid: "x" }], [{ UdalostID: "y", p_vaha: 20 }]),
+    null,
+  );
+  assert.equal(buildGradeWeightModel(null, []), null);
 });
 
 // Regression: resolveOfficialHalfSummary previously included `distant` lessons
