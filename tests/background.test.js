@@ -8,7 +8,7 @@ function loadBackgroundInternals() {
   const source = fs.readFileSync(scriptPath, "utf8");
   const instrumentedSource = source.replace(
     "chrome.runtime.onInstalled.addListener(() => {",
-    "globalThis.__eeBackgroundTest = { shouldEnableGoogleCalendarAlarm, buildGoogleCalendarConnectedStatus, normalizeGoogleCalendarSyncMode, normalizeGoogleCalendarHalfyearScope, normalizeGoogleCalendarName, parseDateOnly, toRfc3339, buildTemplateWeekMap, buildHalfyearDesiredEvents, buildSchoolEventDesiredEvents, buildFutureSubjectLessonUnits, selectTimetableSampleWeeks }; chrome.runtime.onInstalled.addListener(() => {",
+    "globalThis.__eeBackgroundTest = { shouldEnableGoogleCalendarAlarm, buildGoogleCalendarConnectedStatus, normalizeGoogleCalendarSyncMode, normalizeGoogleCalendarHalfyearScope, normalizeGoogleCalendarName, parseDateOnly, toRfc3339, buildTemplateWeekMap, buildHalfyearDesiredEvents, buildSchoolEventDesiredEvents, buildFutureSubjectLessonUnits, selectTimetableSampleWeeks, buildIcsCalendar }; chrome.runtime.onInstalled.addListener(() => {",
   );
 
   const noop = () => {};
@@ -463,4 +463,38 @@ runTest("week sample selection shifts stale weekend weeks and keeps accurate ext
     Array.from(selected.templateSampleWeeks, (week) => week.dayHeaders[0].date),
     ["2026-05-11", "2026-05-18", "2026-05-25", "2026-06-01"],
   );
+});
+
+runTest("buildIcsCalendar emits valid VEVENTs, converts to UTC, escapes text, and skips bad dates", () => {
+  const { buildIcsCalendar } = loadBackgroundInternals();
+
+  const events = [
+    {
+      key: "lesson-1",
+      startDateTime: "2026-06-22T08:50:00+02:00",
+      endDateTime: "2026-06-22T09:35:00+02:00",
+      payload: { summary: "SJL; group, A", location: "012", description: "Class 3.A\nWeek A" },
+    },
+    {
+      key: "lesson-2",
+      startDateTime: "not-a-date",
+      endDateTime: "2026-06-22T10:30:00+02:00",
+      payload: { summary: "MAT" },
+    },
+  ];
+
+  const { ics, count } = buildIcsCalendar(events, "EduPage Timetable");
+
+  assert.equal(count, 1, "the lesson with an invalid start date is skipped");
+  assert.ok(ics.startsWith("BEGIN:VCALENDAR\r\n"), "uses CRLF line endings");
+  assert.ok(ics.includes("END:VCALENDAR"));
+  assert.equal((ics.match(/BEGIN:VEVENT/g) || []).length, 1);
+  // 08:50+02:00 → 06:50 UTC
+  assert.ok(ics.includes("DTSTART:20260622T065000Z"), "DTSTART converted to UTC");
+  assert.ok(ics.includes("DTEND:20260622T073500Z"), "DTEND converted to UTC");
+  // ; and , in the summary are escaped
+  assert.ok(ics.includes("SUMMARY:SJL\\; group\\, A"), "special chars escaped");
+  // newline in description escaped to \n
+  assert.ok(ics.includes("DESCRIPTION:Class 3.A\\nWeek A"));
+  assert.ok(ics.includes("UID:lesson-1@edupage-extras"));
 });

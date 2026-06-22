@@ -184,11 +184,6 @@
           </label>
         </div>
 
-        <div class="setting-note setting-note-warning" role="note" aria-label="Hidden tab disclaimer">
-          <strong data-i18n="hiddenTabDisclaimerTitle">Heads up: hidden tab</strong>
-          <p data-i18n="timetableHighlightsHiddenTabText">This feature reads the substitution page through a hidden EduPage tab — a new background tab briefly opens once per day and closes itself as soon as the data is captured. The feature is still a work in progress, so a few changes may be classified imperfectly.</p>
-        </div>
-
         <div class="setting-row">
           <div>
             <h3 data-i18n="timetableHighlightColorsLabel">Highlight Colors</h3>
@@ -288,6 +283,44 @@
           </div>
         </div>
 
+      </section>
+
+      <section class="setting-group" aria-labelledby="timetable-heading">
+        <h2 id="timetable-heading" data-i18n="groupTimetable">Timetable</h2>
+
+        <div class="setting-row setting-row-stack">
+          <div>
+            <h3 data-i18n="exportTimetable">Export Timetable (.ics)</h3>
+            <p data-i18n="exportTimetableDesc">Download your timetable as an .ics calendar file you can import into Google Calendar, Apple Calendar, Outlook, and most other apps.</p>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <h3 data-i18n="exportTimetableIncludeChanges">Include this week's changes</h3>
+            <p data-i18n="exportTimetableIncludeChangesDesc">When on, the export keeps this week's substitutions and room changes. When off, it exports the regular timetable without them.</p>
+          </div>
+          <label class="switch switch-compact" for="ExportTimetableIncludeChangesCheckbox">
+            <input type="checkbox" id="ExportTimetableIncludeChangesCheckbox" checked>
+            <span class="switch-track" aria-hidden="true"></span>
+            <span class="sr-only" data-i18n="toggleExportIncludeChanges">Toggle including this week's changes</span>
+          </label>
+        </div>
+
+        <div class="setting-note setting-note-warning" role="note" aria-label="Hidden tab disclaimer">
+          <strong data-i18n="hiddenTabDisclaimerTitle">Heads up: hidden tab</strong>
+          <p data-i18n="exportTimetableHiddenTabText">Exporting briefly opens a hidden EduPage tab to read your timetable — a new background tab opens, captures the data, then closes itself.</p>
+        </div>
+
+        <div class="setting-row setting-row-stack">
+          <div class="setting-stack-controls">
+            <div class="actions-row">
+              <button class="secondary-button" id="ExportTimetableWeekButton" type="button" data-i18n="exportTimetableWeek">Export Current Week</button>
+              <button class="secondary-button" id="ExportTimetableHalfyearButton" type="button" data-i18n="exportTimetableHalfyear">Export Half-Year</button>
+            </div>
+            <p id="ExportTimetableStatus" class="setting-note" role="status" aria-live="polite"></p>
+          </div>
+        </div>
       </section>
 
       <section class="setting-group" aria-labelledby="google-calendar-heading">

@@ -42,27 +42,30 @@
          Colors come from --ee-rozvrh-* custom properties (set by content.js
          from user settings, defaulting to blue/orange).
 
-         Uses outline, not background-color/box-shadow: content.js's own
-         dark-mode CSS already paints an !important opaque background on
-         .rozvrhItemAlign and its child spans (the gold "today" period header,
-         etc.) at equal selector specificity, which hid most of a background
-         fill — only whatever gap was left between those children showed
-         through. outline renders entirely outside the border box, so it
-         can never be covered by a child's background regardless of theme. */
-      li.rozvrhItem.ee-rozvrh-substitution,
-      li.rozvrhItem.ee-rozvrh-changed {
-        outline: 3px solid var(--ee-rozvrh-substitution-color, #e65100) !important;
-        outline-offset: 0 !important;
+         EduPage paints the period-number box (.hodina) of EVERY changed lesson
+         the same olive/yellow (rule: .userTopDiv ul.rozvrh li.hasChange .hodina),
+         so a room change and a substitution look identical. We recolor just that
+         box by the real type instead — leaving the rest of the cell untouched.
+         The native rule isn't !important, so ours win; html.ee-dark variants are
+         included in case the dark theme repaints .hodina. */
+      li.rozvrhItem.ee-rozvrh-substitution .hodina,
+      li.rozvrhItem.ee-rozvrh-changed .hodina,
+      html.ee-dark li.rozvrhItem.ee-rozvrh-substitution .hodina,
+      html.ee-dark li.rozvrhItem.ee-rozvrh-changed .hodina {
+        background-color: var(--ee-rozvrh-substitution-color, #e65100) !important;
+        color: #fff !important;
       }
 
-      li.rozvrhItem.ee-rozvrh-room-change {
-        outline: 3px solid var(--ee-rozvrh-room-change-color, #1565c0) !important;
-        outline-offset: 0 !important;
+      li.rozvrhItem.ee-rozvrh-room-change .hodina,
+      html.ee-dark li.rozvrhItem.ee-rozvrh-room-change .hodina {
+        background-color: var(--ee-rozvrh-room-change-color, #1565c0) !important;
+        color: #fff !important;
       }
 
-      li.rozvrhItem.ee-rozvrh-moved {
-        outline: 3px solid #8e24aa !important;
-        outline-offset: 0 !important;
+      li.rozvrhItem.ee-rozvrh-moved .hodina,
+      html.ee-dark li.rozvrhItem.ee-rozvrh-moved .hodina {
+        background-color: #8e24aa !important;
+        color: #fff !important;
       }
     `;
 

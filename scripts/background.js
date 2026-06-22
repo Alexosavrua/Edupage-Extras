@@ -1767,6 +1767,120 @@ function buildWeeklyDesiredEvents(weekData) {
   }));
 }
 
+// ── Timetable .ics export ────────────────────────────────────────────────────
+//
+// Reuses the same desired-event assembly as the Google Calendar sync
+// (buildWeeklyDesiredEvents / buildHalfyearDesiredEvents) but emits an iCalendar
+// file instead of pushing to Google — a plain local download, no OAuth.
+
+function icsEscapeText(value) {
+  return String(value == null ? "" : value)
+    .replace(/\\/g, "\\\\")
+    .replace(/;/g, "\\;")
+    .replace(/,/g, "\\,")
+    .replace(/\r?\n/g, "\\n");
+}
+
+// RFC 5545 caps content lines at 75 octets; fold the rest onto continuation
+// lines that start with a single space.
+function icsFoldLine(line) {
+  if (line.length <= 73) return line;
+  const parts = [line.slice(0, 73)];
+  let rest = line.slice(73);
+  while (rest.length > 72) {
+    parts.push(` ${rest.slice(0, 72)}`);
+    rest = rest.slice(72);
+  }
+  if (rest.length) parts.push(` ${rest}`);
+  return parts.join("\r\n");
+}
+
+// RFC3339 (with offset) → iCalendar UTC stamp "YYYYMMDDTHHMMSSZ". Going through
+// UTC keeps the lessons at the right wall-clock time in any calendar app.
+function toIcsUtcStamp(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return `${date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "")}`;
+}
+
+function buildIcsCalendar(events, calendarName = "EduPage Timetable") {
+  const stamp = toIcsUtcStamp(new Date());
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Edupage Extras//Timetable Export//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    `X-WR-CALNAME:${icsEscapeText(calendarName)}`,
+  ];
+
+  let count = 0;
+  (events || []).forEach((event, index) => {
+    const start = toIcsUtcStamp(event?.startDateTime);
+    const end = toIcsUtcStamp(event?.endDateTime);
+    if (!start || !end) return;
+    const uid = `${String(event?.key || `ee-timetable-${index}`)}@edupage-extras`;
+    lines.push("BEGIN:VEVENT");
+    lines.push(`UID:${icsEscapeText(uid)}`);
+    lines.push(`DTSTAMP:${stamp}`);
+    lines.push(`DTSTART:${start}`);
+    lines.push(`DTEND:${end}`);
+    lines.push(`SUMMARY:${icsEscapeText(event?.payload?.summary)}`);
+    if (event?.payload?.location) lines.push(`LOCATION:${icsEscapeText(event.payload.location)}`);
+    if (event?.payload?.description) lines.push(`DESCRIPTION:${icsEscapeText(event.payload.description)}`);
+    lines.push("END:VEVENT");
+    count += 1;
+  });
+
+  lines.push("END:VCALENDAR");
+  return { ics: lines.map(icsFoldLine).join("\r\n"), count };
+}
+
+async function buildTimetableIcsExport(range, includeChanges = true) {
+  const baseConfig = await getGoogleCalendarConfig();
+  if (!baseConfig.lastEdupageOrigin) {
+    throw new Error("Open any EduPage page once so the extension can learn your school URL, then try again.");
+  }
+
+  const halfyear = range === "halfyear";
+  const config = {
+    ...baseConfig,
+    syncMode: halfyear ? "halfyear" : "week",
+    extraHalfyearSampleWeeks: halfyear ? 2 : 0,
+  };
+
+  const { liveWeek, adjacentWeek, templateSampleWeeks } = await collectLiveEdupageWeek(config);
+  if (!liveWeek?.lessons?.length) {
+    throw new Error("EduPage did not return any lessons for the timetable.");
+  }
+
+  // "Without changes" → drop this week's substitutions/room changes so the file
+  // holds the regular timetable. (The half-year projection already uses only
+  // unchanged lessons for future weeks; this also cleans the live week.)
+  if (!includeChanges) {
+    liveWeek.lessons = liveWeek.lessons.filter((lesson) => !lesson.changed);
+    if (adjacentWeek) {
+      adjacentWeek.lessons = adjacentWeek.lessons.filter((lesson) => !lesson.changed);
+    }
+    if (!liveWeek.lessons.length) {
+      throw new Error("No unchanged lessons to export for this week.");
+    }
+  }
+
+  liveWeek.config = { ...config, templateSampleWeeks };
+  if (adjacentWeek) adjacentWeek.config = liveWeek.config;
+
+  const events = halfyear
+    ? buildHalfyearDesiredEvents(liveWeek, adjacentWeek)
+    : buildWeeklyDesiredEvents(liveWeek);
+
+  const { ics, count } = buildIcsCalendar(events, halfyear ? "EduPage Timetable (Half-year)" : "EduPage Timetable (Week)");
+  if (count === 0) {
+    throw new Error("No lessons were available to export.");
+  }
+  return { ics, count, filename: `edupage-timetable-${halfyear ? "halfyear" : "week"}.ics` };
+}
+
 function buildHalfyearDesiredEvents(liveWeek, adjacentWeek) {
   const anchorDate = parseDateOnly(liveWeek.dayHeaders[0]?.date) || new Date();
   const halfyearRange = computeCurrentHalfyearRange(anchorDate);
@@ -2581,6 +2695,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       .catch((error) => sendResponse({
         ok: false,
         error: error?.message || "Could not build projected subject totals.",
+      }));
+    return true;
+  }
+
+  if (message?.type === "ee-export-timetable-ics") {
+    const range = message.range === "halfyear" ? "halfyear" : "week";
+    const includeChanges = message.includeChanges !== false;
+    buildTimetableIcsExport(range, includeChanges)
+      .then((result) => sendResponse({ ok: true, ...result, range }))
+      .catch((error) => sendResponse({
+        ok: false,
+        error: error?.message || "Timetable export failed.",
       }));
     return true;
   }

@@ -999,6 +999,51 @@ downloadReportButton.addEventListener("click", () => {
 	reportStatus.textContent = t("reportDownloaded") || "Report downloaded.";
 });
 
+const exportTimetableWeekButton = document.getElementById("ExportTimetableWeekButton");
+const exportTimetableHalfyearButton = document.getElementById("ExportTimetableHalfyearButton");
+const exportTimetableIncludeChangesCheckbox = document.getElementById("ExportTimetableIncludeChangesCheckbox");
+const exportTimetableStatus = document.getElementById("ExportTimetableStatus");
+
+function downloadIcsFile(ics, filename) {
+	const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement("a");
+	link.href = url;
+	link.download = filename || "edupage-timetable.ics";
+	document.body.appendChild(link);
+	link.click();
+	link.remove();
+	setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function requestTimetableExport(range) {
+	if (!exportTimetableStatus) return;
+	const buttons = [exportTimetableWeekButton, exportTimetableHalfyearButton];
+	buttons.forEach((button) => { if (button) button.disabled = true; });
+	const includeChanges = exportTimetableIncludeChangesCheckbox
+		? exportTimetableIncludeChangesCheckbox.checked
+		: true;
+	exportTimetableStatus.textContent = t("exportTimetableWorking") || "Reading your timetable…";
+	chrome.runtime.sendMessage({ type: "ee-export-timetable-ics", range, includeChanges }, (response) => {
+		buttons.forEach((button) => { if (button) button.disabled = false; });
+		if (chrome.runtime.lastError || !response || !response.ok) {
+			const detail = response?.error || chrome.runtime.lastError?.message || "";
+			exportTimetableStatus.textContent = `${t("exportTimetableError") || "Export failed:"} ${detail}`.trim();
+			return;
+		}
+		downloadIcsFile(response.ics, response.filename);
+		exportTimetableStatus.textContent = (t("exportTimetableDone") || "Exported {count} lessons.")
+			.replace("{count}", String(response.count));
+	});
+}
+
+if (exportTimetableWeekButton) {
+	exportTimetableWeekButton.addEventListener("click", () => requestTimetableExport("week"));
+}
+if (exportTimetableHalfyearButton) {
+	exportTimetableHalfyearButton.addEventListener("click", () => requestTimetableExport("halfyear"));
+}
+
 openIssueButton.addEventListener("click", () => {
 	if (!latestReport) return;
 	const version = latestReport?.extension?.version || "?";
