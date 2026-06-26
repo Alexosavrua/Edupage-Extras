@@ -1,6 +1,6 @@
 {
   "extName": { "message": "Edupage Extras" },
-  "extDescription": { "message": "QoL extras for Edupage - themes, global grade tools, and update reminders." },
+  "extDescription": { "message": "QoL extras for Edupage - themes, grade tools, attendance stats, and timetable export." },
 
   "madeBy": { "message": "Made by" },
   "openGithub": { "message": "Open GitHub" },
@@ -141,6 +141,7 @@
   "versionCheck": { "message": "Version Check" },
   "noUpdateCheck": { "message": "No update check has run yet." },
   "checkForUpdates": { "message": "Check For Updates" },
+  "updatesAutoStore": { "message": "This install updates automatically through your browser's add-on store." },
   "checkingGithub": { "message": "Checking GitHub..." },
   "updateErrorPrefix": {
     "message": "Could not check GitHub: $error$",

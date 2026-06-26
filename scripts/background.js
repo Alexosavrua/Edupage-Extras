@@ -565,6 +565,27 @@ function maybeNotify(status) {
     });
 }
 
+// The GitHub "pull the latest project and reload" reminder only makes sense for
+// unpacked/developer installs. Installs from a store (Firefox AMO, and a future
+// Chrome Web Store listing) update themselves, so the reminder is wrong there.
+// management.getSelf() reports installType without needing the "management"
+// permission. Assume developer if it can't be determined, so the reminder
+// never silently disappears for someone who actually relies on it.
+let cachedIsDevelopmentInstall = null;
+async function isDevelopmentInstall() {
+  if (cachedIsDevelopmentInstall !== null) return cachedIsDevelopmentInstall;
+  try {
+    const self = await new Promise((resolve) => {
+      if (!chrome.management?.getSelf) { resolve(null); return; }
+      chrome.management.getSelf((info) => resolve(chrome.runtime.lastError ? null : info));
+    });
+    cachedIsDevelopmentInstall = self ? self.installType === "development" : true;
+  } catch {
+    cachedIsDevelopmentInstall = true;
+  }
+  return cachedIsDevelopmentInstall;
+}
+
 async function checkForUpdates({ notify = false } = {}) {
   const localVersion = chrome.runtime.getManifest().version;
 
@@ -581,7 +602,7 @@ async function checkForUpdates({ notify = false } = {}) {
     };
 
     await storeStatus(status);
-    if (notify) {
+    if (notify && await isDevelopmentInstall()) {
       maybeNotify(status);
     }
     return status;
@@ -601,7 +622,8 @@ async function checkForUpdates({ notify = false } = {}) {
 }
 
 async function syncUpdateAlarm() {
-  if (await updateRemindersEnabled()) {
+  // Store installs auto-update, so don't schedule the daily GitHub check there.
+  if (await isDevelopmentInstall() && await updateRemindersEnabled()) {
     chrome.alarms.create(UPDATE_ALARM_NAME, {
       delayInMinutes: 5,
       periodInMinutes: 1440,

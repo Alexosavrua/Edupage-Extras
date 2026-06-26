@@ -175,6 +175,12 @@ p {
     padding: 16px;
 }
 
+/* Let the description column shrink (text wraps) so wide controls like the
+   date input + button can stay on one row beside it. */
+.setting-row > div:first-child {
+    min-width: 0;
+}
+
 [hidden] {
     display: none !important;
 }
@@ -451,9 +457,21 @@ p {
 }
 
 .date-setting-controls {
-    display: grid;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0; /* keep the controls their natural width; let the description text shrink instead */
+}
+
+/* Input and the "Use EduPage Default" button sit side by side on one row; the
+   small "Default: …" hint goes on its own line beneath them. */
+.date-control-row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
     gap: 10px;
-    justify-items: end;
 }
 
 .date-control {
@@ -600,7 +618,7 @@ input[type="checkbox"]:disabled {
     }
 
     .date-setting-controls {
-        justify-items: stretch;
+        justify-content: space-between;
         width: 100%;
     }
 

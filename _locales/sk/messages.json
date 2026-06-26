@@ -1,6 +1,6 @@
 {
   "extName": { "message": "Edupage Extras" },
-  "extDescription": { "message": "Doplnky kvality života pre Edupage – témy, nástroje na známky a pripomienky aktualizácií." },
+  "extDescription": { "message": "Doplnky kvality života pre Edupage – témy, nástroje na známky, štatistiky dochádzky a export rozvrhu." },
 
   "madeBy": { "message": "Vytvoril" },
   "openGithub": { "message": "Otvoriť GitHub" },
@@ -141,6 +141,7 @@
   "versionCheck": { "message": "Kontrola verzie" },
   "noUpdateCheck": { "message": "Zatiaľ neprebehla žiadna kontrola aktualizácií." },
   "checkForUpdates": { "message": "Skontrolovať aktualizácie" },
+  "updatesAutoStore": { "message": "Táto inštalácia sa aktualizuje automaticky cez obchod s doplnkami vášho prehliadača." },
   "checkingGithub": { "message": "Kontroluje sa GitHub..." },
   "updateErrorPrefix": {
     "message": "Nepodarilo sa skontrolovať GitHub: $error$",
