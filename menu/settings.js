@@ -263,7 +263,19 @@ function renderDefaultHalfyearHints() {
 	}
 }
 
+// Set for store installs (Firefox AMO / future Chrome Web Store) — the browser
+// auto-updates the add-on, so the GitHub "pull & reload" flow doesn't apply.
+let isStoreInstall = false;
+
 function renderUpdateStatus(status) {
+	// On store installs, keep the "updates automatically" note regardless of any
+	// stored GitHub check status.
+	if (isStoreInstall) {
+		updateStatusText.dataset.state = "";
+		updateStatusText.textContent = t("updatesAutoStore") ||
+			"This install updates automatically through your browser's add-on store.";
+		return;
+	}
 	const reloadReminder = t("updateReloadReminder");
 	updateStatusText.dataset.state = "";
 	if (!status) {
@@ -721,3 +733,17 @@ chrome.storage.onChanged.addListener((changes, area) => {
 		renderUpdateStatus(changes[UPDATE_STATUS_KEY].newValue);
 	}
 });
+
+// Update Reminders only apply to unpacked/developer installs. On store installs
+// (Firefox AMO, future Chrome Web Store) the browser auto-updates the add-on, so
+// hide the GitHub-only controls and show an "updates automatically" note instead.
+// management.getSelf() works without the "management" permission.
+if (chrome.management && typeof chrome.management.getSelf === "function") {
+	chrome.management.getSelf((info) => {
+		if (chrome.runtime.lastError || !info || info.installType === "development") return;
+		isStoreInstall = true;
+		updateReminderToggle?.closest(".setting-row")?.setAttribute("hidden", "");
+		if (checkUpdatesButton) checkUpdatesButton.hidden = true;
+		renderUpdateStatus(null);
+	});
+}

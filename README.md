@@ -18,12 +18,22 @@ or any school using Edupage.**
 5. Select the project folder: `Edupage-Extras/`.
 6. Open an Edupage page such as `https://your-school.edupage.org/`, or reload an already opened page.
 
+### Installation in Firefox
+
+Edupage Extras is being submitted to addons.mozilla.org (AMO) starting with
+version 0.7.0. Once the listing is live, search "Edupage Extras" on
+[addons.mozilla.org](https://addons.mozilla.org) or follow the link from this
+repository (https://addons.mozilla.org/en-US/firefox/addon/edupage-extras/). Installs from AMO
+update automatically — no manual steps needed.
+
+Note: this extension is build around chromium based browsers and is just ported to chromium so anyone can use it.
+      if you encounter any bugs please report it on my discord. (there is a report tool built in settings.)
 ## Features
 
 ### Appearance
 
 - **Themes** for Edupage pages and extension menus.
-- **Theme hotkey** support for toggling themes on or off through Chrome's
+- **Theme hotkey** support for toggling themes on or off through the browser's
   extension shortcuts page.
 - **Theme picker** with Midnight Blue, Ocean Cyan, Forest Green, Emerald Green,
   Rose Pink, Royal Purple, and Light themes.
@@ -35,6 +45,9 @@ or any school using Edupage.**
 - **Grade badges** on the Edupage grades page.
 - **Color-coded average bars** for subject averages.
 - **Overall average row** based on the averages Edupage already renders.
+- **Virtual Grade Calculator** — add hypothetical grades to any subject and
+  see the projected average update live, using EduPage's own grade weights
+  (read directly from EduPage's data, not guessed from on-screen labels).
 - **JSON export** of the grades table (subject, average, and attendance fields
   when enabled) via an Export JSON button above the table. The file is
   human-readable, self-documenting, and easy to feed back into scripts.
@@ -43,49 +56,50 @@ or any school using Edupage.**
 
 - **Subject attendance** inside the Edupage grades table.
 - **Halfyear absence percentage** inside Edupage's existing attendance summary.
-- **Second halfyear start date override** in Settings for attendance
-  calculations when EduPage's default date needs adjustment.
+- **Second halfyear start/end date overrides** in Settings for attendance
+  calculations when EduPage's default dates need adjusting.
 - Uses the official attendance data already embedded in the loaded Edupage page.
 - Highlights the currently active halfyear and shows the raw absent/total lesson ratio.
 
 The extension reads the values from Edupage's existing grade table. It does not
 log in, use credentials, fetch grades from a server, or calculate hidden grade data.
 
+### Timetable
+
+- **Substitution and room-change highlights**, colored by change type instead
+  of EduPage's single generic color, so you can tell at a glance what changed.
+- **Export to .ics** — download the current week or the whole half-year as a
+  standard calendar file, importable into Google Calendar, Apple Calendar,
+  Outlook, and most other calendar apps. Optionally include or exclude this
+  week's substitutions/room changes.
+
 ### Languages
 
 - **Localized interface** for the popup, Settings, and Experimental pages, plus
   the injected grades columns. English, Slovak, and Czech are bundled.
-- The language follows the browser UI language automatically (Chrome's
-  `chrome.i18n`), falling back to English.
+- The language follows the browser UI language automatically
+  (`chrome.i18n`/`browser.i18n`), falling back to English.
 
 ### Updates
 
-- **Update reminders** checks the public GitHub project manifest and compares it
-  with the installed unpacked extension version.
-- If a newer version is available, the extension shows a reminder to pull the
-  latest project from GitHub and reload the unpacked extension from
-  `chrome://extensions/`.
+- **Chrome/Edge (unpacked installs):** an update reminder checks the public
+  GitHub project manifest and compares it with the installed version. If a
+  newer version is available, it prompts you to pull the latest project and
+  reload the unpacked extension from `chrome://extensions/`.
+- **Firefox (installed from AMO):** updates automatically through Firefox's
+  own add-on update mechanism — no manual steps, and the GitHub-based reminder
+  above doesn't apply.
 - Update checks do not send Edupage data anywhere.
-
-### Google Calendar Sync
-
-- **Google Calendar sync** can mirror the current EduPage timetable to a
-  dedicated Google Calendar.
-- Supports **current week** sync or **current halfyear** sync.
-- Uses a user-provided Google OAuth client and browser-based sign-in.
-- Stores Google OAuth tokens locally in the browser for background sync.
-- **This feature is WIP**
 
 ## Usage
 
 - Click the extension icon to quickly toggle themes or open settings.
 - Open **Settings** for appearance and grade options.
-- Assign a shortcut in Chrome's extension shortcuts page if you want to toggle
+- Assign a shortcut in the extension shortcuts page if you want to toggle
   themes without opening Settings.
-- Choose **Custom** in the theme picker to build your own colors.
+- Choose **Custom** in the theme picker to build your own themes.
 - Use **Check For Updates** in Settings to manually check the public GitHub
-  version. If an update is available, pull the latest project and reload the
-  unpacked extension in `chrome://extensions/`.
+  version (Chrome/Edge unpacked installs only — see Updates above).
 
 ## Permissions
 
@@ -97,19 +111,11 @@ Edupage Extras requests:
 - `alarms` - checks for updates on a daily schedule.
 - `notifications` - shows an unpacked-version update reminder when a newer
   GitHub version is available.
-- `identity` - completes the optional Google OAuth sign-in flow for Google
-  Calendar sync.
 - `https://*.edupage.org/*` host access - injects the extension scripts only on
   Edupage pages and reads timetable/attendance data already present in Edupage.
 - `https://edublurtesting.ct.ws/*` - testing purposes
 - `https://raw.githubusercontent.com/Alexosavrua/Edupage-Extras/*` host access -
   reads the public project manifest for update checks.
-- `https://accounts.google.com/*` host access - opens the Google sign-in and
-  consent screens for the optional Google Calendar feature. - not mandatory only used when google sync is used you can turn it off manually.
-- `https://oauth2.googleapis.com/*` host access - exchanges and refreshes
-  Google OAuth tokens for the optional Google Calendar feature. - not mandatory only used when google sync is used you can turn it off manually.
-- `https://www.googleapis.com/*` host access - creates and updates Google
-  Calendar events for the optional Google Calendar feature. - not mandatory only used when google sync is used you can turn it off manually.
 
 The extension does not request access to all websites.
 
@@ -118,56 +124,62 @@ The extension does not request access to all websites.
 - No backend server.
 - No analytics.
 - No external requests made by the extension except the optional public GitHub
-  manifest update check and the optional Google Calendar sync flow.
+  manifest update check.
 - No Edupage credentials are collected.
 - Settings are stored locally with `chrome.storage.local`.
 - Grade enhancements are generated from data already present in the currently
   loaded Edupage page.
 - Attendance percentages are generated from Edupage's existing attendance page
   data and do not use an external API.
-- Google Calendar OAuth tokens, if configured, are stored locally in the
-  browser profile to support manual and scheduled sync.
-- Google OAuth client details, if configured for Calendar sync, are also stored
-  locally in the browser profile.
-
+- Timetable export generates a calendar file locally in the browser; nothing
+  is uploaded anywhere.
 
 ## Main Files
 
 - `manifest.json` - extension manifest, permissions, and content script setup.
-- `scripts/background.js` - GitHub update checks and update reminders.
+- `scripts/background.js` - GitHub update checks, update reminders, and
+  timetable `.ics` export.
 - `scripts/content.js` - themes, layout cleanup, and visual fixes.
-- `scripts/grades-enhancer.js` - grade badges, average bars, and the overall
-  average row.
+- `scripts/grades-enhancer.js` - grade badges, average bars, the overall
+  average row, and the Virtual Grade Calculator.
 - `scripts/attendance-enhancer.js` - injects current halfyear absence
   percentages into Edupage's attendance summary.
+- `scripts/timetable-enhancer.js` - substitution/room-change highlights on the
+  homepage timetable widget.
+- `scripts/timetable-sync.js` - reads the EduPage timetable page, used by the
+  `.ics` export.
 - `menu/settings.html` - normal user-facing settings.
 - `menu/experimental.html` - experimental features that are kept
   separate from normal settings.
+- `menu/i18n.js` - shared localization helper for the extension's own pages.
 
 ## Development Notes
 
-This is a plain browser extension. There is no build step required for the
-current version.
+This is a plain browser extension with an `npm`-based toolchain for the
+Firefox side (linting, packaging, and publishing). There's no build step for
+loading it unpacked in Chrome/Edge — that still works directly from source.
 
 Recommended checks before publishing:
 
-```powershell
-node --check menu\menu.js
-node --check menu\settings.js
-node --check menu\experimental.js
-node --check menu\i18n.js
-node --check scripts\background.js
-node --check scripts\content.js
-node --check scripts\grades-enhancer.js
-node --check scripts\attendance-enhancer.js
-node --check scripts\timetable-sync.js
-node tests\grades-enhancer.test.js
-node tests\attendance-enhancer.test.js
-node tests\background.test.js
-node tests\timetable-sync.test.js
+```sh
+npm install
+npm test                # runs every tests/*.test.js file
+npm run lint:firefox    # web-ext lint — should report 0 errors
 node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8')); console.log('manifest ok')"
 node -e "['en','sk','cs'].forEach(l=>JSON.parse(require('fs').readFileSync('_locales/'+l+'/messages.json','utf8'))); console.log('locales ok')"
 ```
+
+To build and sanity-check a Firefox package locally:
+
+```sh
+npm run build:firefox   # produces a .zip in web-ext-artifacts/
+npm run verify:package  # fails if the package contains anything it shouldn't
+npm run run:firefox     # launches Firefox with the extension loaded
+```
+
+See [FIREFOX_RELEASE.md](FIREFOX_RELEASE.md) for the full AMO publishing setup
+(one-time manual listing, then automatic releases via GitHub Actions on every
+version tag).
 
 ## Compatibility
 

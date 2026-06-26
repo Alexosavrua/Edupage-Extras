@@ -208,21 +208,21 @@
     }
   }
 
+  // Manual decode instead of the classic <textarea>.innerHTML trick — that's
+  // spec-safe (textarea is a raw-text element, never parses child markup) but
+  // extension-store linters flag any dynamic innerHTML assignment on sight.
+  // EduPage's grade-title tooltip HTML only ever needs basic entity decoding
+  // (it's simple escaped text, not rich content), so numeric + the standard
+  // five named entities cover every real case without touching the DOM at all.
   function decodeHtmlEntities(value) {
-    if (typeof document?.createElement !== "function") {
-      return String(value || "")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&amp;/g, "&")
-        .replace(/&quot;/g, "\"")
-        .replace(/&#39;/g, "'");
-    }
-
-    // <textarea> is a raw-text element per the HTML spec — innerHTML here only
-    // ever decodes entities into .value, it never parses/executes child markup.
-    const textarea = document.createElement("textarea");
-    textarea.innerHTML = String(value || "");
-    return textarea.value;
+    return String(value || "")
+      .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
+      .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(Number.parseInt(dec, 10)))
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&amp;/g, "&")
+      .replace(/&quot;/g, "\"")
+      .replace(/&#39;/g, "'");
   }
 
   function stripHtmlTags(value) {

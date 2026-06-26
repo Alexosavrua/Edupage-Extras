@@ -39,8 +39,9 @@ jobs:
 
       - name: Sign and submit to addons.mozilla.org
         env:
-          WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
-          WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+          # AMO_API_KEY = the AMO "JWT issuer"; AMO_API_SECRET = the "JWT secret".
+          WEB_EXT_API_KEY: ${{ secrets.AMO_API_KEY }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_API_SECRET }}
         run: npm run sign:firefox
 
       - name: Upload signed .xpi as a workflow artifact
