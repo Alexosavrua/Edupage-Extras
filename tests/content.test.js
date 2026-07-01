@@ -76,6 +76,9 @@ function loadContentInternals(pathname = "/") {
       },
       head: {
         appendChild() {},
+        querySelector() {
+          return null;
+        },
       },
     },
     MutationObserver: class {
