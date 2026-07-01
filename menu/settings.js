@@ -116,6 +116,7 @@ const DEFAULT_CUSTOM_THEME = {
 	accent: "#89b4fa",
 	warning: "#fab387",
 	danger: "#f38ba8",
+	tableHeaderBg: "#2c70a3",
 };
 const customInputs = {
 	bgBase: document.getElementById("CustomBgBase"),
@@ -128,6 +129,7 @@ const customInputs = {
 	accent: document.getElementById("CustomAccent"),
 	warning: document.getElementById("CustomWarning"),
 	danger: document.getElementById("CustomDanger"),
+	tableHeaderBg: document.getElementById("CustomTableHeaderBg"),
 };
 
 let customTheme = { ...DEFAULT_CUSTOM_THEME };

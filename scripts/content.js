@@ -22,6 +22,51 @@ const UPDATE_REMINDER_ENABLED_KEY = "eeUpdateReminderEnabled";
 // real per-version descriptions in the commit messages.
 const REPO_RELEASES_URL = "https://github.com/Alexosavrua/Edupage-Extras/commits/main";
 const MOBILE_RESPONSIVE_KEY = "eeMobileResponsiveEnabled";
+const THEME_CACHE_KEY = "eeThemeCacheV1";
+
+// chrome.storage.local.get() is always async, so on every full-page nav the
+// page would otherwise paint once with the light-mode default before the
+// real settings resolve and we re-apply dark mode — a visible white flash.
+// localStorage is synchronous and shared with the page, so we stash the
+// last-applied settings there and use them for the very first paint, then
+// reconcile with the real chrome.storage values right after.
+function readThemeCache() {
+  try {
+    const raw = localStorage.getItem(THEME_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function writeThemeCache(settings) {
+  try {
+    localStorage.setItem(THEME_CACHE_KEY, JSON.stringify(settings));
+  } catch (e) {
+    // localStorage unavailable (private mode, quota, etc.) — cache is a
+    // FOUC-prevention nicety, not required for correctness, so just skip.
+  }
+}
+
+// Heavier pages (e.g. grades — 7+ blocking stylesheets + several scripts)
+// take noticeably longer to finish loading all render-blocking CSS than
+// the dashboard, and the browser paints nothing at all until every one of
+// them is ready — that blank wait is what shows as a "white flash", not
+// our stylesheet losing a cascade fight (it hasn't even had a chance to
+// paint yet). A plain inline background-color on <html>, set synchronously
+// here, paints immediately regardless of pending stylesheet loads, so the
+// blank wait itself reads as dark instead of white. The real per-theme
+// background from buildDarkCSS() takes over the instant it's ready.
+(function paintEarlyBackground() {
+  try {
+    const cached = readThemeCache();
+    if (cached && cached.darkModeEnabled) {
+      document.documentElement.style.backgroundColor = "#0c1220";
+    }
+  } catch (e) {
+    // best-effort only
+  }
+})();
 const MOBILE_STYLE_ID = "ee-mobile-responsive-style";
 const CLASS_NAME = "ee-dark";
 const THEME_CLASSES = [
@@ -73,6 +118,7 @@ const DEFAULT_CUSTOM_THEME = {
   accent: "#89b4fa",
   warning: "#fab387",
   danger: "#f38ba8",
+  tableHeaderBg: "#2c70a3",
 };
 
 function buildDarkCSS() {
@@ -97,10 +143,12 @@ function buildDarkCSS() {
          --ee-text        body/heading text.
          --ee-text-muted  secondary text (timestamps, subtitles).
          --ee-link        clickable text / highlighted values.
-       Only "dark" has real designed values below. The other theme classes
-       intentionally alias to the same values for now — recoloring them
-       properly is the next step once this base is confirmed good, not a
-       bug. */
+       "dark" now uses the palette from the "EduPage Dark Mode" design
+       handoff (Claude Design, 2026-07-01) — same regions/selectors as
+       before, just repainted with that spec's exact hex values. The other
+       theme classes still alias to the previous dark values for now —
+       recoloring them properly is the next step once this base is
+       confirmed good, not a bug. */
     html.ee-dark.ee-scheme-dark {
       color-scheme: dark !important;
     }
@@ -110,20 +158,22 @@ function buildDarkCSS() {
     }
 
     html.ee-dark {
-      --ee-page-bg: #11161f;
-      --ee-card-bg: #171d28;
-      --ee-card-bg-bright: #1d2532;
-      --ee-card-hover: #232d3d;
-      --ee-header-bg: #255b87;
-      --ee-brand-dark: #11263d;
-      --ee-sidebar-bg: #171d28;
-      --ee-sidebar-hover: #1b2738;
+      --ee-page-bg: #0c1220;
+      --ee-card-bg: #141d2e;
+      --ee-card-bg-bright: #1a2538;
+      --ee-card-hover: #202d43;
+      --ee-header-bg: #16233a;
+      --ee-brand-dark: #080d16;
+      --ee-sidebar-bg: #080d16;
+      --ee-sidebar-hover: #0c1726;
       --ee-border: rgba(255, 255, 255, 0.08);
-      --ee-text: #eef2f7;
-      --ee-text-muted: #8c96a6;
-      --ee-link: #4fc3f7;
+      --ee-text: #e9edf4;
+      --ee-text-muted: #8c98af;
+      --ee-link: #6fa8e8;
+      --ee-current-period: #3f5b52;
       --ee-warning: #ffb74d;
       --ee-danger: #ef5350;
+      --ee-table-header-bg: #2c70a3;
     }
 
     html.ee-theme-ocean {
@@ -141,6 +191,7 @@ function buildDarkCSS() {
       --ee-link: #4dd0e1;
       --ee-warning: #ffb74d;
       --ee-danger: #ef5350;
+      --ee-table-header-bg: #0e6675;
     }
 
     html.ee-theme-forest {
@@ -158,6 +209,7 @@ function buildDarkCSS() {
       --ee-link: #81c784;
       --ee-warning: #ffb74d;
       --ee-danger: #ef5350;
+      --ee-table-header-bg: #2e5a2e;
     }
 
     html.ee-theme-emerald {
@@ -175,6 +227,7 @@ function buildDarkCSS() {
       --ee-link: #4adfa3;
       --ee-warning: #ffb74d;
       --ee-danger: #ef5350;
+      --ee-table-header-bg: #0f6b4a;
     }
 
     html.ee-theme-purple {
@@ -192,6 +245,7 @@ function buildDarkCSS() {
       --ee-link: #b39ddb;
       --ee-warning: #ffb74d;
       --ee-danger: #ef5350;
+      --ee-table-header-bg: #4a3a8f;
     }
 
     /* Pink is light-toned (see isLightTonedTheme()) so its tiers run the
@@ -212,6 +266,7 @@ function buildDarkCSS() {
       --ee-link: #e91e63;
       --ee-warning: #ed6c02;
       --ee-danger: #d32f2f;
+      --ee-table-header-bg: #f48fb1;
     }
 
     html.ee-theme-custom {
@@ -229,6 +284,7 @@ function buildDarkCSS() {
       --ee-link: var(--ee-custom-accent, #4fc3f7);
       --ee-warning: var(--ee-custom-warning, #ffb74d);
       --ee-danger: var(--ee-custom-danger, #ef5350);
+      --ee-table-header-bg: var(--ee-custom-table-header-bg, #2c70a3);
     }
 
     html.ee-dark,
@@ -259,7 +315,6 @@ function buildDarkCSS() {
     /* Page: full-bleed wrappers with no visible card boundary of their own. */
     html.ee-dark .bgDiv,
     html.ee-dark .userHomeWidget,
-    html.ee-dark .userTopDiv,
     html.ee-dark .userContentInner,
     html.ee-dark .withMargin,
     html.ee-dark .userTopDivInner,
@@ -287,8 +342,6 @@ function buildDarkCSS() {
     html.ee-dark .userButton,
     html.ee-dark .userHomeOther,
     html.ee-dark .userHomeTitle,
-    html.ee-dark .rozvrhItem,
-    html.ee-dark .rozvrhItemAlign,
     html.ee-dark .userCal2,
     html.ee-dark .calendar,
     html.ee-dark .userCalInner,
@@ -315,8 +368,6 @@ function buildDarkCSS() {
     html.ee-dark .profilemenu li,
     html.ee-dark .profilemenu a,
     html.ee-dark .edubarProfilebox,
-    html.ee-dark .edubarProfilebox .display,
-    html.ee-dark .edubarProfilebox .display span,
     html.ee-dark .dialog,
     html.ee-dark .popup,
     html.ee-dark .modal-content,
@@ -331,6 +382,7 @@ function buildDarkCSS() {
       border-color: var(--ee-border) !important;
       border-width: 1px !important;
       border-style: solid !important;
+      box-sizing: border-box !important;
     }
 
     /* The message/news card reads as the "primary" card in stock too
@@ -381,7 +433,9 @@ function buildDarkCSS() {
     html.ee-dark .ttItem,
     html.ee-dark .tt-day,
     html.ee-dark .timetable,
-    html.ee-dark .timetable-cell {
+    html.ee-dark .timetable-cell,
+    html.ee-dark .rozvrhItem,
+    html.ee-dark .rozvrhItemAlign {
       background-color: var(--ee-brand-dark) !important;
       background-image: none !important;
       color: var(--ee-text) !important;
@@ -395,6 +449,30 @@ function buildDarkCSS() {
       background-color: var(--ee-brand-dark) !important;
       border: none !important;
       color: var(--ee-text) !important;
+    }
+
+    /* .userHomeOther/.userHomeTitle are reused generic card-tier classnames,
+       but the two specific instances inside the top strip are just wrappers
+       around the timetable/nameday panel, not standalone cards — stock has
+       no box or seam around them at all, just the one continuous navy
+       panel. Strip the card-tier border/background these picked up from
+       the generic bordered-card rule so nothing shows through but the
+       shared brand-dark panel behind them. */
+    html.ee-dark .userTopDivInner .userHomeOther,
+    html.ee-dark .userTopDivInner .userHomeTitle {
+      background-color: transparent !important;
+      border: none !important;
+    }
+
+    /* .userTopDivInner/.wmaxL1 themselves still picked up the flat
+       page-bg tier (they're generic full-bleed wrapper classnames used
+       elsewhere too), which showed through as a mismatched patch behind
+       the brand-dark panel above. Scoped to inside .userTopDiv only, so
+       other pages that reuse these classnames outside the strip are
+       untouched. */
+    html.ee-dark .userTopDiv .userTopDivInner,
+    html.ee-dark .userTopDiv .wmaxL1 {
+      background-color: transparent !important;
     }
 
     html.ee-dark .userTopLogo,
@@ -420,11 +498,11 @@ function buildDarkCSS() {
       border-color: var(--ee-border) !important;
     }
 
-    /* Sidebar: barely off the page background, the same small step stock
-       takes (its sidebar is #f6f7f9 against a white page). */
+    /* Sidebar: same tone as the dashboard tiles in the middle of the page,
+       per the user's request — no longer its own darker step. */
     html.ee-dark .edubarSidebar,
     html.ee-dark .edubarSidemenu2 {
-      background-color: var(--ee-sidebar-bg) !important;
+      background-color: var(--ee-card-bg) !important;
       color: var(--ee-text) !important;
       border-color: var(--ee-border) !important;
     }
@@ -432,12 +510,31 @@ function buildDarkCSS() {
     /* The one specific dark-navy block EduPage hardcodes in stock — the
        homepage timetable strip and the active sidebar item share this
        exact same color natively, so they share one token here too. */
+    html.ee-dark .userTopDiv,
     html.ee-dark .userRozvrh,
     html.ee-dark .userRozvrh ul.rozvrh,
     html.ee-dark .userTopDiv ul.rozvrh,
     html.ee-dark .edubarMenuitem.active > a {
       background-color: var(--ee-brand-dark) !important;
       background-image: none !important;
+      color: var(--ee-text) !important;
+    }
+
+    /* Native stock puts a hardcoded light gray-blue border
+       (rgb(144, 164, 174)) around the active sidebar link, meant to read
+       as a subtle outline on a white sidebar — on a dark sidebar it glows
+       as a visible "box" around the current page. Just the brand-dark
+       highlight itself is enough of a selected-page indicator. */
+    html.ee-dark .edubarMenuitem.active > a {
+      border: none !important;
+    }
+
+    /* Native profile name label has no border of its own — it's plain text
+       inside the already-bordered .edubarProfilebox, not its own card. */
+    html.ee-dark .edubarProfilebox .display,
+    html.ee-dark .edubarProfilebox .display span {
+      background-color: transparent !important;
+      border: none !important;
       color: var(--ee-text) !important;
     }
 
@@ -519,15 +616,33 @@ function buildDarkCSS() {
     html.ee-dark #edubarStartButton div,
     html.ee-dark .edubarMenuitem.active > a,
     html.ee-dark .edubarMenuitem:hover > a,
-    html.ee-dark table.znamkyTable thead th,
     html.ee-dark a {
       color: var(--ee-link) !important;
     }
 
-    html.ee-dark .calendar .day.today,
-    html.ee-dark .rozvrhItem.selected {
+    /* Grade table header row is EduPage's own hardcoded brand blue
+       (rgb(44, 112, 163), confirmed live 2026-07-01), untouched by any
+       theme so it clashed against purple/forest/etc. Themeable via its own
+       token (independent of --ee-header-bg) so it's exposed as a separate
+       swatch in the custom theme builder. */
+    html.ee-dark table.znamkyTable thead th {
+      background-color: var(--ee-table-header-bg) !important;
+      color: var(--ee-text) !important;
+    }
+
+    html.ee-dark .calendar .day.today {
       background-color: color-mix(in srgb, var(--ee-link) 25%, var(--ee-card-bg)) !important;
       border: 1px solid var(--ee-link) !important;
+    }
+
+    /* The current-lesson cell in the "Rozvrh dnes" strip — native stock
+       highlights this with a translucent yellow (rgba(255, 252, 159, 0.3)
+       on .rozvrhItem.selected, confirmed live 2026-07-01), distinct from
+       "today" elsewhere in the calendar. Dark mode's own accent color per
+       the "EduPage Dark Mode" design handoff. */
+    html.ee-dark .rozvrhItem.selected {
+      background-color: color-mix(in srgb, var(--ee-current-period) 55%, var(--ee-card-bg)) !important;
+      border: 1px solid var(--ee-current-period) !important;
     }
 
     html.ee-dark .events li {
@@ -596,6 +711,15 @@ function buildDarkCSS() {
 
     html.ee-dark .${MUTED_TEXT_CLASS} {
       color: var(--ee-text-muted) !important;
+    }
+
+    /* Grades: native stock dims lower-weight/duplicate grades to a lighter
+       gray to de-emphasize them, but per user feedback that gray reads as
+       barely legible against the dark card background — just make every
+       grade number the same readable white regardless of that native
+       distinction. */
+    html.ee-dark table.znamkyTable .${MUTED_TEXT_CLASS} {
+      color: var(--ee-text) !important;
     }
 
     html.ee-dark .${BORDER_CLASS} {
@@ -679,10 +803,6 @@ function buildDarkCSS() {
       width: calc(100% - 24px) !important;
     }
 
-    html.ee-clean-ui .userRozvrh {
-      width: min(100%, 1180px) !important;
-    }
-
     html.ee-hide-help-text .userTopLogo,
     html.ee-hide-help-text a.userTopLogo.learnMoreBtn {
       display: none !important;
@@ -751,8 +871,56 @@ function ensureMobileResponsiveStylesheet() {
   return style;
 }
 
+const MOBILE_VIEWPORT_CONTENT = "width=device-width, initial-scale=1";
+
+// EduPage's own markup has no <meta name="viewport">, so mobile browsers fall
+// back to a desktop-width layout viewport (~980px) and zoom the whole page out
+// to fit the screen instead of reflowing it. That means our max-width:768px
+// media query never matches on a real phone, and even if it did the elements
+// are still laid out at desktop width underneath the zoom. Forcing a proper
+// viewport tag is what actually makes the layout viewport match the screen so
+// the responsive CSS below has something to respond to.
+function ensureMobileViewport(enabled) {
+  const runWithHead = (fn) => {
+    if (document.head) {
+      fn();
+      return;
+    }
+    const observer = new MutationObserver(() => {
+      if (document.head) {
+        observer.disconnect();
+        fn();
+      }
+    });
+    observer.observe(document.documentElement, { childList: true });
+  };
+
+  runWithHead(() => {
+    let meta = document.head.querySelector('meta[name="viewport"]');
+    if (enabled) {
+      if (!meta) {
+        meta = document.createElement("meta");
+        meta.setAttribute("name", "viewport");
+        meta.dataset.eeAdded = "true";
+        document.head.appendChild(meta);
+      } else if (meta.dataset.eeOriginalContent === undefined) {
+        meta.dataset.eeOriginalContent = meta.getAttribute("content") || "";
+      }
+      meta.setAttribute("content", MOBILE_VIEWPORT_CONTENT);
+    } else if (meta) {
+      if (meta.dataset.eeAdded === "true") {
+        meta.remove();
+      } else if (meta.dataset.eeOriginalContent !== undefined) {
+        meta.setAttribute("content", meta.dataset.eeOriginalContent);
+        delete meta.dataset.eeOriginalContent;
+      }
+    }
+  });
+}
+
 function applyMobileResponsive(enabled) {
   ensureMobileResponsiveStylesheet();
+  ensureMobileViewport(Boolean(enabled));
   document.documentElement.classList.toggle("ee-mobile-responsive", Boolean(enabled));
 }
 
@@ -904,6 +1072,7 @@ function normalizeSubtree(root = document.documentElement) {
 }
 
 function flushNormalize() {
+  normalizeTimer = null;
   const roots = Array.from(pendingNormalizeRoots);
   pendingNormalizeRoots.clear();
 
@@ -923,7 +1092,16 @@ function flushNormalize() {
 }
 
 function scheduleNormalize(root = document.documentElement) {
-  if (root) pendingNormalizeRoots.add(root);
+  // Leading-edge: the first node in a burst gets normalized immediately so
+  // freshly AJAX-injected content (e.g. switching sidebar tabs) doesn't sit
+  // unstyled/white for the debounce window — only the rest of the burst is
+  // still debounced, so large re-renders don't trigger a sweep per node.
+  const isLeading = normalizeTimer === null && root && root.isConnected;
+  if (isLeading) {
+    normalizeSubtree(root);
+  } else if (root) {
+    pendingNormalizeRoots.add(root);
+  }
   window.clearTimeout(normalizeTimer);
   normalizeTimer = window.setTimeout(flushNormalize, 80);
 }
@@ -969,6 +1147,7 @@ function stopObserver() {
     observer = null;
   }
   window.clearTimeout(normalizeTimer);
+  normalizeTimer = null;
   pendingNormalizeRoots.clear();
 }
 
@@ -1021,6 +1200,7 @@ function applyCustomThemeProperties(theme) {
   root.style.setProperty("--ee-custom-accent", colors.accent);
   root.style.setProperty("--ee-custom-warning", colors.warning);
   root.style.setProperty("--ee-custom-danger", colors.danger);
+  root.style.setProperty("--ee-custom-table-header-bg", colors.tableHeaderBg);
 }
 
 // Applied unconditionally (not gated behind html.ee-dark or any ee-theme-*
@@ -1092,13 +1272,20 @@ function applyDarkMode(enabled) {
 function initDarkMode() {
   if (!hasBootstrappedDarkMode) {
     hasBootstrappedDarkMode = true;
-    applyTheme({ darkModeEnabled: false, theme: "dark", cleanEnabled: false, helpHidden: false });
+    const cached = readThemeCache();
+    if (cached) {
+      applyMobileResponsive(cached.mobileResponsiveEnabled === true);
+      applyTheme(cached);
+    } else {
+      applyTheme({ darkModeEnabled: false, theme: "dark", cleanEnabled: false, helpHidden: false });
+    }
   }
 
   chrome.storage.local.get(
     [STORAGE_KEY, THEME_KEY, CUSTOM_THEME_KEY, CLEAN_UI_KEY, HIDE_HELP_TEXT_KEY, ROZVRH_ROOM_CHANGE_COLOR_KEY, ROZVRH_SUBSTITUTION_COLOR_KEY, MOBILE_RESPONSIVE_KEY],
     (result) => {
-      applyMobileResponsive(result[MOBILE_RESPONSIVE_KEY] === true);
+      const mobileResponsiveEnabled = result[MOBILE_RESPONSIVE_KEY] === true;
+      applyMobileResponsive(mobileResponsiveEnabled);
       const enabled = result[STORAGE_KEY] === true;
       const theme = normalizeTheme(result[THEME_KEY]);
       const customTheme = normalizeCustomTheme(result[CUSTOM_THEME_KEY]);
@@ -1106,7 +1293,9 @@ function initDarkMode() {
       const helpHidden = result[HIDE_HELP_TEXT_KEY] === true;
       const rozvrhRoomChangeColor = normalizeColor(result[ROZVRH_ROOM_CHANGE_COLOR_KEY], DEFAULT_ROZVRH_ROOM_CHANGE_COLOR);
       const rozvrhSubstitutionColor = normalizeColor(result[ROZVRH_SUBSTITUTION_COLOR_KEY], DEFAULT_ROZVRH_SUBSTITUTION_COLOR);
-      applyTheme({ darkModeEnabled: enabled, theme, customTheme, cleanEnabled, helpHidden, rozvrhRoomChangeColor, rozvrhSubstitutionColor });
+      const settings = { darkModeEnabled: enabled, theme, customTheme, cleanEnabled, helpHidden, rozvrhRoomChangeColor, rozvrhSubstitutionColor, mobileResponsiveEnabled };
+      applyTheme(settings);
+      writeThemeCache(settings);
     },
   );
 }
@@ -1197,9 +1386,9 @@ chrome.storage.onChanged.addListener((changes, area) => {
   ) return;
 
   chrome.storage.local.get(
-    [STORAGE_KEY, THEME_KEY, CUSTOM_THEME_KEY, CLEAN_UI_KEY, HIDE_HELP_TEXT_KEY, ROZVRH_ROOM_CHANGE_COLOR_KEY, ROZVRH_SUBSTITUTION_COLOR_KEY],
+    [STORAGE_KEY, THEME_KEY, CUSTOM_THEME_KEY, CLEAN_UI_KEY, HIDE_HELP_TEXT_KEY, ROZVRH_ROOM_CHANGE_COLOR_KEY, ROZVRH_SUBSTITUTION_COLOR_KEY, MOBILE_RESPONSIVE_KEY],
     (result) => {
-      applyTheme({
+      const settings = {
         darkModeEnabled: result[STORAGE_KEY] === true,
         theme: normalizeTheme(result[THEME_KEY]),
         customTheme: normalizeCustomTheme(result[CUSTOM_THEME_KEY]),
@@ -1207,7 +1396,10 @@ chrome.storage.onChanged.addListener((changes, area) => {
         helpHidden: result[HIDE_HELP_TEXT_KEY] === true,
         rozvrhRoomChangeColor: normalizeColor(result[ROZVRH_ROOM_CHANGE_COLOR_KEY], DEFAULT_ROZVRH_ROOM_CHANGE_COLOR),
         rozvrhSubstitutionColor: normalizeColor(result[ROZVRH_SUBSTITUTION_COLOR_KEY], DEFAULT_ROZVRH_SUBSTITUTION_COLOR),
-      });
+        mobileResponsiveEnabled: result[MOBILE_RESPONSIVE_KEY] === true,
+      };
+      applyTheme(settings);
+      writeThemeCache(settings);
     },
   );
 });
