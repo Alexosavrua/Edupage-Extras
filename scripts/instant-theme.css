@@ -1,10 +1,10 @@
 html.ee-dark {
   color-scheme: dark !important;
-  background: #11111b !important;
+  background: #0c1220 !important;
 }
 
 html.ee-dark body {
-  background: #11111b !important;
+  background: #0c1220 !important;
   color: #cdd6f4 !important;
 }
 
@@ -14,7 +14,7 @@ html.ee-dark .skinContent,
 html.ee-dark .userContentInner,
 html.ee-dark #eb_main_content,
 html.ee-dark #bar_mainDiv {
-  background: #11111b !important;
+  background: #0c1220 !important;
   color: #cdd6f4 !important;
 }
 
@@ -86,6 +86,6 @@ html.ee-theme-custom .skinContent,
 html.ee-theme-custom .userContentInner,
 html.ee-theme-custom #eb_main_content,
 html.ee-theme-custom #bar_mainDiv {
-  background: var(--ee-custom-bg-base, #11111b) !important;
+  background: var(--ee-custom-bg-base, #0c1220) !important;
   color: var(--ee-custom-text-main, #cdd6f4) !important;
 }

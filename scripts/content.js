@@ -810,49 +810,354 @@ function buildDarkCSS() {
   `;
 }
 
-// Debug-only, off by default — structural layout fixes only (wrapping,
-// scrolling, scaling), nothing content-dependent, so it doesn't need exam-day
-// page states to verify against. Scoped under a max-width media query so it
-// has zero effect on desktop regardless of the toggle.
 function buildMobileResponsiveCSS() {
+  const M = "html.ee-mobile-responsive";
   return `
     @media (max-width: 768px) {
-      html.ee-mobile-responsive body {
+      /* ── Global ────────────────────────────────────── */
+      ${M} body {
         overflow-x: hidden !important;
+        -webkit-text-size-adjust: 100% !important;
       }
 
-      html.ee-mobile-responsive .userTopDivInner,
-      html.ee-mobile-responsive .wmaxL1,
-      html.ee-mobile-responsive .userRozvrh {
+      /* ── Fixed-width containers → fluid ────────────── */
+      ${M} .userTopDivInner,
+      ${M} .wmaxL1,
+      ${M} .userRozvrh,
+      ${M} .skinContent,
+      ${M} .userContentInner,
+      ${M} .mainBox,
+      ${M} #eb_main_content,
+      ${M} #bar_mainDiv,
+      ${M} .hwMainListMain {
         flex-wrap: wrap !important;
         width: auto !important;
         max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
       }
 
-      html.ee-mobile-responsive .edubarSidebar,
-      html.ee-mobile-responsive .edubarSidemenu2 {
-        width: auto !important;
+      /* ── Sidebar → collapsed above content ─────────── */
+      ${M} .edubarSidebar,
+      ${M} .edubarSidemenu2 {
+        position: static !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        float: none !important;
+      }
+
+      ${M} .edubarSidebar {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 2px !important;
+        padding: 4px !important;
+      }
+
+      ${M} .edubarMenuitem {
+        flex: 1 1 auto !important;
         min-width: 0 !important;
       }
 
-      html.ee-mobile-responsive table.znamkyTable,
-      html.ee-mobile-responsive .timetable,
-      html.ee-mobile-responsive .gotoDay {
+      ${M} .edubarMenuitem > a {
+        padding: 8px 10px !important;
+        font-size: 13px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+      }
+
+      /* ── Top bar compact ────────────────────────────── */
+      ${M} #edubar,
+      ${M} .edubarHeader {
+        flex-wrap: wrap !important;
+        min-height: 0 !important;
+      }
+
+      ${M} .edubarHeaderRight {
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+      }
+
+      ${M} .edubarProfilebox {
+        max-width: 100% !important;
+      }
+
+      ${M} .edubarProfilebox .display {
+        font-size: 13px !important;
+      }
+
+      ${M} #edubarStartButton {
+        padding: 6px 10px !important;
+        font-size: 13px !important;
+      }
+
+      /* ── Main content area full-width ───────────────── */
+      ${M} .skinBody {
+        display: flex !important;
+        flex-direction: column !important;
+        min-width: 0 !important;
+      }
+
+      ${M} .edubarMainNoSkin {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+      }
+
+      /* ── Dashboard widgets → stack vertically ──────── */
+      ${M} .userTopDiv {
+        flex-direction: column !important;
+      }
+
+      ${M} .userTopDivInner {
+        flex-direction: column !important;
+      }
+
+      ${M} .userButton,
+      ${M} .userHomeWidget,
+      ${M} .userHomeOther {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        font-size: 13px !important;
+      }
+
+      ${M} .userHomeTitle {
+        font-size: 14px !important;
+      }
+
+      /* ── Timetable strip → full-width, scrollable ──── */
+      ${M} .userRozvrh {
+        flex-direction: column !important;
+      }
+
+      ${M} ul.rozvrh {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+
+      ${M} .userStats {
+        flex-wrap: wrap !important;
+        font-size: 12px !important;
+      }
+
+      /* ── Data tables → horizontal scroll ────────────── */
+      ${M} table.znamkyTable,
+      ${M} .timetable,
+      ${M} .gotoDay,
+      ${M} table.dash_dochadzka,
+      ${M} .rozvrhTable,
+      ${M} .grid-container {
         display: block !important;
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch !important;
         max-width: 100% !important;
       }
 
-      html.ee-mobile-responsive .userButton,
-      html.ee-mobile-responsive .userHomeOther {
+      ${M} table.znamkyTable td,
+      ${M} table.znamkyTable th {
+        padding: 4px 6px !important;
+        font-size: 12px !important;
+      }
+
+      /* ── Timetable cells ────────────────────────────── */
+      ${M} .rozvrhItem,
+      ${M} .rozvrhItemAlign,
+      ${M} .timetable-cell,
+      ${M} .ttItem {
+        min-width: 60px !important;
+        padding: 4px !important;
+        font-size: 11px !important;
+      }
+
+      /* ── Calendar ───────────────────────────────────── */
+      ${M} .userCal2,
+      ${M} .calendar,
+      ${M} .userCalInner {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+      }
+
+      /* ── Timeline / news feed ───────────────────────── */
+      ${M} .timeline-container {
+        padding: 0 !important;
+      }
+
+      ${M} .timeline-item,
+      ${M} .tml-item,
+      ${M} .tml-in-reply {
+        padding: 8px !important;
         font-size: 13px !important;
       }
 
-      html.ee-mobile-responsive img,
-      html.ee-mobile-responsive .user-button-icon {
+      /* ── Homework / notifications ───────────────────── */
+      ${M} .hwItem,
+      ${M} .hwItemInner,
+      ${M} .hw-content {
+        padding: 8px !important;
+      }
+
+      ${M} .notifBox {
+        padding: 8px !important;
+        font-size: 13px !important;
+      }
+
+      ${M} .substitution-item {
+        flex-wrap: wrap !important;
+        font-size: 13px !important;
+      }
+
+      /* ── Dialogs / modals → near full-screen ────────── */
+      ${M} .dialog,
+      ${M} .popup,
+      ${M} .modal-content {
+        position: fixed !important;
+        top: 4px !important;
+        left: 4px !important;
+        right: 4px !important;
+        bottom: auto !important;
+        max-width: calc(100vw - 8px) !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+        margin: 0 !important;
+        transform: none !important;
+      }
+
+      ${M} .dropDownPanel,
+      ${M} .dropDown {
+        max-width: calc(100vw - 16px) !important;
+        overflow-x: auto !important;
+      }
+
+      /* ── Buttons / interactive → touch-friendly ─────── */
+      ${M} .smartb,
+      ${M} .flat-button,
+      ${M} button,
+      ${M} .userButton a,
+      ${M} .edubarMenuitem > a {
+        min-height: 44px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+      }
+
+      /* ── Images → fluid ─────────────────────────────── */
+      ${M} img,
+      ${M} .user-button-icon {
         max-width: 100% !important;
         height: auto !important;
+      }
+
+      /* ── Grade filter bar → wrap ────────────────────── */
+      ${M} .zsvHeader,
+      ${M} .zsvFilterElem,
+      ${M} .zsvActionButtonsInner {
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+      }
+
+      ${M} .zsvFilterItem select {
+        min-width: 100px !important;
+        font-size: 13px !important;
+      }
+
+      /* ── Attendance grid ────────────────────────────── */
+      ${M} .attendance-box,
+      ${M} .attendanceItem {
+        min-width: 0 !important;
+        font-size: 12px !important;
+      }
+
+      /* ── Print boxes → stack ────────────────────────── */
+      ${M} .print-box {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+
+      /* ── Logo area compact ──────────────────────────── */
+      ${M} .userTopLogo {
+        padding: 8px !important;
+        font-size: 14px !important;
+      }
+
+      ${M} .userTopLogo img {
+        max-height: 32px !important;
+        width: auto !important;
+      }
+
+      /* ── Ribbon (toolbar) → wrap ────────────────────── */
+      ${M} .edubarRibbon,
+      ${M} .ribbon-section {
+        flex-wrap: wrap !important;
+        gap: 2px !important;
+      }
+
+      ${M} .ribbon-button {
+        padding: 6px 8px !important;
+        font-size: 12px !important;
+      }
+
+      /* ── Profile menu dropdown ──────────────────────── */
+      ${M} .profilemenu {
+        max-width: calc(100vw - 16px) !important;
+      }
+
+      ${M} .profilemenu li,
+      ${M} .profilemenu a {
+        padding: 10px 12px !important;
+        font-size: 14px !important;
+      }
+
+      /* ── Gadget boxes → full width ──────────────────── */
+      ${M} .gadgetBox {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+      }
+
+      /* ── Scrollbar hide on touch (thin on desktop) ──── */
+      ${M} ::-webkit-scrollbar {
+        width: 4px !important;
+        height: 4px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      ${M} .edubarSidebar {
+        gap: 1px !important;
+        padding: 2px !important;
+      }
+
+      ${M} .edubarMenuitem > a {
+        padding: 6px 6px !important;
+        font-size: 11px !important;
+      }
+
+      ${M} .userButton,
+      ${M} .userHomeOther,
+      ${M} .timeline-item,
+      ${M} .tml-item,
+      ${M} .hwItem,
+      ${M} .notifBox {
+        padding: 6px !important;
+        font-size: 12px !important;
+      }
+
+      ${M} table.znamkyTable td,
+      ${M} table.znamkyTable th {
+        padding: 3px 4px !important;
+        font-size: 11px !important;
+      }
+
+      ${M} .rozvrhItem,
+      ${M} .timetable-cell,
+      ${M} .ttItem {
+        min-width: 50px !important;
+        font-size: 10px !important;
       }
     }
   `;

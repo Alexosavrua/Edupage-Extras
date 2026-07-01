@@ -102,6 +102,10 @@
   "useEdupageDefault": { "message": "Use EduPage Default" },
   "secondHalfEnd": { "message": "Second Halfyear End Date" },
   "secondHalfEndDesc": { "message": "Override when the second halfyear ends for predicted attendance in grades. Leave this empty to use EduPage's default end date for the current school year." },
+  "autoLogin": { "message": "Auto-Login" },
+  "autoLoginDesc": { "message": "Automatically submit the login form when the browser has autofilled your saved username and password." },
+  "toggleAutoLogin": { "message": "Toggle auto-login" },
+  "autoLoginSubmitting": { "message": "Auto-logging in…" },
 
   "groupDebug": { "message": "Debug" },
   "mobileResponsive": { "message": "Mobile-Responsive Layout" },
