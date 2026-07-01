@@ -60,6 +60,7 @@
   "customColorAccent": { "message": "Akcent" },
   "customColorWarning": { "message": "Upozornění" },
   "customColorDanger": { "message": "Nebezpečí" },
+  "customColorTableHeader": { "message": "Záhlaví tabulky" },
   "importExport": { "message": "Import / Export" },
   "customThemePlaceholder": { "message": "Sem vložte sdílený vlastní motiv Edupage Extras." },
   "exportTheme": { "message": "Exportovat motiv" },

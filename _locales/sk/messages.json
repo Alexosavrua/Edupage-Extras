@@ -60,6 +60,7 @@
   "customColorAccent": { "message": "Akcent" },
   "customColorWarning": { "message": "Upozornenie" },
   "customColorDanger": { "message": "Nebezpečenstvo" },
+  "customColorTableHeader": { "message": "Hlavička tabuľky" },
   "importExport": { "message": "Import / Export" },
   "customThemePlaceholder": { "message": "Sem vložte zdieľanú vlastnú tému Edupage Extras." },
   "exportTheme": { "message": "Exportovať tému" },

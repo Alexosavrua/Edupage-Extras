@@ -60,6 +60,7 @@
   "customColorAccent": { "message": "Accent" },
   "customColorWarning": { "message": "Warning" },
   "customColorDanger": { "message": "Danger" },
+  "customColorTableHeader": { "message": "Table Header" },
   "importExport": { "message": "Import / Export" },
   "customThemePlaceholder": { "message": "Paste a shared Edupage Extras custom theme here." },
   "exportTheme": { "message": "Export Theme" },

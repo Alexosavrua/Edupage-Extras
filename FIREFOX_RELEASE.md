@@ -63,14 +63,24 @@ they never appear in logs or to anyone browsing the repo.
 
 ## Step 4 — Release
 
-Bump the version in both `manifest.json` and `package.json` (they should
-always match), commit, then tag and push:
+`package.json`'s version is the single source of truth — `manifest.json`
+is regenerated from it automatically (via `scripts-dev/sync-version.js`).
+`npm version patch/minor/major` would normally also create its own commit
++ tag, but that means a version bump can't just ride along inside your own
+regular commit — so bump without letting npm commit or tag anything:
 
 ```sh
-git add manifest.json package.json
-git commit -m "Bump version to 0.7.0"
-git tag v0.7.0
-git push origin main v0.7.0
+npm version patch --no-git-tag-version   # or: minor / major
+git add package.json manifest.json
+git commit -m "..."   # fold it into whatever commit you're already making
+```
+
+Then, whenever you're actually ready to release (not necessarily the same
+moment as the version-bump commit), tag that commit and push:
+
+```sh
+git tag v0.7.4
+git push origin main v0.7.4
 ```
 
 Pushing the tag triggers the workflow. Watch it run under the repo's
