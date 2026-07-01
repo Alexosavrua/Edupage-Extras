@@ -616,12 +616,12 @@
 
       html.ee-dark .ee-grades-export-btn {
         background: rgba(62, 131, 184, 0.15);
-        border-color: var(--ee-accent);
-        color: var(--ee-accent);
+        border-color: var(--ee-link);
+        color: var(--ee-link);
       }
 
       html.ee-dark .ee-grades-export-btn:hover {
-        background: var(--ee-accent);
+        background: var(--ee-link);
         color: #fff;
       }
 
@@ -630,13 +630,13 @@
       }
 
       html.ee-dark tr.ee-overall-row td {
-        background-color: var(--ee-bg-elevated) !important;
-        border-top-color: var(--ee-accent) !important;
-        color: var(--ee-text-main) !important;
+        background-color: var(--ee-card-bg-bright) !important;
+        border-top-color: var(--ee-link) !important;
+        color: var(--ee-text) !important;
       }
 
       html.ee-dark tr.ee-overall-row .ee-overall-label {
-        color: var(--ee-accent) !important;
+        color: var(--ee-link) !important;
       }
 
       html.ee-dark .ee-overall-meta {
@@ -644,7 +644,7 @@
       }
 
       html.ee-dark .ee-attendance-total {
-        color: var(--ee-text-main) !important;
+        color: var(--ee-text) !important;
       }
 
       html.ee-dark .ee-attendance-empty {
@@ -652,7 +652,7 @@
       }
 
       html.ee-dark .ee-attendance-tone-good {
-        color: var(--ee-accent) !important;
+        color: var(--ee-link) !important;
       }
 
       html.ee-dark .ee-attendance-tone-warn {
@@ -843,8 +843,8 @@
       }
 
       html.ee-dark .ee-vg-mass-reset:hover {
-        background: var(--ee-bg-muted);
-        color: var(--ee-text-main);
+        background: var(--ee-card-hover);
+        color: var(--ee-text);
       }
 
       html.ee-dark .ee-vg-mass-hint {
@@ -902,13 +902,13 @@
 
       html.ee-dark .ee-vg-btn {
         background: rgba(62, 131, 184, 0.15);
-        border-color: var(--ee-accent);
-        color: var(--ee-accent);
+        border-color: var(--ee-link);
+        color: var(--ee-link);
       }
 
       html.ee-dark .ee-vg-btn:hover,
       html.ee-dark .ee-vg-btn.ee-vg-btn-active {
-        background: var(--ee-accent);
+        background: var(--ee-link);
         color: #fff;
       }
 
@@ -917,18 +917,18 @@
       }
 
       html.ee-dark .ee-vg-popover {
-        background: var(--ee-bg-elevated);
+        background: var(--ee-card-bg-bright);
         border-color: var(--ee-border);
-        color: var(--ee-text-main);
+        color: var(--ee-text);
       }
 
       html.ee-dark .ee-vg-popover-header {
-        color: var(--ee-accent);
+        color: var(--ee-link);
         border-bottom-color: var(--ee-border);
       }
 
       html.ee-dark .ee-vg-item-label {
-        color: var(--ee-text-main);
+        color: var(--ee-text);
       }
 
       html.ee-dark .ee-vg-empty {
@@ -952,13 +952,13 @@
       }
 
       html.ee-dark .ee-vg-input {
-        background: var(--ee-bg-base);
+        background: var(--ee-card-bg);
         border-color: var(--ee-border);
-        color: var(--ee-text-main);
+        color: var(--ee-text);
       }
 
       html.ee-dark .ee-vg-add-btn {
-        background: var(--ee-accent);
+        background: var(--ee-link);
       }
 
       .ee-vg-reset-btn {
@@ -3119,7 +3119,7 @@
     if (!Number.isFinite(percent) || percent <= 5) {
       return {
         background: "rgba(46, 125, 50, 0.12)",
-        color: "var(--ee-accent, #2e7d32)",
+        color: "var(--ee-link, #2e7d32)",
         className: "ee-attendance-tone-good",
       };
     }
