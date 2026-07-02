@@ -46,6 +46,7 @@ const resetActivityShieldButton = document.getElementById("ResetActivityShieldBu
 const reloadEdupageTabsButton = document.getElementById("ReloadEdupageTabsButton");
 const experimentalSaveStatus = document.getElementById("ExperimentalSaveStatus");
 const mobileResponsiveToggle = document.getElementById("MobileResponsiveCheckbox");
+const autoLoginToggle = document.getElementById("AutoLoginCheckbox");
 const previewUpdateToastButton = document.getElementById("PreviewUpdateToastButton");
 const STORAGE_KEY = "darkModeEnabled";
 const THEME_KEY = "themeMode";
@@ -70,6 +71,7 @@ const THEME_TOGGLE_COMMAND = "toggle-theme-mode";
 const REPO_URL = "https://github.com/Alexosavrua/Edupage-Extras";
 const ACTIVITY_SHIELD_COMMAND = "toggle-stay-active-mode";
 const MOBILE_RESPONSIVE_KEY = "eeMobileResponsiveEnabled";
+const AUTOLOGIN_KEY = "eeAutoLoginEnabled";
 const activityShieldSettings = [
 	["ActivityShieldEnabled", "eeActivityShieldEnabled"],
 	["ActivityVisibilityState", "eeActivityShieldVisibilityState"],
@@ -932,6 +934,15 @@ if (mobileResponsiveToggle) {
 	mobileResponsiveToggle.addEventListener("change", () => {
 		chrome.storage.local.set({ [MOBILE_RESPONSIVE_KEY]: mobileResponsiveToggle.checked });
 		notifyEdupageTabs();
+	});
+}
+
+if (autoLoginToggle) {
+	chrome.storage.local.get([AUTOLOGIN_KEY], (result) => {
+		autoLoginToggle.checked = result[AUTOLOGIN_KEY] === true;
+	});
+	autoLoginToggle.addEventListener("change", () => {
+		chrome.storage.local.set({ [AUTOLOGIN_KEY]: autoLoginToggle.checked });
 	});
 }
 

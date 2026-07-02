@@ -149,7 +149,7 @@
 
   // "... Zameniť učebňu: OLD ➔ NEW ..." — returns the new room code/name.
   function extractNewRoom(info) {
-    const match = /Zameni[ťt]\s*u[čc]ebňu:?\s*[^➔→⇒→➔]+[➔→⇒→➔]\s*([^\s,;(]+)/i
+    const match = /Zameni[ťt]\s*u[čc]ebňu:?\s*[^➔→⇒]+[➔→⇒]\s*([^\s,;(]+)/i
       .exec(String(info || ""));
     return match ? match[1].trim() : null;
   }
@@ -189,8 +189,11 @@
   // every authenticated page. Content scripts can't read the page's JS globals
   // directly, but the assignment is in the page HTML, so scrape it from there.
   function getGsecHash() {
-    const match = /gsechash["'\s:=]+([A-Za-z0-9]{6,})/.exec(document.documentElement.innerHTML);
-    return match ? match[1] : null;
+    for (const script of document.querySelectorAll("script:not([src])")) {
+      const match = /gsechash["'\s:=]+([A-Za-z0-9]{6,})/.exec(script.textContent);
+      if (match) return match[1];
+    }
+    return null;
   }
 
   // The Suplovanie page is fully client-rendered, but its viewer.js POST returns
@@ -514,8 +517,8 @@
   function scheduleRozvrhEnhance() {
     window.clearTimeout(rozvrhScheduleTimer);
     rozvrhScheduleTimer = window.setTimeout(() => {
-      enhanceRozvrhWidget();
-      enhanceRozvrhRooms();
+      enhanceRozvrhWidget().catch(() => {});
+      enhanceRozvrhRooms().catch(() => {});
     }, 200);
   }
 
@@ -584,8 +587,8 @@
   function initStorage() {
     chrome.storage.local.get([HIGHLIGHTS_KEY], (result) => {
       highlightsEnabled = result[HIGHLIGHTS_KEY] !== false;
-      if (highlightsEnabled) enhanceRozvrhWidget();
-      enhanceRozvrhRooms(); // independent of the highlights toggle — a display preference, not a highlight
+      if (highlightsEnabled) enhanceRozvrhWidget().catch(() => {});
+      enhanceRozvrhRooms().catch(() => {});
     });
 
     chrome.storage.onChanged.addListener((changes, area) => {
@@ -607,13 +610,13 @@
 
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", () => {
-        enhanceRozvrhWidget();
-        enhanceRozvrhRooms();
+        enhanceRozvrhWidget().catch(() => {});
+        enhanceRozvrhRooms().catch(() => {});
         initRozvrhObserver();
       }, { once: true });
     } else {
-      enhanceRozvrhWidget();
-      enhanceRozvrhRooms();
+      enhanceRozvrhWidget().catch(() => {});
+      enhanceRozvrhRooms().catch(() => {});
       initRozvrhObserver();
     }
   }

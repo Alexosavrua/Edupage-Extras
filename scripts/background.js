@@ -552,7 +552,7 @@ function maybeNotify(status) {
 
       chrome.notifications.create(`ee-update-${status.latestVersion}`, {
         type: "basic",
-        iconUrl: "images/placeholder_icon.png",
+        iconUrl: "images/Edupage-Extras.png",
         title: "Edupage Extras update available",
         message: `Version ${status.latestVersion} is available. Pull the latest project from GitHub.`,
         buttons: [{ title: "Open GitHub" }],

@@ -102,6 +102,10 @@
   "useEdupageDefault": { "message": "Použít výchozí EduPage" },
   "secondHalfEnd": { "message": "Datum konce druhého pololetí" },
   "secondHalfEndDesc": { "message": "Přepište, kdy končí druhé pololetí pro předpovězenou docházku ve známkách. Ponechte prázdné pro použití výchozího data konce EduPage pro aktuální školní rok." },
+  "autoLogin": { "message": "Automatické přihlášení" },
+  "autoLoginDesc": { "message": "Automaticky odešle přihlašovací formulář, když prohlížeč vyplní uložené jméno a heslo." },
+  "toggleAutoLogin": { "message": "Přepnout automatické přihlášení" },
+  "autoLoginSubmitting": { "message": "Automatické přihlašování…" },
 
   "groupDebug": { "message": "Ladění" },
   "mobileResponsive": { "message": "Responzivní rozvržení pro mobil" },

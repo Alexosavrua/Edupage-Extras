@@ -95,7 +95,9 @@
     const indicator = ensureIndicator();
     indicator.style.display = visible ? "block" : "none";
     indicator.style.background = enabled ? "#89b4fa" : "#f38ba8";
-    indicator.title = enabled ? "Activity Shield active" : "Activity Shield paused";
+    const label = enabled ? "Activity Shield active" : "Activity Shield paused";
+    indicator.title = label;
+    indicator.setAttribute("aria-label", label);
   }
 
   function applyPrefs(prefs) {

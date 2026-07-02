@@ -2,6 +2,8 @@
   "use strict";
 
   if (window.top !== window) return;
+  if (window.__eeTimetableSyncInit) return;
+  window.__eeTimetableSyncInit = true;
 
   const DAY_MS = 24 * 60 * 60 * 1000;
   let lastResolvedWeekStart = null;
@@ -339,10 +341,12 @@
   }
 
   async function clickWeekNavigator(direction) {
-    const targetText = direction > 0 ? ">>" : "<<";
-    const control = Array.from(document.querySelectorAll("span")).find((element) => element.textContent.trim() === targetText);
+    const forwardTexts = [">>", "»", "»", "››"];
+    const backwardTexts = ["<<", "«", "«", "‹‹"];
+    const candidates = direction > 0 ? forwardTexts : backwardTexts;
+    const control = Array.from(document.querySelectorAll("span")).find((element) => candidates.includes(element.textContent.trim()));
     if (!control) {
-      throw new Error(`Could not find timetable navigation control: ${targetText}`);
+      throw new Error(`Could not find timetable navigation control: ${candidates[0]}`);
     }
 
     const before = readWeekSignature();
@@ -393,6 +397,8 @@
     if (message?.type !== "ee-extract-timetable-week" && message?.type !== "ee-extract-timetable-week-series") return false;
 
     (async () => {
+      lastResolvedWeekStart = null;
+
       if (!window.location.href.includes("mode=timetable")) {
         throw new Error("The hidden tab is not on the EduPage timetable page.");
       }
