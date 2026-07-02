@@ -1209,12 +1209,8 @@
   function dispatchSyntheticClick(element) {
     if (!element) return false;
     try {
-      if (typeof element.click === "function") {
-        element.click();
-      }
-      // Also dispatch a bubbling MouseEvent because EduPage often attaches
-      // its toggle handlers via jQuery delegation higher up the tree —
-      // direct .click() doesn't always traverse the delegation chain.
+      // Use a bubbling MouseEvent so jQuery delegation handlers higher up
+      // the tree also fire (direct .click() doesn't always reach them).
       element.dispatchEvent(new MouseEvent("click", {
         bubbles: true,
         cancelable: true,

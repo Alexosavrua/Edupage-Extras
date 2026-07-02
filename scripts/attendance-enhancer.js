@@ -473,7 +473,6 @@
   function init() {
     injectStyles();
     initStorage();
-    enhanceAttendanceTable();
     initObserver();
   }
 
