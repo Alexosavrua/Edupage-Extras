@@ -1,3 +1,8 @@
+// Firefox's notifications API doesn't support the "buttons" option (silently
+// rejects the whole create() call) — used below to omit it there, since the
+// onClicked listener already handles a click on the notification body itself.
+const IS_FIREFOX = typeof navigator !== "undefined" && /\bFirefox\//.test(navigator.userAgent || "");
+
 const UPDATE_ALARM_NAME = "ee-update-check";
 const UPDATE_STATUS_KEY = "eeUpdateStatus";
 const UPDATE_REMINDER_ENABLED_KEY = "eeUpdateReminderEnabled";
@@ -555,7 +560,7 @@ function maybeNotify(status) {
         iconUrl: "images/Edupage-Extras.png",
         title: "Edupage Extras update available",
         message: `Version ${status.latestVersion} is available. Pull the latest project from GitHub.`,
-        buttons: [{ title: "Open GitHub" }],
+        ...(IS_FIREFOX ? {} : { buttons: [{ title: "Open GitHub" }] }),
         priority: 1,
       }, () => {
         storageSet({
@@ -1421,12 +1426,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         error: error?.message || "Could not check GitHub",
       }));
     return true;
-  }
-
-  if (message?.type === "ee-open-repo") {
-    openRepository();
-    sendResponse({ ok: true });
-    return false;
   }
 
   if (message?.type === "ee-collect-report") {

@@ -60,7 +60,7 @@ function writeThemeCache(settings) {
 (function paintEarlyBackground() {
   try {
     const cached = readThemeCache();
-    if (cached && cached.darkModeEnabled) {
+    if (cached && cached.darkModeEnabled && !shouldSuppressThemeForPath()) {
       document.documentElement.style.backgroundColor = "#0c1220";
     }
   } catch (e) {
@@ -1564,16 +1564,6 @@ function applyTheme({
   }
 }
 
-function applyDarkMode(enabled) {
-  applyTheme({
-    darkModeEnabled: enabled,
-    theme: currentTheme,
-    customTheme: currentCustomTheme,
-    cleanEnabled: cleanUiEnabled,
-    helpHidden: hideHelpTextEnabled,
-  });
-}
-
 function initDarkMode() {
   if (!hasBootstrappedDarkMode) {
     hasBootstrappedDarkMode = true;
@@ -1656,7 +1646,15 @@ function showUpdateToast(version) {
 
   actions.append(viewLink, dismissButton);
   toast.append(title, body, actions);
-  document.body.appendChild(toast);
+
+  // Runs from a storage callback, which can resolve before <body> exists on
+  // slow-loading pages (this script runs at document_start) — wait for it
+  // instead of throwing.
+  if (document.body) {
+    document.body.appendChild(toast);
+  } else {
+    document.addEventListener("DOMContentLoaded", () => document.body.appendChild(toast), { once: true });
+  }
 }
 
 function checkForUpdateToast() {
@@ -1710,9 +1708,6 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message && message.type === "ee-set-dark-mode") {
-    applyDarkMode(Boolean(message.enabled));
-  }
   if (message && message.type === "ee-set-theme") {
     applyTheme({
       darkModeEnabled: message.darkModeEnabled === true,

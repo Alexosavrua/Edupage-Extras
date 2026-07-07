@@ -341,8 +341,8 @@
   }
 
   async function clickWeekNavigator(direction) {
-    const forwardTexts = [">>", "»", "»", "››"];
-    const backwardTexts = ["<<", "«", "«", "‹‹"];
+    const forwardTexts = [">>", "»", "›", "››"];
+    const backwardTexts = ["<<", "«", "‹", "‹‹"];
     const candidates = direction > 0 ? forwardTexts : backwardTexts;
     const control = Array.from(document.querySelectorAll("span")).find((element) => candidates.includes(element.textContent.trim()));
     if (!control) {
@@ -359,7 +359,7 @@
       await delay(250);
     }
 
-    throw new Error(`Timetable did not change after clicking ${targetText}.`);
+    throw new Error(`Timetable did not change after clicking ${candidates[0]}.`);
   }
 
   function serializeParsedWeek(parsed) {

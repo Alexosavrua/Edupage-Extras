@@ -90,7 +90,7 @@
 
       html.ee-dark .ee-attendance-stat-current {
         background: rgba(137, 180, 250, 0.16) !important;
-        color: var(--ee-accent) !important;
+        color: var(--ee-link) !important;
       }
     `;
     (document.head || document.documentElement).appendChild(style);
