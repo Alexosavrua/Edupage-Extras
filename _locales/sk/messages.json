@@ -3,6 +3,7 @@
   "extDescription": { "message": "Doplnky kvality života pre Edupage – témy, nástroje na známky, štatistiky dochádzky a export rozvrhu." },
 
   "madeBy": { "message": "Vytvoril" },
+  "madeByContributors": { "message": "a prispievatelia" },
   "openGithub": { "message": "Otvoriť GitHub" },
   "openShortcutSettings": { "message": "Otvoriť nastavenia skratiek" },
   "noHotkey": { "message": "Žiadna skratka nie je priradená." },

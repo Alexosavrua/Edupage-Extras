@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!--
+  Dev-only preview harness: renders menu/menu.html or menu/settings.html in a
+  plain browser (no extension runtime) by injecting chrome-shim.js.
+
+  Serve the repo root over HTTP, then open:
+    /tests/preview/index.html?page=settings&theme=dark&enabled=1&update=1
+      page:    menu | settings   (default settings)
+      theme:   dark | ocean | forest | emerald | pink | purple | light | custom
+      enabled: 1 | 0             (themes toggle on/off; 0 forces light)
+      update:  1                 (pretend an update is available)
+
+  Never shipped: tests/ is excluded from both store builds.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edupage Extras UI preview</title>
+    <style>
+      html, body { height: 100%; margin: 0; }
+      iframe { border: 0; display: block; height: 100%; width: 100%; }
+    </style>
+  </head>
+  <body>
+    <iframe id="frame" title="preview"></iframe>
+    <script>
+      (async function () {
+        const params = new URLSearchParams(location.search);
+        const page = params.get("page") === "menu" ? "menu" : "settings";
+        const cfg = {
+          theme: params.get("theme") || "dark",
+          enabled: params.get("enabled") !== "0",
+          update: params.get("update") === "1",
+          messages: await (await fetch("/_locales/en/messages.json")).json(),
+        };
+        const html = await (await fetch("/menu/" + page + ".html")).text();
+        const inject =
+          "<base href=\"/menu/\">" +
+          "<script>window.__EE_PREVIEW__ = " + JSON.stringify(cfg) + ";<\/script>" +
+          "<script src=\"/tests/preview/chrome-shim.js\"><\/script>";
+        document.getElementById("frame").srcdoc = html.replace(/<head>/i, "<head>" + inject);
+      })();
+    </script>
+  </body>
+</html>

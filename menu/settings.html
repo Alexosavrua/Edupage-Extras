@@ -17,13 +17,34 @@
 
       <div class="settings-body">
         <nav class="settings-nav" role="tablist" aria-orientation="vertical" aria-label="Settings categories">
-          <button class="settings-nav-item" type="button" role="tab" id="nav-appearance" aria-controls="panel-appearance" aria-selected="true" data-target="appearance" data-i18n="groupAppearance">Appearance</button>
-          <button class="settings-nav-item" type="button" role="tab" id="nav-cleanup" aria-controls="panel-cleanup" aria-selected="false" tabindex="-1" data-target="cleanup" data-i18n="groupCleanup">Cleanup</button>
-          <button class="settings-nav-item" type="button" role="tab" id="nav-features" aria-controls="panel-features" aria-selected="false" tabindex="-1" data-target="features" data-i18n="groupFeatures">Features</button>
-          <button class="settings-nav-item" type="button" role="tab" id="nav-timetable" aria-controls="panel-timetable" aria-selected="false" tabindex="-1" data-target="timetable" data-i18n="groupTimetable">Timetable</button>
-          <button class="settings-nav-item" type="button" role="tab" id="nav-updates" aria-controls="panel-updates" aria-selected="false" tabindex="-1" data-target="updates" data-i18n="groupUpdates">Updates</button>
-          <button class="settings-nav-item" type="button" role="tab" id="nav-debug" aria-controls="panel-debug" aria-selected="false" tabindex="-1" data-target="debug" data-i18n="groupDebug">Debug</button>
-          <button class="settings-nav-item settings-nav-item-experimental" type="button" role="tab" id="ExperimentalSettingsButton" aria-controls="panel-experimental" aria-selected="false" tabindex="-1" data-target="experimental" data-i18n="experimentalButton">Experimental</button>
+          <button class="settings-nav-item" type="button" role="tab" id="nav-appearance" aria-controls="panel-appearance" aria-selected="true" data-target="appearance">
+            <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></svg>
+            <span data-i18n="groupAppearance">Appearance</span>
+          </button>
+          <button class="settings-nav-item" type="button" role="tab" id="nav-cleanup" aria-controls="panel-cleanup" aria-selected="false" tabindex="-1" data-target="cleanup">
+            <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+            <span data-i18n="groupCleanup">Cleanup</span>
+          </button>
+          <button class="settings-nav-item" type="button" role="tab" id="nav-features" aria-controls="panel-features" aria-selected="false" tabindex="-1" data-target="features">
+            <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.7a2 2 0 0 0 1.4 1.4L21 12l-5.7 1.9a2 2 0 0 0-1.4 1.4L12 21l-1.9-5.7a2 2 0 0 0-1.4-1.4L3 12l5.7-1.9a2 2 0 0 0 1.4-1.4L12 3z"/></svg>
+            <span data-i18n="groupFeatures">Features</span>
+          </button>
+          <button class="settings-nav-item" type="button" role="tab" id="nav-timetable" aria-controls="panel-timetable" aria-selected="false" tabindex="-1" data-target="timetable">
+            <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 9h18"/></svg>
+            <span data-i18n="groupTimetable">Timetable</span>
+          </button>
+          <button class="settings-nav-item" type="button" role="tab" id="nav-updates" aria-controls="panel-updates" aria-selected="false" tabindex="-1" data-target="updates">
+            <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 21h14"/></svg>
+            <span data-i18n="groupUpdates">Updates</span>
+          </button>
+          <button class="settings-nav-item" type="button" role="tab" id="nav-debug" aria-controls="panel-debug" aria-selected="false" tabindex="-1" data-target="debug">
+            <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg>
+            <span data-i18n="groupDebug">Debug</span>
+          </button>
+          <button class="settings-nav-item settings-nav-item-experimental" type="button" role="tab" id="ExperimentalSettingsButton" aria-controls="panel-experimental" aria-selected="false" tabindex="-1" data-target="experimental">
+            <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6"/><path d="M10 2v7.5L4.7 19a1.8 1.8 0 0 0 1.6 2.7h11.4a1.8 1.8 0 0 0 1.6-2.7L14 9.5V2"/><path d="M7 15h10"/></svg>
+            <span data-i18n="experimentalButton">Experimental</span>
+          </button>
         </nav>
 
         <div class="settings-content">
@@ -31,127 +52,129 @@
       <section class="setting-group" id="panel-appearance" role="tabpanel" aria-labelledby="appearance-heading nav-appearance" tabindex="0">
         <h2 id="appearance-heading" data-i18n="groupAppearance">Appearance</h2>
 
-        <div class="setting-row">
-          <div>
-            <h3>
-              <span data-i18n="themesLabel">Themes</span>
-              <span class="setting-tag setting-tag-wip" data-i18n="wipBadge">WIP</span>
-            </h3>
-            <p data-i18n="themesDesc">Apply Edupage Extras colors across Edupage and the extension menus.</p>
-          </div>
-          <label class="switch switch-compact" for="DarkModeCheckbox">
-            <input type="checkbox" id="DarkModeCheckbox">
-            <span class="switch-track" aria-hidden="true"></span>
-            <span class="sr-only" data-i18n="toggleThemes">Toggle themes</span>
-          </label>
-        </div>
-
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="themeHotkey">Theme Hotkey</h3>
-            <p data-i18n="themeHotkeyDesc">Optional. Add a Chrome extension shortcut for toggling themes on or off.</p>
-          </div>
-          <div class="shortcut-controls">
-            <button class="secondary-button" id="OpenShortcutSettingsButton" type="button" data-i18n="openShortcutSettings">Open Shortcut Settings</button>
-            <span class="shortcut-status" id="ThemeShortcutStatus" data-i18n="noHotkey">No hotkey assigned.</span>
-          </div>
-        </div>
-
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="themeLabel">Theme</h3>
-            <p data-i18n="themeDesc">Choose the colors Edupage Extras applies to Edupage.</p>
-          </div>
-          <label class="select-control" for="ThemeSelect">
-            <span data-i18n="themeLabel">Theme</span>
-            <select id="ThemeSelect">
-              <option value="dark" data-i18n="themeOptionDark">Midnight Blue</option>
-              <option value="ocean" data-i18n="themeOptionOcean">Ocean Cyan</option>
-              <option value="forest" data-i18n="themeOptionForest">Forest Green</option>
-              <option value="emerald" data-i18n="themeOptionEmerald">Emerald Green</option>
-              <option value="pink" data-i18n="themeOptionPink">Rose Pink</option>
-              <option value="purple" data-i18n="themeOptionPurple">Royal Purple</option>
-              <option value="custom" data-i18n="themeOptionCustom">Custom</option>
-              <option value="light" data-i18n="themeOptionLight">Light</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="setting-note setting-note-warning" role="note" aria-label="Theme disclaimer">
-          <strong data-i18n="themeDisclaimerTitle">Theme Disclaimer</strong>
-          <p data-i18n="themeDisclaimerText">During an online test or exam, a recolored EduPage looks different from the standard page — which can draw a teacher's attention or be mistaken for tampering. Switch to the default theme (or turn themes off) while you take the test.</p>
-        </div>
-
-        <div class="setting-row custom-theme-row" id="CustomThemePanel" hidden>
-          <div>
-            <h3 data-i18n="customThemeLabel">Custom Theme</h3>
-            <p data-i18n="customThemeDesc">Build your own Edupage Extras colors.</p>
-          </div>
-          <div class="custom-theme-controls">
-            <div class="custom-theme-grid">
-              <label>
-                <span data-i18n="customColorBg">Background</span>
-                <input type="color" id="CustomBgBase">
-              </label>
-              <label>
-                <span data-i18n="customColorSurface">Surface</span>
-                <input type="color" id="CustomBgRaised">
-              </label>
-              <label>
-                <span data-i18n="customColorControls">Controls</span>
-                <input type="color" id="CustomBgElevated">
-              </label>
-              <label>
-                <span data-i18n="customColorMuted">Muted Surface</span>
-                <input type="color" id="CustomBgMuted">
-              </label>
-              <label>
-                <span data-i18n="customColorBorder">Border</span>
-                <input type="color" id="CustomBorder">
-              </label>
-              <label>
-                <span data-i18n="customColorTextMain">Main Text</span>
-                <input type="color" id="CustomTextMain">
-              </label>
-              <label>
-                <span data-i18n="customColorTextMuted">Muted Text</span>
-                <input type="color" id="CustomTextMuted">
-              </label>
-              <label>
-                <span data-i18n="customColorAccent">Accent</span>
-                <input type="color" id="CustomAccent">
-              </label>
-              <label>
-                <span data-i18n="customColorWarning">Warning</span>
-                <input type="color" id="CustomWarning">
-              </label>
-              <label>
-                <span data-i18n="customColorDanger">Danger</span>
-                <input type="color" id="CustomDanger">
-              </label>
-              <label>
-                <span data-i18n="customColorTableHeader">Table Header</span>
-                <input type="color" id="CustomTableHeaderBg">
-              </label>
-              <label>
-                <span data-i18n="timetableHighlightColorRoomChange">Room Change Color</span>
-                <input type="color" id="CustomRozvrhRoomChange">
-              </label>
-              <label>
-                <span data-i18n="timetableHighlightColorSubstitution">Substitution Color</span>
-                <input type="color" id="CustomRozvrhSubstitution">
-              </label>
+        <div class="setting-card">
+          <div class="setting-row">
+            <div>
+              <h3>
+                <span data-i18n="themesLabel">Themes</span>
+                <span class="setting-tag setting-tag-wip" data-i18n="wipBadge">WIP</span>
+              </h3>
+              <p data-i18n="themesDesc">Apply Edupage Extras colors across Edupage and the extension menus.</p>
             </div>
-            <label class="custom-theme-import" for="CustomThemeImport">
-              <span data-i18n="importExport">Import / Export</span>
-              <textarea id="CustomThemeImport" rows="5" placeholder="Paste a shared Edupage Extras custom theme here." data-i18n-attr="placeholder:customThemePlaceholder"></textarea>
+            <label class="switch switch-compact" for="DarkModeCheckbox">
+              <input type="checkbox" id="DarkModeCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleThemes">Toggle themes</span>
             </label>
-            <div class="actions-row">
-              <button class="secondary-button" id="ExportCustomThemeButton" type="button" data-i18n="exportTheme">Export Theme</button>
-              <button class="secondary-button" id="ImportCustomThemeButton" type="button" data-i18n="importTheme">Import Theme</button>
-              <button class="secondary-button" id="ResetCustomThemeButton" type="button" data-i18n="resetCustomTheme">Reset Custom Theme</button>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="themeHotkey">Theme Hotkey</h3>
+              <p data-i18n="themeHotkeyDesc">Optional. Add a Chrome extension shortcut for toggling themes on or off.</p>
             </div>
-            <span class="save-status" id="CustomThemeStatus" role="status"></span>
+            <div class="shortcut-controls">
+              <button class="secondary-button" id="OpenShortcutSettingsButton" type="button" data-i18n="openShortcutSettings">Open Shortcut Settings</button>
+              <span class="shortcut-status" id="ThemeShortcutStatus" data-i18n="noHotkey">No hotkey assigned.</span>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="themeLabel">Theme</h3>
+              <p data-i18n="themeDesc">Choose the colors Edupage Extras applies to Edupage.</p>
+            </div>
+            <label class="select-control" for="ThemeSelect">
+              <span class="sr-only" data-i18n="themeLabel">Theme</span>
+              <select id="ThemeSelect">
+                <option value="dark" data-i18n="themeOptionDark">Midnight Blue</option>
+                <option value="ocean" data-i18n="themeOptionOcean">Ocean Cyan</option>
+                <option value="forest" data-i18n="themeOptionForest">Forest Green</option>
+                <option value="emerald" data-i18n="themeOptionEmerald">Emerald Green</option>
+                <option value="pink" data-i18n="themeOptionPink">Rose Pink</option>
+                <option value="purple" data-i18n="themeOptionPurple">Royal Purple</option>
+                <option value="custom" data-i18n="themeOptionCustom">Custom</option>
+                <option value="light" data-i18n="themeOptionLight">Light</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="setting-note setting-note-warning" role="note" aria-label="Theme disclaimer">
+            <strong data-i18n="themeDisclaimerTitle">Theme Disclaimer</strong>
+            <p data-i18n="themeDisclaimerText">During an online test or exam, a recolored EduPage looks different from the standard page — which can draw a teacher's attention or be mistaken for tampering. Switch to the default theme (or turn themes off) while you take the test.</p>
+          </div>
+
+          <div class="setting-row custom-theme-row" id="CustomThemePanel" hidden>
+            <div>
+              <h3 data-i18n="customThemeLabel">Custom Theme</h3>
+              <p data-i18n="customThemeDesc">Build your own Edupage Extras colors.</p>
+            </div>
+            <div class="custom-theme-controls">
+              <div class="custom-theme-grid">
+                <label>
+                  <span data-i18n="customColorBg">Background</span>
+                  <input type="color" id="CustomBgBase">
+                </label>
+                <label>
+                  <span data-i18n="customColorSurface">Surface</span>
+                  <input type="color" id="CustomBgRaised">
+                </label>
+                <label>
+                  <span data-i18n="customColorControls">Controls</span>
+                  <input type="color" id="CustomBgElevated">
+                </label>
+                <label>
+                  <span data-i18n="customColorMuted">Muted Surface</span>
+                  <input type="color" id="CustomBgMuted">
+                </label>
+                <label>
+                  <span data-i18n="customColorBorder">Border</span>
+                  <input type="color" id="CustomBorder">
+                </label>
+                <label>
+                  <span data-i18n="customColorTextMain">Main Text</span>
+                  <input type="color" id="CustomTextMain">
+                </label>
+                <label>
+                  <span data-i18n="customColorTextMuted">Muted Text</span>
+                  <input type="color" id="CustomTextMuted">
+                </label>
+                <label>
+                  <span data-i18n="customColorAccent">Accent</span>
+                  <input type="color" id="CustomAccent">
+                </label>
+                <label>
+                  <span data-i18n="customColorWarning">Warning</span>
+                  <input type="color" id="CustomWarning">
+                </label>
+                <label>
+                  <span data-i18n="customColorDanger">Danger</span>
+                  <input type="color" id="CustomDanger">
+                </label>
+                <label>
+                  <span data-i18n="customColorTableHeader">Table Header</span>
+                  <input type="color" id="CustomTableHeaderBg">
+                </label>
+                <label>
+                  <span data-i18n="timetableHighlightColorRoomChange">Room Change Color</span>
+                  <input type="color" id="CustomRozvrhRoomChange">
+                </label>
+                <label>
+                  <span data-i18n="timetableHighlightColorSubstitution">Substitution Color</span>
+                  <input type="color" id="CustomRozvrhSubstitution">
+                </label>
+              </div>
+              <label class="custom-theme-import" for="CustomThemeImport">
+                <span data-i18n="importExport">Import / Export</span>
+                <textarea id="CustomThemeImport" rows="5" placeholder="Paste a shared Edupage Extras custom theme here." data-i18n-attr="placeholder:customThemePlaceholder"></textarea>
+              </label>
+              <div class="actions-row">
+                <button class="secondary-button" id="ExportCustomThemeButton" type="button" data-i18n="exportTheme">Export Theme</button>
+                <button class="secondary-button" id="ImportCustomThemeButton" type="button" data-i18n="importTheme">Import Theme</button>
+                <button class="secondary-button" id="ResetCustomThemeButton" type="button" data-i18n="resetCustomTheme">Reset Custom Theme</button>
+              </div>
+              <span class="save-status" id="CustomThemeStatus" role="status"></span>
+            </div>
           </div>
         </div>
       </section>
@@ -159,200 +182,204 @@
       <section class="setting-group" id="panel-cleanup" role="tabpanel" aria-labelledby="cleanup-heading nav-cleanup" tabindex="0" hidden>
         <h2 id="cleanup-heading" data-i18n="groupCleanup">Cleanup</h2>
 
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="centeredLayout">Centered Layout</h3>
-            <p data-i18n="centeredLayoutDesc">Keep the top schedule and main content aligned in the middle.</p>
+        <div class="setting-card">
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="centeredLayout">Centered Layout</h3>
+              <p data-i18n="centeredLayoutDesc">Keep the top schedule and main content aligned in the middle.</p>
+            </div>
+            <label class="switch switch-compact" for="CleanUiCheckbox">
+              <input type="checkbox" id="CleanUiCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleCenteredLayout">Toggle centered layout</span>
+            </label>
           </div>
-          <label class="switch switch-compact" for="CleanUiCheckbox">
-            <input type="checkbox" id="CleanUiCheckbox">
-            <span class="switch-track" aria-hidden="true"></span>
-            <span class="sr-only" data-i18n="toggleCenteredLayout">Toggle centered layout</span>
-          </label>
-        </div>
 
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="hideHelpText">Hide Help Text</h3>
-            <p data-i18n="hideHelpTextDesc">Hide the top-right Edupage help greeting.</p>
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="hideHelpText">Hide Help Text</h3>
+              <p data-i18n="hideHelpTextDesc">Hide the top-right Edupage help greeting.</p>
+            </div>
+            <label class="switch switch-compact" for="HideHelpTextCheckbox">
+              <input type="checkbox" id="HideHelpTextCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleHelpText">Toggle help text</span>
+            </label>
           </div>
-          <label class="switch switch-compact" for="HideHelpTextCheckbox">
-            <input type="checkbox" id="HideHelpTextCheckbox">
-            <span class="switch-track" aria-hidden="true"></span>
-            <span class="sr-only" data-i18n="toggleHelpText">Toggle help text</span>
-          </label>
-        </div>
 
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="mobileResponsive">Mobile-Responsive Layout</h3>
-            <p data-i18n="mobileResponsiveDesc">Inject structural CSS (flex-wrap, scrollable tables, scaled sidebar/fonts) to make Edupage usable on small screens. Off by default — not fully verified on every page yet.</p>
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="mobileResponsive">Mobile-Responsive Layout</h3>
+              <p data-i18n="mobileResponsiveDesc">Inject structural CSS (flex-wrap, scrollable tables, scaled sidebar/fonts) to make Edupage usable on small screens. Off by default — not fully verified on every page yet.</p>
+            </div>
+            <label class="switch switch-compact" for="MobileResponsiveCheckbox">
+              <input type="checkbox" id="MobileResponsiveCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleMobileResponsive">Toggle mobile-responsive layout</span>
+            </label>
           </div>
-          <label class="switch switch-compact" for="MobileResponsiveCheckbox">
-            <input type="checkbox" id="MobileResponsiveCheckbox">
-            <span class="switch-track" aria-hidden="true"></span>
-            <span class="sr-only" data-i18n="toggleMobileResponsive">Toggle mobile-responsive layout</span>
-          </label>
         </div>
-
       </section>
 
       <section class="setting-group" id="panel-features" role="tabpanel" aria-labelledby="features-heading nav-features" tabindex="0" hidden>
         <h2 id="features-heading" data-i18n="groupFeatures">Features</h2>
 
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="timetableHighlights">Timetable Change Highlights</h3>
-            <p data-i18n="timetableHighlightsDesc">Color-code substitutions (orange) and classroom changes (blue) on the main page schedule widget.</p>
-          </div>
-          <label class="switch switch-compact" for="TimetableHighlightsCheckbox">
-            <input type="checkbox" id="TimetableHighlightsCheckbox">
-            <span class="switch-track" aria-hidden="true"></span>
-            <span class="sr-only" data-i18n="toggleTimetableHighlights">Toggle timetable change highlights</span>
-          </label>
-        </div>
-
-        <div class="setting-row" id="TimetableHighlightColorsRow">
-          <div>
-            <h3 data-i18n="timetableHighlightColorsLabel">Highlight Colors</h3>
-          </div>
-          <div class="custom-theme-grid timetable-highlight-colors">
-            <label>
-              <span data-i18n="timetableHighlightColorRoomChange">Room Change Color</span>
-              <input type="color" id="RozvrhRoomChangeColor">
-            </label>
-            <label>
-              <span data-i18n="timetableHighlightColorSubstitution">Substitution Color</span>
-              <input type="color" id="RozvrhSubstitutionColor">
+        <div class="setting-card">
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="timetableHighlights">Timetable Change Highlights</h3>
+              <p data-i18n="timetableHighlightsDesc">Color-code substitutions (orange) and classroom changes (blue) on the main page schedule widget.</p>
+            </div>
+            <label class="switch switch-compact" for="TimetableHighlightsCheckbox">
+              <input type="checkbox" id="TimetableHighlightsCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleTimetableHighlights">Toggle timetable change highlights</span>
             </label>
           </div>
-        </div>
 
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="gradeBadges">Grade Badges</h3>
-            <p data-i18n="gradeBadgesDesc">Show average badges, bars, and the overall average row on the grades page.</p>
-          </div>
-          <label class="switch switch-compact" for="GradeBadgesCheckbox">
-            <input type="checkbox" id="GradeBadgesCheckbox">
-            <span class="switch-track" aria-hidden="true"></span>
-            <span class="sr-only" data-i18n="toggleGradeBadges">Toggle grade badges</span>
-          </label>
-        </div>
-
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="subjectAttendance">Grades Page Subject Attendance</h3>
-            <p data-i18n-html="subjectAttendanceDesc">Inject per-subject absence percentage and total lesson hours into each row on the <strong>Grades</strong> page, using official EduPage data.</p>
-          </div>
-          <label class="switch switch-compact" for="GradesAttendanceCheckbox">
-            <input type="checkbox" id="GradesAttendanceCheckbox">
-            <span class="switch-track" aria-hidden="true"></span>
-            <span class="sr-only" data-i18n="toggleSubjectAttendance">Toggle subject attendance</span>
-          </label>
-        </div>
-
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="attendancePercentages">Attendance Summary Percentages</h3>
-            <p data-i18n-html="attendancePercentagesDesc">Add the current-halfyear absence percentage into EduPage's own <strong>Attendance</strong> summary table (the standalone attendance page, not the Grades page).</p>
-          </div>
-          <label class="switch switch-compact" for="AttendancePercentagesCheckbox">
-            <input type="checkbox" id="AttendancePercentagesCheckbox">
-            <span class="switch-track" aria-hidden="true"></span>
-            <span class="sr-only" data-i18n="toggleAttendancePercentages">Toggle attendance percentages</span>
-          </label>
-        </div>
-
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="secondHalfStart">Second Halfyear Start Date</h3>
-            <p data-i18n="secondHalfStartDesc">Override when the second halfyear begins for attendance calculations. Leave this empty to use EduPage's default date for the current school year.</p>
-          </div>
-          <div class="date-setting-controls">
-            <div class="date-control-row">
-              <label class="date-control" for="HalfyearStartDateInput">
-                <span data-i18n="dateLabel">Date</span>
-                <input type="date" id="HalfyearStartDateInput">
-              </label>
-              <button class="secondary-button" id="ResetHalfyearStartDateButton" type="button" data-i18n="useEdupageDefault">Use EduPage Default</button>
+          <div class="setting-row" id="TimetableHighlightColorsRow">
+            <div>
+              <h3 data-i18n="timetableHighlightColorsLabel">Highlight Colors</h3>
             </div>
-            <small class="date-default-hint" id="HalfyearStartDefaultHint"></small>
-          </div>
-        </div>
-
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="secondHalfEnd">Second Halfyear End Date</h3>
-            <p data-i18n="secondHalfEndDesc">Override when the second halfyear ends for predicted attendance in grades. Leave this empty to use EduPage's default end date for the current school year.</p>
-          </div>
-          <div class="date-setting-controls">
-            <div class="date-control-row">
-              <label class="date-control" for="HalfyearEndDateInput">
-                <span data-i18n="dateLabel">Date</span>
-                <input type="date" id="HalfyearEndDateInput">
+            <div class="custom-theme-grid timetable-highlight-colors">
+              <label>
+                <span data-i18n="timetableHighlightColorRoomChange">Room Change Color</span>
+                <input type="color" id="RozvrhRoomChangeColor">
               </label>
-              <button class="secondary-button" id="ResetHalfyearEndDateButton" type="button" data-i18n="useEdupageDefault">Use EduPage Default</button>
+              <label>
+                <span data-i18n="timetableHighlightColorSubstitution">Substitution Color</span>
+                <input type="color" id="RozvrhSubstitutionColor">
+              </label>
             </div>
-            <small class="date-default-hint" id="HalfyearEndDefaultHint"></small>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="gradeBadges">Grade Badges</h3>
+              <p data-i18n="gradeBadgesDesc">Show average badges, bars, and the overall average row on the grades page.</p>
+            </div>
+            <label class="switch switch-compact" for="GradeBadgesCheckbox">
+              <input type="checkbox" id="GradeBadgesCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleGradeBadges">Toggle grade badges</span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="subjectAttendance">Grades Page Subject Attendance</h3>
+              <p data-i18n-html="subjectAttendanceDesc">Inject per-subject absence percentage and total lesson hours into each row on the <strong>Grades</strong> page, using official EduPage data.</p>
+            </div>
+            <label class="switch switch-compact" for="GradesAttendanceCheckbox">
+              <input type="checkbox" id="GradesAttendanceCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleSubjectAttendance">Toggle subject attendance</span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="attendancePercentages">Attendance Summary Percentages</h3>
+              <p data-i18n-html="attendancePercentagesDesc">Add the current-halfyear absence percentage into EduPage's own <strong>Attendance</strong> summary table (the standalone attendance page, not the Grades page).</p>
+            </div>
+            <label class="switch switch-compact" for="AttendancePercentagesCheckbox">
+              <input type="checkbox" id="AttendancePercentagesCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleAttendancePercentages">Toggle attendance percentages</span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="secondHalfStart">Second Halfyear Start Date</h3>
+              <p data-i18n="secondHalfStartDesc">Override when the second halfyear begins for attendance calculations. Leave this empty to use EduPage's default date for the current school year.</p>
+            </div>
+            <div class="date-setting-controls">
+              <div class="date-control-row">
+                <label class="date-control" for="HalfyearStartDateInput">
+                  <span data-i18n="dateLabel">Date</span>
+                  <input type="date" id="HalfyearStartDateInput">
+                </label>
+                <button class="secondary-button" id="ResetHalfyearStartDateButton" type="button" data-i18n="useEdupageDefault">Use EduPage Default</button>
+              </div>
+              <small class="date-default-hint" id="HalfyearStartDefaultHint"></small>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="secondHalfEnd">Second Halfyear End Date</h3>
+              <p data-i18n="secondHalfEndDesc">Override when the second halfyear ends for predicted attendance in grades. Leave this empty to use EduPage's default end date for the current school year.</p>
+            </div>
+            <div class="date-setting-controls">
+              <div class="date-control-row">
+                <label class="date-control" for="HalfyearEndDateInput">
+                  <span data-i18n="dateLabel">Date</span>
+                  <input type="date" id="HalfyearEndDateInput">
+                </label>
+                <button class="secondary-button" id="ResetHalfyearEndDateButton" type="button" data-i18n="useEdupageDefault">Use EduPage Default</button>
+              </div>
+              <small class="date-default-hint" id="HalfyearEndDefaultHint"></small>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="autoLogin">Auto-Login</h3>
+              <p data-i18n="autoLoginDesc">Automatically clicks through the EduPage login (account picker included) and submits once your browser autofills the saved password. Stops the moment you type anything yourself.</p>
+            </div>
+            <label class="switch switch-compact" for="AutoLoginCheckbox">
+              <input type="checkbox" id="AutoLoginCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleAutoLogin">Toggle auto-login</span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="ucivoExport">Curriculum Export</h3>
+              <p data-i18n="ucivoExportDesc">Add export buttons to a subject's Učivo page to download the topic plan (with taught dates) as .txt or .csv.</p>
+            </div>
+            <label class="switch switch-compact" for="UcivoExportCheckbox">
+              <input type="checkbox" id="UcivoExportCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleUcivoExport">Toggle curriculum export</span>
+            </label>
           </div>
         </div>
-
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="autoLogin">Auto-Login</h3>
-            <p data-i18n="autoLoginDesc">Automatically clicks through the EduPage login (account picker included) and submits once your browser autofills the saved password. Stops the moment you type anything yourself.</p>
-          </div>
-          <label class="switch switch-compact" for="AutoLoginCheckbox">
-            <input type="checkbox" id="AutoLoginCheckbox">
-            <span class="switch-track" aria-hidden="true"></span>
-            <span class="sr-only" data-i18n="toggleAutoLogin">Toggle auto-login</span>
-          </label>
-        </div>
-
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="ucivoExport">Curriculum Export</h3>
-            <p data-i18n="ucivoExportDesc">Add export buttons to a subject's Učivo page to download the topic plan (with taught dates) as .txt or .csv.</p>
-          </div>
-          <label class="switch switch-compact" for="UcivoExportCheckbox">
-            <input type="checkbox" id="UcivoExportCheckbox">
-            <span class="switch-track" aria-hidden="true"></span>
-            <span class="sr-only" data-i18n="toggleUcivoExport">Toggle curriculum export</span>
-          </label>
-        </div>
-
       </section>
 
       <section class="setting-group" id="panel-timetable" role="tabpanel" aria-labelledby="timetable-heading nav-timetable" tabindex="0" hidden>
         <h2 id="timetable-heading" data-i18n="groupTimetable">Timetable</h2>
 
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="exportTimetable">Export Timetable (.ics)</h3>
-            <p data-i18n="exportTimetableDesc">Download your timetable as an .ics file for Google Calendar, Apple Calendar, Outlook, etc. Briefly opens a hidden EduPage tab to read the timetable.</p>
-          </div>
-        </div>
-
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="exportTimetableIncludeChanges">Include this week's changes</h3>
-            <p data-i18n="exportTimetableIncludeChangesDesc">Keep this week's substitutions and room changes in the export.</p>
-          </div>
-          <label class="switch switch-compact" for="ExportTimetableIncludeChangesCheckbox">
-            <input type="checkbox" id="ExportTimetableIncludeChangesCheckbox" checked>
-            <span class="switch-track" aria-hidden="true"></span>
-            <span class="sr-only" data-i18n="toggleExportIncludeChanges">Toggle including this week's changes</span>
-          </label>
-        </div>
-
-        <div class="setting-row setting-row-stack">
-          <div class="setting-stack-controls">
-            <div class="actions-row">
-              <button class="secondary-button" id="ExportTimetableWeekButton" type="button" data-i18n="exportTimetableWeek">Export Current Week</button>
-              <button class="secondary-button" id="ExportTimetableHalfyearButton" type="button" data-i18n="exportTimetableHalfyear">Export Half-Year</button>
+        <div class="setting-card">
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="exportTimetable">Export Timetable (.ics)</h3>
+              <p data-i18n="exportTimetableDesc">Download your timetable as an .ics file for Google Calendar, Apple Calendar, Outlook, etc. Briefly opens a hidden EduPage tab to read the timetable.</p>
             </div>
-            <p id="ExportTimetableStatus" class="setting-note" role="status" aria-live="polite"></p>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="exportTimetableIncludeChanges">Include this week's changes</h3>
+              <p data-i18n="exportTimetableIncludeChangesDesc">Keep this week's substitutions and room changes in the export.</p>
+            </div>
+            <label class="switch switch-compact" for="ExportTimetableIncludeChangesCheckbox">
+              <input type="checkbox" id="ExportTimetableIncludeChangesCheckbox" checked>
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleExportIncludeChanges">Toggle including this week's changes</span>
+            </label>
+          </div>
+
+          <div class="setting-row setting-row-stack">
+            <div class="setting-stack-controls">
+              <div class="actions-row">
+                <button class="secondary-button" id="ExportTimetableWeekButton" type="button" data-i18n="exportTimetableWeek">Export Current Week</button>
+                <button class="secondary-button" id="ExportTimetableHalfyearButton" type="button" data-i18n="exportTimetableHalfyear">Export Half-Year</button>
+              </div>
+              <p id="ExportTimetableStatus" class="setting-note" role="status" aria-live="polite"></p>
+            </div>
           </div>
         </div>
 
@@ -362,26 +389,28 @@
       <section class="setting-group" id="panel-updates" role="tabpanel" aria-labelledby="updates-heading nav-updates" tabindex="0" hidden>
         <h2 id="updates-heading" data-i18n="groupUpdates">Updates</h2>
 
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="updateReminders">Update Reminders</h3>
-            <p data-i18n="updateRemindersDesc">Check the public GitHub project for a newer unpacked version.</p>
+        <div class="setting-card">
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="updateReminders">Update Reminders</h3>
+              <p data-i18n="updateRemindersDesc">Check the public GitHub project for a newer unpacked version.</p>
+            </div>
+            <label class="switch switch-compact" for="UpdateReminderCheckbox">
+              <input type="checkbox" id="UpdateReminderCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleUpdateReminders">Toggle update reminders</span>
+            </label>
           </div>
-          <label class="switch switch-compact" for="UpdateReminderCheckbox">
-            <input type="checkbox" id="UpdateReminderCheckbox">
-            <span class="switch-track" aria-hidden="true"></span>
-            <span class="sr-only" data-i18n="toggleUpdateReminders">Toggle update reminders</span>
-          </label>
-        </div>
 
-        <div class="setting-row setting-row-stack">
-          <div>
-            <h3 data-i18n="versionCheck">Version Check</h3>
-            <p id="UpdateStatusText" data-i18n="noUpdateCheck">No update check has run yet.</p>
-          </div>
-          <div class="actions-row">
-            <button class="secondary-button" id="CheckUpdatesButton" type="button" data-i18n="checkForUpdates">Check For Updates</button>
-            <button class="secondary-button" id="OpenRepositoryButton" type="button" data-i18n="openGithub">Open GitHub</button>
+          <div class="setting-row setting-row-stack">
+            <div>
+              <h3 data-i18n="versionCheck">Version Check</h3>
+              <p id="UpdateStatusText" data-i18n="noUpdateCheck">No update check has run yet.</p>
+            </div>
+            <div class="actions-row">
+              <button class="secondary-button" id="CheckUpdatesButton" type="button" data-i18n="checkForUpdates">Check For Updates</button>
+              <button class="secondary-button" id="OpenRepositoryButton" type="button" data-i18n="openGithub">Open GitHub</button>
+            </div>
           </div>
         </div>
       </section>
@@ -389,46 +418,48 @@
       <section class="setting-group" id="panel-debug" role="tabpanel" aria-labelledby="debug-heading nav-debug" tabindex="0" hidden>
         <h2 id="debug-heading" data-i18n="groupDebug">Debug</h2>
 
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="previewUpdateToast">Preview Update Toast</h3>
-            <p data-i18n="previewUpdateToastDesc">Show the "what's new" toast on an open Edupage tab right now, without waiting for an actual version change.</p>
-          </div>
-          <button class="secondary-button" id="PreviewUpdateToastButton" type="button" data-i18n="previewUpdateToastButton">Preview</button>
-        </div>
-
-        <div class="setting-row">
-          <div>
-            <h3 data-i18n="gradesDebug">Grades Attendance Debug</h3>
-            <p data-i18n="gradesDebugDesc">Print detailed fetch, parsing, matching, and rendering diagnostics for the grades attendance feature into the browser console.</p>
-          </div>
-          <label class="switch switch-compact" for="GradesAttendanceDebugCheckbox">
-            <input type="checkbox" id="GradesAttendanceDebugCheckbox">
-            <span class="switch-track" aria-hidden="true"></span>
-            <span class="sr-only" data-i18n="toggleGradesDebug">Toggle grades attendance debug</span>
-          </label>
-        </div>
-
-        <div class="setting-row setting-row-stack">
-          <div>
-            <h3 data-i18n="reportProblem">Report a Problem</h3>
-            <p data-i18n="reportProblemDesc">If a feature misbehaves on your school's EduPage, generate a diagnostic report so the issue can be fixed without access to your account. Open the affected EduPage page in another tab first, then generate the report.</p>
-          </div>
-          <div class="setting-stack-controls">
-            <label class="inline-checkbox" for="ReportRedactCheckbox">
-              <input type="checkbox" id="ReportRedactCheckbox" checked>
-              <span data-i18n="reportRedact">Hide personal data (recommended)</span>
-            </label>
-            <p class="setting-note" data-i18n="reportRedactNote">When enabled, the report includes page structure (tags, classes, layout) but no grades, names, marks, or other text values.</p>
-            <div class="actions-row">
-              <button class="secondary-button" id="GenerateReportButton" type="button" data-i18n="generateReport">Generate Report</button>
-              <button class="secondary-button" id="CopyReportButton" type="button" data-i18n="copyReport" disabled>Copy</button>
-              <button class="secondary-button" id="DownloadReportButton" type="button" data-i18n="downloadReport" disabled>Download .json</button>
-              <button class="secondary-button" id="OpenIssueButton" type="button" data-i18n="openIssue" disabled>Open GitHub Issue</button>
-              <a class="secondary-button" href="https://discord.gg/eNZXHesA9j" target="_blank" rel="noopener noreferrer" data-i18n="reportDiscord">Report on Discord</a>
+        <div class="setting-card">
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="previewUpdateToast">Preview Update Toast</h3>
+              <p data-i18n="previewUpdateToastDesc">Show the "what's new" toast on an open Edupage tab right now, without waiting for an actual version change.</p>
             </div>
-            <p id="ReportStatus" class="setting-note" role="status" aria-live="polite"></p>
-            <textarea id="ReportOutput" class="report-output" readonly hidden aria-label="Diagnostic report"></textarea>
+            <button class="secondary-button" id="PreviewUpdateToastButton" type="button" data-i18n="previewUpdateToastButton">Preview</button>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="gradesDebug">Grades Attendance Debug</h3>
+              <p data-i18n="gradesDebugDesc">Print detailed fetch, parsing, matching, and rendering diagnostics for the grades attendance feature into the browser console.</p>
+            </div>
+            <label class="switch switch-compact" for="GradesAttendanceDebugCheckbox">
+              <input type="checkbox" id="GradesAttendanceDebugCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleGradesDebug">Toggle grades attendance debug</span>
+            </label>
+          </div>
+
+          <div class="setting-row setting-row-stack">
+            <div>
+              <h3 data-i18n="reportProblem">Report a Problem</h3>
+              <p data-i18n="reportProblemDesc">If a feature misbehaves on your school's EduPage, generate a diagnostic report so the issue can be fixed without access to your account. Open the affected EduPage page in another tab first, then generate the report.</p>
+            </div>
+            <div class="setting-stack-controls">
+              <label class="inline-checkbox" for="ReportRedactCheckbox">
+                <input type="checkbox" id="ReportRedactCheckbox" checked>
+                <span data-i18n="reportRedact">Hide personal data (recommended)</span>
+              </label>
+              <p class="setting-note" data-i18n="reportRedactNote">When enabled, the report includes page structure (tags, classes, layout) but no grades, names, marks, or other text values.</p>
+              <div class="actions-row">
+                <button class="secondary-button" id="GenerateReportButton" type="button" data-i18n="generateReport">Generate Report</button>
+                <button class="secondary-button" id="CopyReportButton" type="button" data-i18n="copyReport" disabled>Copy</button>
+                <button class="secondary-button" id="DownloadReportButton" type="button" data-i18n="downloadReport" disabled>Download .json</button>
+                <button class="secondary-button" id="OpenIssueButton" type="button" data-i18n="openIssue" disabled>Open GitHub Issue</button>
+                <a class="secondary-button" href="https://discord.gg/eNZXHesA9j" target="_blank" rel="noopener noreferrer" data-i18n="reportDiscord">Report on Discord</a>
+              </div>
+              <p id="ReportStatus" class="setting-note" role="status" aria-live="polite"></p>
+              <textarea id="ReportOutput" class="report-output" readonly hidden aria-label="Diagnostic report"></textarea>
+            </div>
           </div>
         </div>
       </section>
@@ -436,33 +467,35 @@
       <section class="setting-group" id="panel-experimental" role="tabpanel" aria-labelledby="experimental-heading ExperimentalSettingsButton" tabindex="0" hidden>
         <div id="ExperimentalContent" hidden>
           <h2 id="experimental-heading" data-i18n="experimentalHeading">Experimental</h2>
-          <p data-i18n="experimentalSubtitle">Test activity and visibility protections on Edupage pages.</p>
-          <p><a class="inline-link" href="https://edublurtesting.ct.ws/" target="_blank" rel="noopener noreferrer" data-i18n="openTestingSite">Open the testing website</a></p>
+          <p class="setting-group-subtitle" data-i18n="experimentalSubtitle">Test activity and visibility protections on Edupage pages.</p>
+          <p class="setting-group-subtitle"><a class="inline-link" href="https://edublurtesting.ct.ws/" target="_blank" rel="noopener noreferrer" data-i18n="openTestingSite">Open the testing website</a></p>
           <div class="section-heading">
             <h3 id="activity-heading" data-i18n="samHeading">Stay Active Mode</h3>
             <p data-i18n="samDesc">Controls how Edupage sees tab activity, focus, mouse movement, and clipboard actions. Changes apply live, but reloading open Edupage tabs gives the cleanest start.</p>
           </div>
 
-          <div class="setting-row prominent-row">
-            <div>
-              <h3 data-i18n="samMaster">Stay Active Mode (Master Switch)</h3>
-              <p data-i18n="samMasterDesc">Turn the full Stay Active feature set on or off at once for Edupage pages.</p>
+          <div class="setting-card">
+            <div class="setting-row prominent-row">
+              <div>
+                <h3 data-i18n="samMaster">Stay Active Mode (Master Switch)</h3>
+                <p data-i18n="samMasterDesc">Turn the full Stay Active feature set on or off at once for Edupage pages.</p>
+              </div>
+              <label class="switch switch-compact" for="ActivityShieldEnabled">
+                <input type="checkbox" id="ActivityShieldEnabled">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleSam">Toggle Stay Active Mode</span>
+              </label>
             </div>
-            <label class="switch switch-compact" for="ActivityShieldEnabled">
-              <input type="checkbox" id="ActivityShieldEnabled">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleSam">Toggle Stay Active Mode</span>
-            </label>
-          </div>
 
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="samHotkey">Master Switch Hotkey</h3>
-              <p data-i18n="samHotkeyDesc">Optional. No default hotkey is assigned. Use Chrome's extension shortcuts page if you want a shortcut for toggling Stay Active Mode.</p>
-            </div>
-            <div class="shortcut-controls">
-              <button class="secondary-button" id="ExperimentalShortcutSettingsButton" type="button" data-i18n="openShortcutSettings">Open Shortcut Settings</button>
-              <span class="shortcut-status" id="ActivityShieldShortcutStatus" data-i18n="noHotkey">No hotkey assigned.</span>
+            <div class="setting-row">
+              <div>
+                <h3 data-i18n="samHotkey">Master Switch Hotkey</h3>
+                <p data-i18n="samHotkeyDesc">Optional. No default hotkey is assigned. Use Chrome's extension shortcuts page if you want a shortcut for toggling Stay Active Mode.</p>
+              </div>
+              <div class="shortcut-controls">
+                <button class="secondary-button" id="ExperimentalShortcutSettingsButton" type="button" data-i18n="openShortcutSettings">Open Shortcut Settings</button>
+                <span class="shortcut-status" id="ActivityShieldShortcutStatus" data-i18n="noHotkey">No hotkey assigned.</span>
+              </div>
             </div>
           </div>
 
@@ -470,168 +503,174 @@
             <h3 id="spoofing-heading" data-i18n="sectVisibility">Visibility & Focus</h3>
           </div>
 
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="keepVisible">Keep Tab Marked Visible</h3>
-              <p data-i18n-html="keepVisibleDesc">Make Edupage read the tab as <code>visible</code> even after switching away.</p>
+          <div class="setting-card">
+            <div class="setting-row">
+              <div>
+                <h3 data-i18n="keepVisible">Keep Tab Marked Visible</h3>
+                <p data-i18n-html="keepVisibleDesc">Make Edupage read the tab as <code>visible</code> even after switching away.</p>
+              </div>
+              <label class="switch switch-compact" for="ActivityVisibilityState">
+                <input type="checkbox" id="ActivityVisibilityState">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleKeepVisible">Toggle keep tab marked visible</span>
+              </label>
             </div>
-            <label class="switch switch-compact" for="ActivityVisibilityState">
-              <input type="checkbox" id="ActivityVisibilityState">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleKeepVisible">Toggle keep tab marked visible</span>
-            </label>
-          </div>
 
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="keepNotHidden">Keep Tab Marked Not Hidden</h3>
-              <p data-i18n-html="keepNotHiddenDesc">Make Edupage read <code>document.hidden</code> as <code>false</code>.</p>
+            <div class="setting-row">
+              <div>
+                <h3 data-i18n="keepNotHidden">Keep Tab Marked Not Hidden</h3>
+                <p data-i18n-html="keepNotHiddenDesc">Make Edupage read <code>document.hidden</code> as <code>false</code>.</p>
+              </div>
+              <label class="switch switch-compact" for="ActivityHidden">
+                <input type="checkbox" id="ActivityHidden">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleKeepNotHidden">Toggle keep tab marked not hidden</span>
+              </label>
             </div>
-            <label class="switch switch-compact" for="ActivityHidden">
-              <input type="checkbox" id="ActivityHidden">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleKeepNotHidden">Toggle keep tab marked not hidden</span>
-            </label>
-          </div>
 
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="hideTabSwitch">Hide Tab-Switch Events</h3>
-              <p data-i18n="hideTabSwitchDesc">Stop Edupage scripts from receiving visibility and page-hide events.</p>
+            <div class="setting-row">
+              <div>
+                <h3 data-i18n="hideTabSwitch">Hide Tab-Switch Events</h3>
+                <p data-i18n="hideTabSwitchDesc">Stop Edupage scripts from receiving visibility and page-hide events.</p>
+              </div>
+              <label class="switch switch-compact" for="ActivityVisibilityEvents">
+                <input type="checkbox" id="ActivityVisibilityEvents">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleHideTabSwitch">Toggle hide tab-switch events</span>
+              </label>
             </div>
-            <label class="switch switch-compact" for="ActivityVisibilityEvents">
-              <input type="checkbox" id="ActivityVisibilityEvents">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleHideTabSwitch">Toggle hide tab-switch events</span>
-            </label>
-          </div>
 
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="keepFocused">Keep Page Marked Focused</h3>
-              <p data-i18n="keepFocusedDesc">Make Edupage read the page as focused and hide focus-in events.</p>
+            <div class="setting-row">
+              <div>
+                <h3 data-i18n="keepFocused">Keep Page Marked Focused</h3>
+                <p data-i18n="keepFocusedDesc">Make Edupage read the page as focused and hide focus-in events.</p>
+              </div>
+              <label class="switch switch-compact" for="ActivityFocus">
+                <input type="checkbox" id="ActivityFocus">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleKeepFocused">Toggle keep page marked focused</span>
+              </label>
             </div>
-            <label class="switch switch-compact" for="ActivityFocus">
-              <input type="checkbox" id="ActivityFocus">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleKeepFocused">Toggle keep page marked focused</span>
-            </label>
-          </div>
 
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="hideFocusLoss">Hide Focus Loss</h3>
-              <p data-i18n="hideFocusLossDesc">Stop Edupage scripts from receiving blur and focus-out events.</p>
+            <div class="setting-row">
+              <div>
+                <h3 data-i18n="hideFocusLoss">Hide Focus Loss</h3>
+                <p data-i18n="hideFocusLossDesc">Stop Edupage scripts from receiving blur and focus-out events.</p>
+              </div>
+              <label class="switch switch-compact" for="ActivityBlur">
+                <input type="checkbox" id="ActivityBlur">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleHideFocusLoss">Toggle hide focus loss</span>
+              </label>
             </div>
-            <label class="switch switch-compact" for="ActivityBlur">
-              <input type="checkbox" id="ActivityBlur">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleHideFocusLoss">Toggle hide focus loss</span>
-            </label>
           </div>
 
           <div class="section-heading">
             <h3 id="input-heading" data-i18n="sectInput">Mouse & Input</h3>
           </div>
 
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="hideCursorLeave">Hide Cursor Leaving The Page</h3>
-              <p data-i18n="hideCursorLeaveDesc">Stop Edupage scripts from seeing mouse enter and leave events.</p>
+          <div class="setting-card">
+            <div class="setting-row">
+              <div>
+                <h3 data-i18n="hideCursorLeave">Hide Cursor Leaving The Page</h3>
+                <p data-i18n="hideCursorLeaveDesc">Stop Edupage scripts from seeing mouse enter and leave events.</p>
+              </div>
+              <label class="switch switch-compact" for="ActivityMouseleave">
+                <input type="checkbox" id="ActivityMouseleave">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleHideCursorLeave">Toggle hide cursor leaving the page</span>
+              </label>
             </div>
-            <label class="switch switch-compact" for="ActivityMouseleave">
-              <input type="checkbox" id="ActivityMouseleave">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleHideCursorLeave">Toggle hide cursor leaving the page</span>
-            </label>
-          </div>
 
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="hideCursorMove">Hide Cursor Moving Between Areas</h3>
-              <p data-i18n="hideCursorMoveDesc">Stop Edupage scripts from seeing mouse over and out events.</p>
+            <div class="setting-row">
+              <div>
+                <h3 data-i18n="hideCursorMove">Hide Cursor Moving Between Areas</h3>
+                <p data-i18n="hideCursorMoveDesc">Stop Edupage scripts from seeing mouse over and out events.</p>
+              </div>
+              <label class="switch switch-compact" for="ActivityMouseout">
+                <input type="checkbox" id="ActivityMouseout">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleHideCursorMove">Toggle hide cursor moving between areas</span>
+              </label>
             </div>
-            <label class="switch switch-compact" for="ActivityMouseout">
-              <input type="checkbox" id="ActivityMouseout">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleHideCursorMove">Toggle hide cursor moving between areas</span>
-            </label>
-          </div>
 
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="hidePointerCapture">Hide Pointer Capture Changes</h3>
-              <p data-i18n="hidePointerCaptureDesc">Stop Edupage scripts from seeing pointer capture and release events.</p>
+            <div class="setting-row">
+              <div>
+                <h3 data-i18n="hidePointerCapture">Hide Pointer Capture Changes</h3>
+                <p data-i18n="hidePointerCaptureDesc">Stop Edupage scripts from seeing pointer capture and release events.</p>
+              </div>
+              <label class="switch switch-compact" for="ActivityPointercapture">
+                <input type="checkbox" id="ActivityPointercapture">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleHidePointerCapture">Toggle hide pointer capture changes</span>
+              </label>
             </div>
-            <label class="switch switch-compact" for="ActivityPointercapture">
-              <input type="checkbox" id="ActivityPointercapture">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleHidePointerCapture">Toggle hide pointer capture changes</span>
-            </label>
-          </div>
 
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="hideClipboard">Hide Copy, Paste, Selection, And Dragging</h3>
-              <p data-i18n="hideClipboardDesc">Stop Edupage scripts from seeing clipboard, context menu, selection, drag, and drop events.</p>
+            <div class="setting-row">
+              <div>
+                <h3 data-i18n="hideClipboard">Hide Copy, Paste, Selection, And Dragging</h3>
+                <p data-i18n="hideClipboardDesc">Stop Edupage scripts from seeing clipboard, context menu, selection, drag, and drop events.</p>
+              </div>
+              <label class="switch switch-compact" for="ActivityClipboard">
+                <input type="checkbox" id="ActivityClipboard">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleHideClipboard">Toggle hide copy paste selection and dragging</span>
+              </label>
             </div>
-            <label class="switch switch-compact" for="ActivityClipboard">
-              <input type="checkbox" id="ActivityClipboard">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleHideClipboard">Toggle hide copy paste selection and dragging</span>
-            </label>
           </div>
 
           <div class="section-heading">
             <h3 id="background-heading" data-i18n="sectBackground">Background Behavior</h3>
           </div>
 
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="stopRedirects">Stop Hidden-Tab Reload Redirects</h3>
-              <p data-i18n="stopRedirectsDesc">Try to block reload redirects that start after Edupage becomes hidden.</p>
+          <div class="setting-card">
+            <div class="setting-row">
+              <div>
+                <h3 data-i18n="stopRedirects">Stop Hidden-Tab Reload Redirects</h3>
+                <p data-i18n="stopRedirectsDesc">Try to block reload redirects that start after Edupage becomes hidden.</p>
+              </div>
+              <label class="switch switch-compact" for="ActivityRedirect">
+                <input type="checkbox" id="ActivityRedirect">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleStopRedirects">Toggle hidden-tab reload redirects</span>
+              </label>
             </div>
-            <label class="switch switch-compact" for="ActivityRedirect">
-              <input type="checkbox" id="ActivityRedirect">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleStopRedirects">Toggle hidden-tab reload redirects</span>
-            </label>
-          </div>
 
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="keepAnimation">Keep Page Animation Running In Background</h3>
-              <p data-i18n-html="keepAnimationDesc">Keep <code>requestAnimationFrame</code> callbacks moving while the tab is hidden.</p>
+            <div class="setting-row">
+              <div>
+                <h3 data-i18n="keepAnimation">Keep Page Animation Running In Background</h3>
+                <p data-i18n-html="keepAnimationDesc">Keep <code>requestAnimationFrame</code> callbacks moving while the tab is hidden.</p>
+              </div>
+              <label class="switch switch-compact" for="ActivityAnimationFrame">
+                <input type="checkbox" id="ActivityAnimationFrame">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleKeepAnimation">Toggle keep page animation running in background</span>
+              </label>
             </div>
-            <label class="switch switch-compact" for="ActivityAnimationFrame">
-              <input type="checkbox" id="ActivityAnimationFrame">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleKeepAnimation">Toggle keep page animation running in background</span>
-            </label>
-          </div>
 
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="showStatusDot">Show Status Dot On Edupage</h3>
-              <p data-i18n="showStatusDotDesc">Show a small dot so users can see whether Stay Active Mode is active or paused.</p>
+            <div class="setting-row">
+              <div>
+                <h3 data-i18n="showStatusDot">Show Status Dot On Edupage</h3>
+                <p data-i18n="showStatusDotDesc">Show a small dot so users can see whether Stay Active Mode is active or paused.</p>
+              </div>
+              <label class="switch switch-compact" for="ActivityVisualIndicator">
+                <input type="checkbox" id="ActivityVisualIndicator">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleShowStatusDot">Toggle status dot on Edupage</span>
+              </label>
             </div>
-            <label class="switch switch-compact" for="ActivityVisualIndicator">
-              <input type="checkbox" id="ActivityVisualIndicator">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleShowStatusDot">Toggle status dot on Edupage</span>
-            </label>
-          </div>
 
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="showConsoleDebug">Show Console Debug Messages</h3>
-              <p data-i18n="showConsoleDebugDesc">Print technical diagnostics in the page console when something cannot be changed.</p>
+            <div class="setting-row">
+              <div>
+                <h3 data-i18n="showConsoleDebug">Show Console Debug Messages</h3>
+                <p data-i18n="showConsoleDebugDesc">Print technical diagnostics in the page console when something cannot be changed.</p>
+              </div>
+              <label class="switch switch-compact" for="ActivityLog">
+                <input type="checkbox" id="ActivityLog">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleShowConsoleDebug">Toggle console debug messages</span>
+              </label>
             </div>
-            <label class="switch switch-compact" for="ActivityLog">
-              <input type="checkbox" id="ActivityLog">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleShowConsoleDebug">Toggle console debug messages</span>
-            </label>
           </div>
 
           <div class="section-heading">
@@ -650,7 +689,7 @@
       </div>
 
       <footer class="made-by">
-        <span data-i18n="madeBy">Made by</span> <a href="https://github.com/Alexosavrua" target="_blank" rel="noopener noreferrer">JustAlex</a>
+        <span data-i18n="madeBy">Made by</span> <a href="https://github.com/Alexosavrua" target="_blank" rel="noopener noreferrer">JustAlex</a> <a class="made-by-contributors" href="https://github.com/Alexosavrua/Edupage-Extras/graphs/contributors" target="_blank" rel="noopener noreferrer" data-i18n="madeByContributors">and contributors</a>
       </footer>
 
       <dialog class="confirm-dialog" id="ExperimentalConfirmDialog" aria-labelledby="experimental-confirm-title">

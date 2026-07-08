@@ -826,58 +826,114 @@ function buildMobileResponsiveCSS() {
   const M = "html.ee-mobile-responsive";
   return `
     @media (max-width: 768px) {
-      /* ── Global ────────────────────────────────────── */
+      /* ── Global guards ──────────────────────────────────
+         Nothing may force the layout viewport wider than the
+         screen: hidden overflow as the last resort, fluid media,
+         and breakable long words (links, filenames, teacher
+         emails) inside content cards. */
       ${M} body {
         overflow-x: hidden !important;
         -webkit-text-size-adjust: 100% !important;
       }
 
-      /* ── Fixed-width containers → fluid ────────────── */
+      ${M} img {
+        max-width: 100% !important;
+        height: auto !important;
+      }
+
+      ${M} iframe,
+      ${M} video,
+      ${M} canvas,
+      ${M} embed,
+      ${M} object {
+        max-width: 100% !important;
+      }
+
+      ${M} .userButton,
+      ${M} .userHomeWidget,
+      ${M} .userHomeOther,
+      ${M} .timeline-item,
+      ${M} .tml-item,
+      ${M} .tml-in-reply,
+      ${M} .hwItem,
+      ${M} .hw-content,
+      ${M} .notifBox {
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+      }
+
+      /* ── Fixed-width containers → fluid ─────────────────
+         Also strip left/right margins and floats: the desktop
+         layout reserves a gutter for the sidebar column, which
+         otherwise survives as dead space once the sidebar is
+         repositioned. */
       ${M} .userTopDivInner,
       ${M} .wmaxL1,
       ${M} .userRozvrh,
       ${M} .skinContent,
+      ${M} .skinBody,
       ${M} .userContentInner,
       ${M} .mainBox,
+      ${M} .bgDiv,
+      ${M} .withMargin,
+      ${M} .edubarMain,
+      ${M} .edubarMainNoSkin,
       ${M} #eb_main_content,
       ${M} #bar_mainDiv,
       ${M} .hwMainListMain {
-        flex-wrap: wrap !important;
         width: auto !important;
         max-width: 100% !important;
         min-width: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        float: none !important;
         box-sizing: border-box !important;
       }
 
-      /* ── Sidebar → collapsed above content ─────────── */
+      /* ── Sidebar → horizontal chip rail ─────────────────
+         A wrapped wall of menu pills eats half a phone screen
+         before any content shows. One compact row that scrolls
+         sideways (like every mobile tab bar) keeps the menu
+         reachable and the content on top. */
       ${M} .edubarSidebar,
       ${M} .edubarSidemenu2 {
         position: static !important;
+        float: none !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
         width: 100% !important;
         min-width: 0 !important;
+        max-width: 100% !important;
         max-height: none !important;
-        overflow: visible !important;
-        float: none !important;
-      }
-
-      ${M} .edubarSidebar {
-        display: flex !important;
-        flex-wrap: wrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
         gap: 2px !important;
         padding: 4px !important;
+        box-sizing: border-box !important;
+        scrollbar-width: thin !important;
+      }
+
+      ${M} .edubarSidebar::-webkit-scrollbar,
+      ${M} .edubarSidemenu2::-webkit-scrollbar {
+        height: 4px !important;
       }
 
       ${M} .edubarMenuitem {
-        flex: 1 1 auto !important;
+        flex: 0 0 auto !important;
+        width: auto !important;
         min-width: 0 !important;
       }
 
       ${M} .edubarMenuitem > a {
-        padding: 8px 10px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        min-height: 40px !important;
+        padding: 6px 12px !important;
         font-size: 13px !important;
         white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
+        box-sizing: border-box !important;
       }
 
       /* ── Top bar compact ────────────────────────────── */
@@ -885,6 +941,7 @@ function buildMobileResponsiveCSS() {
       ${M} .edubarHeader {
         flex-wrap: wrap !important;
         min-height: 0 !important;
+        max-width: 100% !important;
       }
 
       ${M} .edubarHeaderRight {
@@ -905,11 +962,10 @@ function buildMobileResponsiveCSS() {
         font-size: 13px !important;
       }
 
-      /* ── Main content area full-width ───────────────── */
+      /* ── Main content column ────────────────────────── */
       ${M} .skinBody {
         display: flex !important;
         flex-direction: column !important;
-        min-width: 0 !important;
       }
 
       ${M} .edubarMainNoSkin {
@@ -925,6 +981,7 @@ function buildMobileResponsiveCSS() {
 
       ${M} .userTopDivInner {
         flex-direction: column !important;
+        flex-wrap: wrap !important;
       }
 
       ${M} .userButton,
@@ -940,16 +997,22 @@ function buildMobileResponsiveCSS() {
         font-size: 14px !important;
       }
 
-      /* ── Timetable strip → full-width, scrollable ──── */
+      /* ── Timetable strip → one row, swipeable ───────── */
       ${M} .userRozvrh {
         flex-direction: column !important;
       }
 
       ${M} ul.rozvrh {
+        display: flex !important;
+        flex-wrap: nowrap !important;
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch !important;
         max-width: 100% !important;
         padding: 0 !important;
+      }
+
+      ${M} ul.rozvrh > li {
+        flex: 0 0 auto !important;
       }
 
       ${M} .userStats {
@@ -1033,6 +1096,7 @@ function buildMobileResponsiveCSS() {
         left: 4px !important;
         right: 4px !important;
         bottom: auto !important;
+        width: auto !important;
         max-width: calc(100vw - 8px) !important;
         max-height: 90vh !important;
         overflow-y: auto !important;
@@ -1046,35 +1110,41 @@ function buildMobileResponsiveCSS() {
         overflow-x: auto !important;
       }
 
-      /* ── Buttons / interactive → touch-friendly ─────── */
-      ${M} .smartb,
-      ${M} .flat-button,
-      ${M} button,
-      ${M} .userButton a,
-      ${M} .edubarMenuitem > a {
-        min-height: 44px !important;
-        display: inline-flex !important;
-        align-items: center !important;
+      /* ── Forms & touch targets ──────────────────────────
+         16px text inputs stop iOS Safari from auto-zooming the
+         page on focus. The touch-size floor stays scoped to
+         real action buttons — a blanket "button {min-height:
+         44px}" inflates the small inline icon buttons EduPage
+         scatters through tables and toolbars. */
+      ${M} input[type="text"],
+      ${M} input[type="password"],
+      ${M} input[type="email"],
+      ${M} input[type="search"],
+      ${M} input[type="number"],
+      ${M} select,
+      ${M} textarea {
+        font-size: 16px !important;
+        max-width: 100% !important;
       }
 
-      /* ── Images → fluid ─────────────────────────────── */
-      ${M} img,
-      ${M} .user-button-icon {
-        max-width: 100% !important;
-        height: auto !important;
+      ${M} .smartb,
+      ${M} .flat-button {
+        min-height: 40px !important;
+        box-sizing: border-box !important;
       }
 
       /* ── Grade filter bar → wrap ────────────────────── */
       ${M} .zsvHeader,
+      ${M} .zsvHeaderTab,
       ${M} .zsvFilterElem,
       ${M} .zsvActionButtonsInner {
         flex-wrap: wrap !important;
         gap: 4px !important;
+        max-width: 100% !important;
       }
 
       ${M} .zsvFilterItem select {
         min-width: 100px !important;
-        font-size: 13px !important;
       }
 
       /* ── Attendance grid ────────────────────────────── */
@@ -1145,8 +1215,8 @@ function buildMobileResponsiveCSS() {
       }
 
       ${M} .edubarMenuitem > a {
-        padding: 6px 6px !important;
-        font-size: 11px !important;
+        padding: 5px 9px !important;
+        font-size: 12px !important;
       }
 
       ${M} .userButton,

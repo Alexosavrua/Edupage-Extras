@@ -3,6 +3,7 @@
   "extDescription": { "message": "QoL extras for Edupage - themes, grade tools, attendance stats, and timetable export." },
 
   "madeBy": { "message": "Made by" },
+  "madeByContributors": { "message": "and contributors" },
   "openGithub": { "message": "Open GitHub" },
   "openShortcutSettings": { "message": "Open Shortcut Settings" },
   "noHotkey": { "message": "No hotkey assigned." },

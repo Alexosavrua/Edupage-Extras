@@ -15,6 +15,20 @@
     --text-muted: #a6adc8;
     --accent-color: #89b4fa;
     --danger-color: #f38ba8;
+
+    /* Derived tints — recomputed per theme from the vars above, so every
+       theme (including custom) re-tints the whole page without extra blocks. */
+    --accent-soft: color-mix(in srgb, var(--accent-color) 16%, transparent);
+    --accent-faint: color-mix(in srgb, var(--accent-color) 9%, transparent);
+    --danger-soft: color-mix(in srgb, var(--danger-color) 9%, transparent);
+    --border-subtle: color-mix(in srgb, var(--border-color) 72%, transparent);
+
+    --radius-card: 14px;
+    --radius-control: 9px;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --shadow-raised:
+        0 1px 2px rgba(0, 0, 0, 0.14),
+        0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 :root[data-theme="light"],
@@ -97,6 +111,13 @@
     --text-muted: #596273;
     --accent-color: #246bca;
     --danger-color: #d7113f;
+    --shadow-raised:
+        0 1px 2px rgba(20, 30, 50, 0.05),
+        0 2px 10px rgba(20, 30, 50, 0.05);
+}
+
+html {
+    scrollbar-color: var(--border-color) transparent;
 }
 
 html,
@@ -111,16 +132,33 @@ body {
 
 body {
     min-height: 100vh;
-    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+}
+
+/* Theme-reactive glow behind the page header — follows the active accent. */
+body::before {
+    content: "";
+    position: fixed;
+    top: -160px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(860px, 92vw);
+    height: 300px;
+    background: radial-gradient(closest-side, var(--accent-faint), transparent);
+    pointer-events: none;
+    z-index: 0;
 }
 
 .settings {
     display: flex;
     flex-direction: column;
-    max-width: 920px;
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
     min-height: 100vh;
     margin: 0 auto;
-    padding: 32px 18px;
+    padding: 36px 24px 24px;
 }
 
 .page-header {
@@ -128,37 +166,49 @@ body {
     align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 22px;
+    margin-bottom: 26px;
 }
 
 .settings-body {
     display: flex;
-    align-items: stretch;
-    gap: 24px;
+    align-items: flex-start;
+    gap: 32px;
     flex: 1;
+    width: 100%;
 }
 
 .settings-nav {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    flex: 0 0 180px;
+    gap: 3px;
+    flex: 0 0 204px;
     position: sticky;
-    top: 32px;
+    top: 28px;
 }
 
 .settings-nav-item {
-    border: 1px solid transparent;
-    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    position: relative;
+    border: none;
+    border-radius: var(--radius-control);
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
     font: inherit;
     font-weight: 600;
-    font-size: 14px;
-    padding: 10px 12px;
+    font-size: 13.5px;
+    padding: 9px 13px;
     text-align: left;
-    transition: background-color 150ms cubic-bezier(0.23, 1, 0.32, 1), color 150ms cubic-bezier(0.23, 1, 0.32, 1);
+    transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+}
+
+.nav-icon {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 auto;
+    opacity: 0.9;
 }
 
 .settings-nav-item:hover {
@@ -167,8 +217,19 @@ body {
 }
 
 .settings-nav-item[aria-selected="true"] {
-    background: var(--control-bg);
+    background: var(--accent-soft);
     color: var(--accent-color);
+}
+
+.settings-nav-item[aria-selected="true"]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 9px;
+    bottom: 9px;
+    width: 3px;
+    border-radius: 3px;
+    background: var(--accent-color);
 }
 
 .settings-nav-item:focus-visible {
@@ -176,79 +237,26 @@ body {
     outline-offset: 2px;
 }
 
+.settings-nav-item-experimental {
+    margin-top: 14px;
+}
+
+.settings-nav-item-experimental::after {
+    content: "";
+    position: absolute;
+    top: -8px;
+    left: 13px;
+    right: 13px;
+    height: 1px;
+    background: var(--border-subtle);
+}
+
 .settings-content {
     flex: 1;
     min-width: 0;
 }
 
-.settings-nav-item-experimental {
-    margin-top: auto;
-    color: var(--text-muted);
-    border-top: 1px solid var(--border-color);
-    border-radius: 0;
-    padding-top: 14px;
-}
-
-.settings-nav-item-experimental[aria-selected="true"] {
-    background: transparent;
-    color: var(--text-muted);
-}
-
-.confirm-dialog {
-    max-width: 360px;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    background: var(--surface-bg);
-    color: var(--text-main);
-    box-shadow:
-        0 4px 12px rgba(0, 0, 0, 0.18),
-        0 12px 32px rgba(0, 0, 0, 0.16);
-    padding: 20px;
-}
-
-.confirm-dialog[open] {
-    animation: confirmDialogIn 200ms cubic-bezier(0.23, 1, 0.32, 1) both;
-}
-
-@keyframes confirmDialogIn {
-    from {
-        opacity: 0;
-        transform: scale(0.96);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-.confirm-dialog::backdrop {
-    background: rgba(0, 0, 0, 0.45);
-}
-
-.confirm-dialog h2 {
-    font-size: 16px;
-    margin-bottom: 8px;
-}
-
-.confirm-dialog p {
-    margin-top: 0;
-}
-
-.confirm-dialog-actions {
-    justify-content: flex-end;
-    margin-top: 16px;
-}
-
-.confirm-dialog-confirm {
-    border-color: var(--danger-color);
-    color: var(--danger-color);
-}
-
-.confirm-dialog-confirm:hover,
-.confirm-dialog-confirm:focus-visible {
-    background: var(--danger-color);
-    color: var(--surface-bg);
-}
+/* ---- Type ------------------------------------------------------------- */
 
 h1,
 h2,
@@ -258,19 +266,23 @@ p {
 }
 
 h1 {
-    font-size: 28px;
+    font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
 }
 
 h2 {
-    color: var(--accent-color);
-    font-size: 13px;
-    letter-spacing: 0;
-    margin-bottom: 10px;
-    text-transform: uppercase;
+    font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin-bottom: 14px;
 }
 
 h3 {
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: 650;
     margin: 0;
 }
 
@@ -281,16 +293,94 @@ h4 {
 
 p {
     color: var(--text-muted);
-    line-height: 1.5;
+    font-size: 13px;
+    line-height: 1.55;
+    margin-top: 4px;
+}
+
+.page-header p {
+    font-size: 14px;
     margin-top: 6px;
 }
 
-.section-heading {
-    margin-bottom: 12px;
+.setting-group-subtitle {
+    margin: -8px 0 14px;
 }
 
-.prominent-row {
-    border-color: var(--accent-color);
+.section-heading {
+    margin: 24px 2px 10px;
+}
+
+.section-heading h3 {
+    color: var(--accent-color);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.inline-link {
+    color: var(--accent-color);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.inline-link:hover,
+.inline-link:focus-visible {
+    text-decoration: underline;
+    outline: none;
+}
+
+code {
+    background: var(--control-bg);
+    border-radius: 5px;
+    font-family: ui-monospace, SFMono-Regular, Consolas, Menlo, monospace;
+    font-size: 0.92em;
+    padding: 1px 5px;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+/* ---- Panels & cards ---------------------------------------------------- */
+
+.setting-group {
+    margin-bottom: 26px;
+}
+
+.setting-group:not([hidden]) {
+    animation: panelIn 220ms var(--ease-out) both;
+}
+
+@keyframes panelIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.setting-group:focus-visible {
+    border-radius: var(--radius-control);
+    outline: 2px solid var(--accent-soft);
+    outline-offset: 4px;
+}
+
+.setting-card {
+    background: var(--surface-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raised);
+    margin-bottom: 14px;
+    overflow: hidden;
+}
+
+.setting-card > :not([hidden]) ~ :not([hidden]) {
+    border-top: 1px solid var(--border-subtle);
 }
 
 .setting-row {
@@ -298,11 +388,7 @@ p {
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--surface-bg);
-    margin-bottom: 12px;
-    padding: 16px;
+    padding: 15px 18px;
 }
 
 /* Let the description column shrink (text wraps) so wide controls like the
@@ -311,39 +397,69 @@ p {
     min-width: 0;
 }
 
-[hidden] {
-    display: none !important;
+.setting-row p {
+    max-width: 58ch;
 }
 
-.setting-group {
-    margin-bottom: 22px;
+.setting-row-stack {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
 }
+
+.custom-theme-row {
+    align-items: flex-start;
+}
+
+.prominent-row {
+    background: var(--accent-faint);
+}
+
+/* ---- Notes, tags, hints ------------------------------------------------ */
 
 .setting-note {
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--surface-bg);
-    margin-bottom: 12px;
-    padding: 14px 16px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--control-bg) 65%, transparent);
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 0;
+    padding: 12px 14px;
+}
+
+.setting-note:empty {
+    display: none;
 }
 
 .setting-note strong {
+    color: var(--text-main);
     display: block;
     font-size: 13px;
+    margin-bottom: 2px;
 }
 
 .setting-note-warning {
-    border-color: var(--danger-color);
+    background: var(--danger-soft);
+    border-color: color-mix(in srgb, var(--danger-color) 35%, transparent);
 }
 
 .setting-note-warning strong {
     color: var(--danger-color);
 }
 
+/* Notes placed directly inside a card become full-width strips separated by
+   the card's own dividers. */
+.setting-card > .setting-note {
+    border: 0;
+    border-radius: 0;
+    padding: 14px 18px;
+}
+
 /* A one-line hint, lighter than .setting-note — no border/background box, just
    muted text. For tips that don't need the visual weight of a full note. */
 .setting-tip {
-    margin: 4px 0 0;
+    margin: 2px 4px 0;
     font-size: 12px;
     color: var(--text-muted);
 }
@@ -352,13 +468,13 @@ p {
     display: inline-block;
     vertical-align: middle;
     margin-left: 8px;
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 2px 7px;
+    border-radius: 999px;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    line-height: 1.2;
+    line-height: 1.3;
 }
 
 .setting-tag-wip {
@@ -373,14 +489,7 @@ p {
     color: var(--text-muted);
 }
 
-.setting-row-stack {
-    align-items: stretch;
-    flex-direction: column;
-}
-
-.custom-theme-row {
-    align-items: flex-start;
-}
+/* ---- Custom theme editor ----------------------------------------------- */
 
 .custom-theme-controls {
     display: grid;
@@ -400,12 +509,12 @@ p {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-control);
     background: var(--control-bg);
     color: var(--text-muted);
-    font-size: 13px;
-    padding: 8px 10px;
+    font-size: 12.5px;
+    padding: 7px 8px 7px 11px;
 }
 
 .custom-theme-import {
@@ -420,22 +529,20 @@ p {
     width: 100%;
     min-height: 104px;
     resize: vertical;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-control);
     background: var(--control-bg);
     color: var(--text-main);
-    font: 12px/1.45 Consolas, "Courier New", monospace;
+    font: 12px/1.45 ui-monospace, SFMono-Regular, Consolas, "Courier New", monospace;
     padding: 9px 10px;
 }
 
-.custom-theme-import textarea:focus-visible {
-    border-color: var(--accent-color);
-    outline: none;
-}
+/* ---- Control clusters --------------------------------------------------- */
 
 .actions-row {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 10px;
 }
 
@@ -451,14 +558,20 @@ p {
     color: var(--text-main);
     cursor: pointer;
     display: inline-flex;
-    font-size: 14px;
+    font-size: 13.5px;
     gap: 8px;
+}
+
+.inline-checkbox input[type="checkbox"] {
+    accent-color: var(--accent-color);
+    height: 16px;
+    width: 16px;
 }
 
 .report-output {
     background: var(--control-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
     color: var(--text-main);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 12px;
@@ -479,8 +592,8 @@ p {
 
 .shortcut-status {
     color: var(--accent-color);
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 12.5px;
+    font-weight: 650;
     line-height: 1.4;
     text-align: right;
     word-break: break-word;
@@ -492,6 +605,8 @@ p {
     min-height: 18px;
     text-align: right;
 }
+
+/* ---- Switch ------------------------------------------------------------- */
 
 .switch {
     display: inline-flex;
@@ -505,33 +620,32 @@ p {
 
 .switch-compact {
     justify-content: flex-end;
-    min-width: 52px;
+    min-width: 44px;
 }
 
 .switch-track {
-    background: #5b6470;
-    border: 1px solid #7b8592;
+    background: color-mix(in srgb, var(--text-muted) 38%, transparent);
+    border: 1px solid transparent;
     border-radius: 999px;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
     display: inline-flex;
     flex: 0 0 auto;
-    height: 28px;
+    height: 26px;
     position: relative;
-    transition: background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
-    width: 48px;
+    transition: background-color 180ms var(--ease-out);
+    width: 44px;
 }
 
 .switch-track::after {
     background: #ffffff;
     border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.35);
     content: "";
-    height: 22px;
+    height: 20px;
     left: 2px;
     position: absolute;
     top: 2px;
-    transition: transform 140ms ease;
-    width: 22px;
+    transition: transform 180ms var(--ease-out);
+    width: 20px;
 }
 
 .switch-text {
@@ -562,22 +676,23 @@ p {
 }
 
 .switch input[type="checkbox"]:checked + .switch-track {
-    background: #34c759;
-    border-color: #34c759;
+    background: var(--accent-color);
 }
 
 .switch input[type="checkbox"]:checked + .switch-track::after {
-    transform: translateX(20px);
+    transform: translateX(18px);
 }
 
 .switch input[type="checkbox"]:focus-visible + .switch-track {
-    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.28);
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
 }
 
 .switch input[type="checkbox"]:disabled + .switch-track {
-    opacity: 0.6;
-    box-shadow: none;
+    opacity: 0.55;
 }
+
+/* ---- Inputs ------------------------------------------------------------- */
 
 .select-control {
     display: flex;
@@ -613,9 +728,9 @@ p {
 }
 
 input[type="color"] {
-    width: 42px;
-    height: 34px;
-    border: 1px solid var(--border-color);
+    width: 44px;
+    height: 32px;
+    border: 1px solid var(--border-subtle);
     border-radius: 8px;
     background: var(--control-bg);
     cursor: pointer;
@@ -623,9 +738,9 @@ input[type="color"] {
 }
 
 select {
-    min-width: 150px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+    min-width: 160px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-control);
     background: var(--control-bg);
     color: var(--text-main);
     font: inherit;
@@ -634,8 +749,8 @@ select {
 
 input[type="date"] {
     min-width: 150px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-control);
     background: var(--control-bg);
     color: var(--text-main);
     font: inherit;
@@ -656,8 +771,8 @@ input[type="password"],
 input[type="number"] {
     width: 100%;
     min-width: 150px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-control);
     background: var(--control-bg);
     color: var(--text-main);
     font: inherit;
@@ -668,8 +783,10 @@ input[type="text"]:focus-visible,
 input[type="password"]:focus-visible,
 input[type="number"]:focus-visible,
 input[type="date"]:focus-visible,
+textarea:focus-visible,
 select:focus-visible {
     border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-faint);
     outline: none;
 }
 
@@ -692,26 +809,111 @@ input[type="checkbox"]:disabled {
     color: var(--danger-color);
 }
 
+/* ---- Buttons ------------------------------------------------------------ */
+
 .secondary-button {
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-control);
     background: var(--control-bg);
     color: var(--text-main);
     cursor: pointer;
     font: inherit;
-    font-weight: 700;
-    padding: 9px 12px;
+    font-size: 13px;
+    font-weight: 650;
+    padding: 8px 14px;
+    text-align: center;
+    text-decoration: none;
+    transition: border-color 130ms var(--ease-out), background-color 130ms var(--ease-out), color 130ms var(--ease-out), transform 100ms var(--ease-out);
 }
 
 .secondary-button:hover,
 .secondary-button:focus-visible {
+    background: var(--accent-faint);
     border-color: var(--accent-color);
     color: var(--accent-color);
     outline: none;
 }
 
+.secondary-button:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+.secondary-button:active {
+    transform: translateY(1px);
+}
+
+.secondary-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* ---- Dialog ------------------------------------------------------------- */
+
+.confirm-dialog {
+    width: min(400px, calc(100vw - 32px));
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    background: var(--surface-bg);
+    color: var(--text-main);
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.18),
+        0 16px 40px rgba(0, 0, 0, 0.22);
+    padding: 22px;
+}
+
+.confirm-dialog[open] {
+    animation: confirmDialogIn 200ms var(--ease-out) both;
+}
+
+@keyframes confirmDialogIn {
+    from {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.confirm-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+}
+
+.confirm-dialog h2 {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.confirm-dialog p {
+    margin-top: 0;
+}
+
+.confirm-dialog-actions {
+    justify-content: flex-end;
+    margin-top: 18px;
+}
+
+.confirm-dialog-confirm {
+    background: var(--danger-soft);
+    border-color: color-mix(in srgb, var(--danger-color) 40%, transparent);
+    color: var(--danger-color);
+}
+
+.confirm-dialog-confirm:hover,
+.confirm-dialog-confirm:focus-visible {
+    background: var(--danger-color);
+    border-color: var(--danger-color);
+    color: var(--surface-bg);
+}
+
+/* ---- Footer ------------------------------------------------------------- */
+
 .made-by {
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-subtle);
     color: var(--text-muted);
     font-size: 13px;
     margin-top: auto;
@@ -731,45 +933,109 @@ input[type="checkbox"]:disabled {
     outline: none;
 }
 
-@media (max-width: 720px) {
-    .settings-body {
-        flex-direction: column;
+.made-by a.made-by-contributors {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* ---- Responsive --------------------------------------------------------- */
+
+@media (max-width: 900px) {
+    .settings {
+        padding: 20px 16px 20px;
     }
 
+    h1 {
+        font-size: 22px;
+    }
+
+    .page-header {
+        margin-bottom: 14px;
+    }
+
+    .page-header p {
+        font-size: 13px;
+        margin-top: 3px;
+    }
+
+    .settings-body {
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    /* The section nav becomes a sticky, horizontally scrollable tab bar. */
     .settings-nav {
+        flex: none;
         flex-direction: row;
-        flex-wrap: wrap;
-        position: static;
-        width: 100%;
+        gap: 4px;
+        align-self: stretch;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        margin: 0 -16px;
+        padding: 10px 16px;
+        overflow-x: auto;
+        background: color-mix(in srgb, var(--page-bg) 90%, transparent);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        scrollbar-width: none;
+    }
+
+    .settings-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .settings-nav-item {
+        flex: 0 0 auto;
+        padding: 8px 12px;
+    }
+
+    .settings-nav-item[aria-selected="true"]::before {
+        top: auto;
+        left: 12px;
+        right: 12px;
+        bottom: 0;
+        width: auto;
+        height: 3px;
     }
 
     .settings-nav-item-experimental {
-        margin-top: 0;
-        margin-left: auto;
-        border-top: none;
-        padding-top: 10px;
+        margin: 0 0 0 10px;
+    }
+
+    .settings-nav-item-experimental::after {
+        top: 7px;
+        bottom: 7px;
+        left: -7px;
+        right: auto;
+        width: 1px;
+        height: auto;
     }
 }
 
-@media (max-width: 560px) {
-    .page-header,
-    .setting-row {
+@media (max-width: 620px) {
+    .page-header {
         align-items: flex-start;
         flex-direction: column;
     }
 
-    .custom-theme-controls,
-    .custom-theme-grid {
-        width: 100%;
+    .setting-row {
+        gap: 14px;
+        padding: 14px;
     }
 
-    .custom-theme-grid {
-        grid-template-columns: 1fr;
+    .setting-card > .setting-note {
+        padding: 13px 14px;
     }
 
-    .date-setting-controls {
-        justify-content: space-between;
-        width: 100%;
+    /* Only rows whose controls are genuinely wide stack vertically; simple
+       toggle rows keep the label-left / switch-right layout. */
+    .setting-row:has(.shortcut-controls),
+    .setting-row:has(.date-setting-controls),
+    .setting-row:has(.custom-theme-controls),
+    .setting-row:has(.custom-theme-grid) {
+        align-items: stretch;
+        flex-direction: column;
     }
 
     .shortcut-controls {
@@ -781,14 +1047,38 @@ input[type="checkbox"]:disabled {
         text-align: left;
     }
 
+    .custom-theme-controls,
+    .custom-theme-grid {
+        justify-items: stretch;
+        max-width: none;
+        width: 100%;
+    }
+
+    .custom-theme-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .save-status {
+        text-align: left;
+    }
+
+    .date-setting-controls {
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .date-control-row {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
     .date-control {
         justify-content: space-between;
         width: 100%;
     }
 
-    .option-grid .switch {
-        justify-content: space-between;
-        width: 100%;
+    .actions-row .secondary-button {
+        flex: 1 1 auto;
     }
 }
 
