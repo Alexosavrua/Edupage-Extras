@@ -6,10 +6,6 @@ const vm = require("node:vm");
 function loadBackgroundInternals() {
   const scriptPath = path.join(__dirname, "..", "scripts", "background.js");
   const source = fs.readFileSync(scriptPath, "utf8");
-  const instrumentedSource = source.replace(
-    "chrome.runtime.onInstalled.addListener(() => {",
-    "globalThis.__eeBackgroundTest = { parseDateOnly, toRfc3339, buildTemplateWeekMap, buildHalfyearDesiredEvents, selectTimetableSampleWeeks, buildIcsCalendar, icsFoldLine }; chrome.runtime.onInstalled.addListener(() => {",
-  );
 
   const noop = () => {};
   const context = {
@@ -93,10 +89,11 @@ function loadBackgroundInternals() {
   };
 
   context.globalThis = context;
+  context.__EE_TEST__ = true;
 
   const libSource = fs.readFileSync(path.join(__dirname, "..", "scripts", "lib", "ee-common.js"), "utf8");
-  vm.runInNewContext(libSource + "\n" + instrumentedSource, context, { filename: scriptPath });
-  return context.__eeBackgroundTest;
+  vm.runInNewContext(libSource + "\n" + source, context, { filename: scriptPath });
+  return context.__eeTestExports;
 }
 
 function runTest(name, fn) {

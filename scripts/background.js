@@ -1407,6 +1407,22 @@ async function collectLiveEdupageWeek(config) {
   }
 }
 
+// Deliberate test hook: tests set globalThis.__EE_TEST__ before evaluating
+// this file in a vm sandbox and read the internals from __eeTestExports —
+// a missing name then fails loudly instead of a string-replace anchor
+// silently no-opping after a refactor. Never set in the real extension.
+if (globalThis.__EE_TEST__) {
+  globalThis.__eeTestExports = {
+    parseDateOnly,
+    toRfc3339,
+    buildTemplateWeekMap,
+    buildHalfyearDesiredEvents,
+    selectTimetableSampleWeeks,
+    buildIcsCalendar,
+    icsFoldLine,
+  };
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   syncUpdateAlarm().then((enabled) => {
     if (enabled) {

@@ -4,6 +4,15 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.9.1 — 2026-07-09
+
+- Tests no longer instrument the scripts with fragile string-replace
+  anchors — each tested script now exposes its internals via a deliberate
+  guarded hook (`globalThis.__EE_TEST__` → `__eeTestExports`), so a refactor
+  that renames an exported function fails loudly instead of silently
+  no-opping. No runtime behavior change (the hook is inert in the real
+  extension). ([#35](https://github.com/Alexosavrua/Edupage-Extras/issues/35))
+
 ## 0.9.0 — 2026-07-09
 
 - Extracted shared helpers into `scripts/lib/ee-common.js` (a `globalThis.EE`

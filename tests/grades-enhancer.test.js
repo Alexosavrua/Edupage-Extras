@@ -6,10 +6,6 @@ const vm = require("node:vm");
 function loadGradesEnhancerInternals() {
   const scriptPath = path.join(__dirname, "..", "scripts", "grades-enhancer.js");
   const source = fs.readFileSync(scriptPath, "utf8");
-  const instrumentedSource = source.replace(
-    'if (document.readyState === "loading") {',
-    'globalThis.__eeTest = { parseAverage, gradeColor, gradePercentage, parseDateOnly, normalizeDateInput, parseSubjectMap, computeSubjectAbsences, summarizeAttendance, summarizeRenderableAttendance, finalizeSubjectStats, resolveAttendanceBreakdown, resolveOfficialHalfSummary, resolveUnambiguousStudentId, matchSubjectStats, parseGradeTitleSegments, buildGradeOriginalTitleHtml, buildGradeTitleOverrideKey, gradeTableRowCount, resolveCurrentHalfWindow, computeProjectedSubjectTotals, buildAttendancePlaceholderState, shouldRenderPredictedAttendance, computeSummaryColumnLayout, calcWeightedAvg, projectAverageWithVirtualGrades, parseGradeWeight, readExistingGradeMass, buildGradeWeightModel, migrateFlatMapToByOrigin }; if (document.readyState === "loading") {',
-  );
 
   const context = {
     console,
@@ -24,10 +20,11 @@ function loadGradesEnhancerInternals() {
   context.window = context;
   context.window.top = context.window;
   context.globalThis = context;
+  context.__EE_TEST__ = true;
 
   const libSource = fs.readFileSync(path.join(__dirname, "..", "scripts", "lib", "ee-common.js"), "utf8");
-  vm.runInNewContext(libSource + "\n" + instrumentedSource, context, { filename: scriptPath });
-  return context.__eeTest;
+  vm.runInNewContext(libSource + "\n" + source, context, { filename: scriptPath });
+  return context.__eeTestExports;
 }
 
 function runTest(name, fn) {

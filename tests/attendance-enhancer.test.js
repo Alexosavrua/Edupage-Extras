@@ -6,10 +6,6 @@ const vm = require("node:vm");
 function loadAttendanceEnhancerInternals() {
   const scriptPath = path.join(__dirname, "..", "scripts", "attendance-enhancer.js");
   const source = fs.readFileSync(scriptPath, "utf8");
-  const instrumentedSource = source.replace(
-    'if (document.readyState === "loading") {',
-    'globalThis.__eeAttendanceTest = { parseDateOnly, normalizeDateInput, resolveSecondHalfStartDate, computeHalfStats }; if (document.readyState === "loading") {',
-  );
 
   const context = {
     console,
@@ -23,10 +19,11 @@ function loadAttendanceEnhancerInternals() {
   context.window = context;
   context.window.top = context.window;
   context.globalThis = context;
+  context.__EE_TEST__ = true;
 
   const libSource = fs.readFileSync(path.join(__dirname, "..", "scripts", "lib", "ee-common.js"), "utf8");
-  vm.runInNewContext(libSource + "\n" + instrumentedSource, context, { filename: scriptPath });
-  return context.__eeAttendanceTest;
+  vm.runInNewContext(libSource + "\n" + source, context, { filename: scriptPath });
+  return context.__eeTestExports;
 }
 
 function runTest(name, fn) {

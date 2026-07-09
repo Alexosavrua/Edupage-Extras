@@ -6,10 +6,6 @@ const vm = require("node:vm");
 function loadTimetableInternals() {
   const scriptPath = path.join(__dirname, "..", "scripts", "timetable-sync.js");
   const source = fs.readFileSync(scriptPath, "utf8");
-  const instrumentedSource = source.replace(
-    '  chrome.runtime.sendMessage({',
-    '  window.__eeTimetableSyncTest = { resolveDisplayedDate, resolveDisplayedWeekDates, formatDate }; chrome.runtime.sendMessage({',
-  );
 
   const noop = () => {};
   // waitForTimetableReady's polling loop (timetable-sync.js) keeps scheduling
@@ -58,10 +54,11 @@ function loadTimetableInternals() {
 
   window.document = context.document;
   context.globalThis = context;
+  context.__EE_TEST__ = true;
 
   const libSource = fs.readFileSync(path.join(__dirname, "..", "scripts", "lib", "ee-common.js"), "utf8");
-  vm.runInNewContext(libSource + "\n" + instrumentedSource, context, { filename: scriptPath });
-  return window.__eeTimetableSyncTest;
+  vm.runInNewContext(libSource + "\n" + source, context, { filename: scriptPath });
+  return context.__eeTestExports;
 }
 
 function runTest(name, fn) {

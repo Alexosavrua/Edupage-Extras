@@ -427,6 +427,11 @@
     initObserver();
   }
 
+  // Deliberate test hook — see tests/attendance-enhancer.test.js.
+  if (globalThis.__EE_TEST__) {
+    globalThis.__eeTestExports = { parseDateOnly, normalizeDateInput, resolveSecondHalfStartDate, computeHalfStats };
+  }
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init, { once: true });
   } else {

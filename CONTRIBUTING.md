@@ -26,11 +26,12 @@ npm test
 ```
 
 Node's built-in test runner over `tests/*.test.js`. Tests read content-script
-source, string-replace anchor lines to expose internals, and run the result
-in a `vm` sandbox with stubbed `chrome.*`. **Caveat:** if your refactor
-changes a line a test anchors on, the test breaks silently at load — run
-`npm test` after touching any file that has a matching `tests/*.test.js`, and
-update the anchors in the same change.
+source and run it in a `vm` sandbox with stubbed `chrome.*`. Tested scripts
+expose internals via a guarded hook (`if (globalThis.__EE_TEST__)
+globalThis.__eeTestExports = {…}`) — if you rename or move an exported
+function, update that export list in the same change; a missing name fails
+loudly. Run `npm test` after touching any file that has a matching
+`tests/*.test.js`.
 
 `npm run lint:firefox` runs web-ext lint (also run by CI on every push/PR).
 

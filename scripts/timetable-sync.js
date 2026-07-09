@@ -433,4 +433,8 @@
 
     return true;
   });
+  // Deliberate test hook — see tests/timetable-sync.test.js.
+  if (globalThis.__EE_TEST__) {
+    globalThis.__eeTestExports = { resolveDisplayedDate, resolveDisplayedWeekDates, formatDate };
+  }
 })();

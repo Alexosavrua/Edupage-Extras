@@ -37,10 +37,6 @@ function createClassList() {
 function loadContentInternals(pathname = "/") {
   const scriptPath = path.join(__dirname, "..", "scripts", "content.js");
   const source = fs.readFileSync(scriptPath, "utf8");
-  const instrumentedSource = source.replace(
-    "initDarkMode();",
-    'globalThis.__eeTest = { normalizeTheme, shouldSuppressThemeForPath, resolveAppliedTheme }; initDarkMode();',
-  );
 
   const documentElement = {
     classList: createClassList(),
@@ -120,10 +116,11 @@ function loadContentInternals(pathname = "/") {
   context.window = context;
   context.window.top = context.window;
   context.globalThis = context;
+  context.__EE_TEST__ = true;
 
   const libSource = fs.readFileSync(path.join(__dirname, "..", "scripts", "lib", "ee-common.js"), "utf8");
-  vm.runInNewContext(libSource + "\n" + instrumentedSource, context, { filename: scriptPath });
-  return context.__eeTest;
+  vm.runInNewContext(libSource + "\n" + source, context, { filename: scriptPath });
+  return context.__eeTestExports;
 }
 
 function runTest(name, fn) {

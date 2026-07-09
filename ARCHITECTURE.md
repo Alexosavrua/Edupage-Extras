@@ -87,11 +87,13 @@ Keys are camelCase in `chrome.storage.local`. Newer keys are prefixed `ee`
 ## Tests
 
 `npm test` runs Node's built-in test runner over `tests/*.test.js`. Tests
-read the content-script **source text**, instrument it with string
-replacement to expose internals, and execute it in a `vm` sandbox with
-stubbed `chrome.*` APIs — no browser involved. The footgun: if a refactor
-changes a line a test uses as a replace anchor, the test breaks silently at
-load. Keep those anchor lines stable or update the tests in the same change.
+read the content-script **source text** and execute it in a `vm` sandbox with
+stubbed `chrome.*` APIs — no browser involved. Each testable script contains
+a deliberate hook: when `globalThis.__EE_TEST__` is set (tests only, never
+the real extension), it publishes its internals on
+`globalThis.__eeTestExports`. Renaming or removing an exported function fails
+loudly at the export site — keep the hook's export list in sync when
+refactoring.
 
 ## Release flow
 

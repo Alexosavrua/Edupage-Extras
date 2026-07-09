@@ -4945,6 +4945,41 @@
     initObserver();
   }
 
+  // Deliberate test hook — see tests/grades-enhancer.test.js.
+  if (globalThis.__EE_TEST__) {
+    globalThis.__eeTestExports = {
+      parseAverage,
+      gradeColor,
+      gradePercentage,
+      parseDateOnly,
+      normalizeDateInput,
+      parseSubjectMap,
+      computeSubjectAbsences,
+      summarizeAttendance,
+      summarizeRenderableAttendance,
+      finalizeSubjectStats,
+      resolveAttendanceBreakdown,
+      resolveOfficialHalfSummary,
+      resolveUnambiguousStudentId,
+      matchSubjectStats,
+      parseGradeTitleSegments,
+      buildGradeOriginalTitleHtml,
+      buildGradeTitleOverrideKey,
+      gradeTableRowCount,
+      resolveCurrentHalfWindow,
+      computeProjectedSubjectTotals,
+      buildAttendancePlaceholderState,
+      shouldRenderPredictedAttendance,
+      computeSummaryColumnLayout,
+      calcWeightedAvg,
+      projectAverageWithVirtualGrades,
+      parseGradeWeight,
+      readExistingGradeMass,
+      buildGradeWeightModel,
+      migrateFlatMapToByOrigin,
+    };
+  }
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init, { once: true });
   } else {
