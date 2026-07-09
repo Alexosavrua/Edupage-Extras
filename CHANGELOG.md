@@ -4,6 +4,13 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.8.14 — 2026-07-09
+
+- Fixed "Timetable Change Highlights" not staying off — disabling it in
+  settings was undone within ~10s by EduPage's own widget re-render, since
+  the observer/init paths re-applied highlights without checking the
+  toggle. ([#42](https://github.com/Alexosavrua/Edupage-Extras/issues/42))
+
 ## 0.8.13 — 2026-07-09
 
 - Fixed grades-page attendance columns (Abs %, predicted attendance, overall

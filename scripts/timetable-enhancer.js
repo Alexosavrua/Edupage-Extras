@@ -320,6 +320,8 @@
   }
 
   async function enhanceRozvrhWidget() {
+    if (!highlightsEnabled) return;
+
     const items = Array.from(document.querySelectorAll("ul.rozvrh > li.rozvrhItem.hasChange"))
       .filter((item) => !item.hasAttribute(ROZVRH_PROCESSED_ATTR));
     if (items.length === 0) return;
