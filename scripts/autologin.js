@@ -5,8 +5,10 @@
   if (!/^\/login(?:\/|$)/i.test(window.location.pathname)) return;
 
   const AUTOLOGIN_KEY = "eeAutoLoginEnabled";
+  const AUTOLOGIN_PREFERRED_ACCOUNT_KEY = "eeAutoLoginPreferredAccount";
   const STYLE_ID = "ee-autologin-style";
   let autoLoginEnabled = false;
+  let preferredAccount = "";
   // EduPage's login is a multi-step modal (SSO trigger → account picker →
   // username → password). Each auto-advance fires at most once; the password
   // submit is terminal so a rejected password never loops.
@@ -120,13 +122,26 @@
       return;
     }
 
-    // Account picker: only auto-pick when there is exactly one saved account,
-    // so multi-account users still choose themselves.
+    // Account picker: auto-pick when there is exactly one saved account, or
+    // when a preferred account name is configured and matches exactly one
+    // visible entry — otherwise leave it for the user to choose themselves.
     const savedAccounts = document.querySelectorAll(".mainlogin-userlist-item.userItem");
     if (!accountPicked && savedAccounts.length === 1 && isVisible(savedAccounts[0])) {
       accountPicked = true;
       savedAccounts[0].click();
       return;
+    }
+    if (!accountPicked && savedAccounts.length > 1 && preferredAccount) {
+      const visibleAccounts = Array.from(savedAccounts).filter(isVisible);
+      const needle = preferredAccount.toLowerCase();
+      const matches = visibleAccounts.filter((account) =>
+        (account.textContent || "").toLowerCase().includes(needle)
+      );
+      if (matches.length === 1) {
+        accountPicked = true;
+        matches[0].click();
+        return;
+      }
     }
 
     // Landing page: open the EduPage login modal.
@@ -192,8 +207,9 @@
   }
 
   function init() {
-    chrome.storage.local.get([AUTOLOGIN_KEY], (result) => {
+    chrome.storage.local.get([AUTOLOGIN_KEY, AUTOLOGIN_PREFERRED_ACCOUNT_KEY], (result) => {
       autoLoginEnabled = result[AUTOLOGIN_KEY] === true;
+      preferredAccount = String(result[AUTOLOGIN_PREFERRED_ACCOUNT_KEY] || "").trim();
       if (!autoLoginEnabled) return;
       startWatching();
     });

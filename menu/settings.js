@@ -47,6 +47,7 @@ const reloadEdupageTabsButton = document.getElementById("ReloadEdupageTabsButton
 const experimentalSaveStatus = document.getElementById("ExperimentalSaveStatus");
 const mobileResponsiveToggle = document.getElementById("MobileResponsiveCheckbox");
 const autoLoginToggle = document.getElementById("AutoLoginCheckbox");
+const autoLoginPreferredAccountInput = document.getElementById("AutoLoginPreferredAccountInput");
 const ucivoExportToggle = document.getElementById("UcivoExportCheckbox");
 const etestCopyToggle = document.getElementById("EtestCopyCheckbox");
 const previewUpdateToastButton = document.getElementById("PreviewUpdateToastButton");
@@ -74,6 +75,7 @@ const REPO_URL = "https://github.com/Alexosavrua/Edupage-Extras";
 const ACTIVITY_SHIELD_COMMAND = "toggle-stay-active-mode";
 const MOBILE_RESPONSIVE_KEY = "eeMobileResponsiveEnabled";
 const AUTOLOGIN_KEY = "eeAutoLoginEnabled";
+const AUTOLOGIN_PREFERRED_ACCOUNT_KEY = "eeAutoLoginPreferredAccount";
 const UCIVO_EXPORT_KEY = "eeUcivoExportEnabled";
 const ETEST_COPY_KEY = "eeEtestCopyEnabled";
 const activityShieldSettings = [
@@ -953,6 +955,15 @@ if (autoLoginToggle) {
 	});
 	autoLoginToggle.addEventListener("change", () => {
 		chrome.storage.local.set({ [AUTOLOGIN_KEY]: autoLoginToggle.checked });
+	});
+}
+
+if (autoLoginPreferredAccountInput) {
+	chrome.storage.local.get([AUTOLOGIN_PREFERRED_ACCOUNT_KEY], (result) => {
+		autoLoginPreferredAccountInput.value = result[AUTOLOGIN_PREFERRED_ACCOUNT_KEY] || "";
+	});
+	autoLoginPreferredAccountInput.addEventListener("change", () => {
+		chrome.storage.local.set({ [AUTOLOGIN_PREFERRED_ACCOUNT_KEY]: autoLoginPreferredAccountInput.value.trim() });
 	});
 }
 

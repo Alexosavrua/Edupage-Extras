@@ -4,6 +4,10 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.8.11 — 2026-07-09
+
+- Added a "Preferred Account" auto-login setting so multi-account pickers can auto-select a chosen account instead of always stopping. ([#26](https://github.com/Alexosavrua/Edupage-Extras/issues/26))
+
 ## 0.8.10 — 2026-07-09
 
 - Added Czech public holidays to the half-year .ics export (previously only Slovak holidays were recognized). ([#27](https://github.com/Alexosavrua/Edupage-Extras/issues/27))
