@@ -1021,15 +1021,37 @@ function icsEscapeText(value) {
 
 // RFC 5545 caps content lines at 75 octets; fold the rest onto continuation
 // lines that start with a single space.
+// RFC 5545 §3.1 caps content lines at 75 *octets*, not UTF-16 code units —
+// Slovak/Czech titles are full of 2-byte UTF-8 characters (č, ť, ž, á, …), so
+// folding by character count alone can produce lines ~2x over the limit (see
+// #50). Measure with TextEncoder and always cut on whole-character
+// boundaries so a multi-byte character is never split across the fold.
+const icsTextEncoder = new TextEncoder();
+
 function icsFoldLine(line) {
-  if (line.length <= 73) return line;
-  const parts = [line.slice(0, 73)];
-  let rest = line.slice(73);
-  while (rest.length > 72) {
-    parts.push(` ${rest.slice(0, 72)}`);
-    rest = rest.slice(72);
+  const text = String(line ?? "");
+  if (icsTextEncoder.encode(text).length <= 75) return text;
+
+  const parts = [];
+  let chunk = "";
+  let chunkBytes = 0;
+  // First line has no leading space (budget 75); continuation lines are
+  // prefixed with a space that itself costs 1 of the 75 octets (budget 74).
+  let budget = 75;
+
+  for (const ch of Array.from(text)) {
+    const chBytes = icsTextEncoder.encode(ch).length;
+    if (chunkBytes + chBytes > budget) {
+      parts.push(parts.length === 0 ? chunk : ` ${chunk}`);
+      chunk = "";
+      chunkBytes = 0;
+      budget = 74;
+    }
+    chunk += ch;
+    chunkBytes += chBytes;
   }
-  if (rest.length) parts.push(` ${rest}`);
+  if (chunk) parts.push(parts.length === 0 ? chunk : ` ${chunk}`);
+
   return parts.join("\r\n");
 }
 

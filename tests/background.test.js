@@ -8,7 +8,7 @@ function loadBackgroundInternals() {
   const source = fs.readFileSync(scriptPath, "utf8");
   const instrumentedSource = source.replace(
     "chrome.runtime.onInstalled.addListener(() => {",
-    "globalThis.__eeBackgroundTest = { parseDateOnly, toRfc3339, buildTemplateWeekMap, buildHalfyearDesiredEvents, selectTimetableSampleWeeks, buildIcsCalendar }; chrome.runtime.onInstalled.addListener(() => {",
+    "globalThis.__eeBackgroundTest = { parseDateOnly, toRfc3339, buildTemplateWeekMap, buildHalfyearDesiredEvents, selectTimetableSampleWeeks, buildIcsCalendar, icsFoldLine }; chrome.runtime.onInstalled.addListener(() => {",
   );
 
   const noop = () => {};
@@ -277,4 +277,43 @@ runTest("buildIcsCalendar emits valid VEVENTs, converts to UTC, escapes text, an
   // newline in description escaped to \n
   assert.ok(ics.includes("DESCRIPTION:Class 3.A\\nWeek A"));
   assert.ok(ics.includes("UID:lesson-1@edupage-extras"));
+});
+
+// Regression for #50: RFC 5545 caps content lines at 75 *octets*, but the
+// old implementation folded by UTF-16 character count, letting
+// diacritic-heavy (2-byte UTF-8) lines serialize to far more than 75 octets.
+runTest("icsFoldLine folds by UTF-8 octet count, not character count", () => {
+  const { icsFoldLine } = loadBackgroundInternals();
+  const encoder = new TextEncoder();
+
+  const assertLinesFitOctetCap = (input) => {
+    const folded = icsFoldLine(input);
+    const lines = folded.split("\r\n");
+    lines.forEach((line, index) => {
+      const bytes = encoder.encode(line).length;
+      assert.ok(
+        bytes <= 75,
+        `line ${index} is ${bytes} octets (>75): ${JSON.stringify(line)}`,
+      );
+      if (index > 0) {
+        assert.ok(line.startsWith(" "), `continuation line ${index} must start with a space`);
+      }
+    });
+    // Re-joining (stripping the single leading fold space) must reproduce
+    // the original text with no characters lost or duplicated.
+    const rejoined = lines.map((line, index) => (index === 0 ? line : line.slice(1))).join("");
+    assert.equal(rejoined, input);
+  };
+
+  // ASCII line under the cap: untouched, no folding.
+  assert.equal(icsFoldLine("SUMMARY:Math"), "SUMMARY:Math");
+
+  // Diacritic-heavy line that previously produced ~140 octets per "folded"
+  // chunk (72 two-byte chars) despite looking like it fit under 75.
+  const diacriticLine = "SUMMARY:Telesná a športová výchova | Telocvičňa | Mgr. Novák Ján | 3.A skupina";
+  assertLinesFitOctetCap(diacriticLine);
+
+  // Plain ASCII line long enough to need multiple folds.
+  const longAscii = `SUMMARY:${"A".repeat(200)}`;
+  assertLinesFitOctetCap(longAscii);
 });

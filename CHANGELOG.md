@@ -4,6 +4,13 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.8.19 — 2026-07-09
+
+- Fixed .ics export line folding measuring UTF-16 characters instead of
+  UTF-8 octets — Slovak/Czech diacritic-heavy lines (lesson titles, rooms,
+  teacher names) could serialize to nearly double RFC 5545's 75-octet cap,
+  which strict calendar validators/CalDAV servers reject. ([#50](https://github.com/Alexosavrua/Edupage-Extras/issues/50))
+
 ## 0.8.18 — 2026-07-09
 
 - Fixed the "what's new" update toast racing across iframes on pages with
