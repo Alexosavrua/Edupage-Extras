@@ -409,7 +409,17 @@
         return;
       }
 
-      const studentId = Object.keys(payload.halfStats)[0];
+      // Parent accounts with multiple children get one halfStats key per
+      // child, and nothing on this page tells us which child the rendered
+      // table belongs to — showing the wrong child's numbers would be worse
+      // than showing none, so skip rather than guess.
+      const studentIds = Object.keys(payload.halfStats);
+      if (studentIds.length > 1) {
+        clearInjectedStats(summaryGrid);
+        return;
+      }
+
+      const studentId = studentIds[0];
       const rawHalfStats = payload.halfStats[studentId];
       if (!studentId || !rawHalfStats) {
         clearInjectedStats(summaryGrid);
