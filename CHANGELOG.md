@@ -4,6 +4,13 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.8.16 — 2026-07-09
+
+- Fixed a wrong-layout flash on the first page load after toggling "Mobile
+  responsive layout" — the FOUC-prevention cache wasn't refreshed when that
+  was the only setting changed, so the next page load painted from a stale
+  cached value before self-correcting. ([#44](https://github.com/Alexosavrua/Edupage-Extras/issues/44))
+
 ## 0.8.15 — 2026-07-09
 
 - Fixed the half-year .ics export ignoring the custom second-halfyear

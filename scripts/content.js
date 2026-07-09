@@ -20,7 +20,7 @@ const UPDATE_REMINDER_ENABLED_KEY = "eeUpdateReminderEnabled";
 // No GitHub Releases are published for this repo (just tags), so that page
 // is always empty — link to the commit history instead, which actually has
 // real per-version descriptions in the commit messages.
-const REPO_RELEASES_URL = "https://github.com/Alexosavrua/Edupage-Extras/commits/main";
+const REPO_RELEASES_URL = "https://github.com/Alexosavrua/Edupage-Extras/blob/main/CHANGELOG.md";
 const MOBILE_RESPONSIVE_KEY = "eeMobileResponsiveEnabled";
 const THEME_CACHE_KEY = "eeThemeCacheV1";
 
@@ -1781,6 +1781,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
     && !changes[HIDE_HELP_TEXT_KEY]
     && !changes[ROZVRH_ROOM_CHANGE_COLOR_KEY]
     && !changes[ROZVRH_SUBSTITUTION_COLOR_KEY]
+    && !changes[MOBILE_RESPONSIVE_KEY]
   ) return;
 
   chrome.storage.local.get(
