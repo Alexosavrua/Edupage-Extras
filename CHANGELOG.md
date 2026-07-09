@@ -4,6 +4,13 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.8.18 — 2026-07-09
+
+- Fixed the "what's new" update toast racing across iframes on pages with
+  embedded EduPage views — it could render clipped inside a small iframe,
+  or in rarer cases get suppressed entirely on the real page. Now only runs
+  in the top frame. ([#46](https://github.com/Alexosavrua/Edupage-Extras/issues/46))
+
 ## 0.8.17 — 2026-07-09
 
 - Fixed diagnostics ("Report a Problem") silently dropping every uncaught

@@ -1766,7 +1766,15 @@ function checkForUpdateToast() {
   });
 }
 
-checkForUpdateToast();
+// content.js runs in every frame (theming applies everywhere), but the
+// update toast/lastSeenVersion bookkeeping must run once per page load —
+// otherwise iframe-embedded EduPage views race on eeLastSeenVersion (every
+// frame reads the old value, any of them can write the new one first) and
+// can either duplicate/clip the toast inside a small iframe or, worse,
+// suppress it entirely on the real page (see #46).
+if (window.top === window) {
+  checkForUpdateToast();
+}
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local") return;
