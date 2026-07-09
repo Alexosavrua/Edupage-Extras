@@ -29,6 +29,7 @@ const DEFAULT_CUSTOM_THEME = {
 	accent: "#89b4fa",
 	warning: "#fab387",
 	danger: "#f38ba8",
+	tableHeaderBg: "#2c70a3",
 };
 
 let customTheme = { ...DEFAULT_CUSTOM_THEME };

@@ -4,6 +4,10 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.8.7 — 2026-07-09
+
+- Fixed the popup's dark-mode toggle silently discarding a custom theme's table-header color. ([#19](https://github.com/Alexosavrua/Edupage-Extras/issues/19))
+
 ## 0.8.6 — 2026-07-09
 
 - Fixed a year-rollover bug in the timetable widget's date detection around the December/January boundary (mixed 1-based/0-based month math). ([#21](https://github.com/Alexosavrua/Edupage-Extras/issues/21))
