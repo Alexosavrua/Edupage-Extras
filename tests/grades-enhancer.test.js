@@ -25,7 +25,8 @@ function loadGradesEnhancerInternals() {
   context.window.top = context.window;
   context.globalThis = context;
 
-  vm.runInNewContext(instrumentedSource, context, { filename: scriptPath });
+  const libSource = fs.readFileSync(path.join(__dirname, "..", "scripts", "lib", "ee-common.js"), "utf8");
+  vm.runInNewContext(libSource + "\n" + instrumentedSource, context, { filename: scriptPath });
   return context.__eeTest;
 }
 

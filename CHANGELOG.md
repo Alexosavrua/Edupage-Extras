@@ -4,6 +4,17 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.9.0 — 2026-07-09
+
+- Extracted shared helpers into `scripts/lib/ee-common.js` (a `globalThis.EE`
+  namespace loaded first in every context — content scripts, background,
+  popup/settings pages, tests). Kills the duplicated copies of the custom
+  theme defaults (3×), `normalizeTheme`/`normalizeColor`/
+  `normalizeCustomTheme` (3×), `parseDateOnly` (4×), `formatDate` (3×),
+  slug normalization (2×) and the balanced-literal parsing helpers, so a
+  future edit can't silently diverge again (the class of bug behind #19).
+  No behavior change intended. ([#32](https://github.com/Alexosavrua/Edupage-Extras/issues/32))
+
 ## 0.8.26 — 2026-07-09
 
 - Added `scripts/_template-enhancer.js` — a copy-paste skeleton for new page

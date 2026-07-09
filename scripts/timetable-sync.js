@@ -18,12 +18,7 @@
   }
 
   function normalizeText(value) {
-    return String(value || "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+    return EE.normalizeKeyText(value);
   }
 
   function readStyleNumber(element, propertyName) {
@@ -31,23 +26,7 @@
   }
 
   function parseDateOnly(value) {
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""));
-    if (!match) return null;
-
-    const year = Number.parseInt(match[1], 10);
-    const month = Number.parseInt(match[2], 10);
-    const day = Number.parseInt(match[3], 10);
-    const date = new Date(year, month - 1, day);
-    if (
-      Number.isNaN(date.getTime())
-      || date.getFullYear() !== year
-      || date.getMonth() !== month - 1
-      || date.getDate() !== day
-    ) {
-      return null;
-    }
-
-    return date;
+    return EE.parseDateOnly(value);
   }
 
   function resolveDisplayedDate(dayText, monthText, anchorDate = new Date()) {
@@ -120,11 +99,7 @@
   }
 
   function formatDate(date) {
-    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
-    const year = String(date.getFullYear()).padStart(4, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return EE.formatDate(date);
   }
 
   function readWeekSignature() {

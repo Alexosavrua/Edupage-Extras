@@ -2,7 +2,7 @@
   "name": "__MSG_extName__",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
-  "version": "0.8.26",
+  "version": "0.9.0",
   "manifest_version": 3,
   "icons": {
     "16": "images/icon-16.png",
@@ -30,7 +30,7 @@
   ],
   "background": {
     "service_worker": "scripts/background.js",
-    "scripts": ["scripts/background.js"]
+    "scripts": ["scripts/lib/ee-common.js", "scripts/background.js"]
   },
   "commands": {
     "toggle-stay-active-mode": {
@@ -58,6 +58,7 @@
       "matches": ["https://*.edupage.org/*"],
       "css": ["scripts/instant-theme.css"],
       "js": [
+        "scripts/lib/ee-common.js",
         "scripts/diagnostics.js",
         "scripts/activity-shield-bridge.js",
         "scripts/content.js",

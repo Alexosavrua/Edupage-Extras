@@ -381,31 +381,11 @@
   }
 
   function parseDateOnly(value) {
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""));
-    if (!match) return null;
-
-    const year = Number.parseInt(match[1], 10);
-    const month = Number.parseInt(match[2], 10);
-    const day = Number.parseInt(match[3], 10);
-    const date = new Date(year, month - 1, day);
-
-    if (
-      Number.isNaN(date.getTime())
-      || date.getFullYear() !== year
-      || date.getMonth() !== month - 1
-      || date.getDate() !== day
-    ) {
-      return null;
-    }
-
-    return date;
+    return EE.parseDateOnly(value);
   }
 
   function formatDateISO(date) {
-    const year = date.getFullYear();
-    const month = `${date.getMonth() + 1}`.padStart(2, "0");
-    const day = `${date.getDate()}`.padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return EE.formatDate(date);
   }
 
   function timeToMinutes(value) {
@@ -2143,120 +2123,15 @@
   }
 
   function extractBalanced(text, startIndex) {
-    const opening = text[startIndex];
-    const closing = opening === "{" ? "}" : opening === "[" ? "]" : opening === "(" ? ")" : "";
-    if (!closing) return null;
-
-    let depth = 0;
-    let inString = false;
-    let stringQuote = "";
-    let escaped = false;
-
-    for (let index = startIndex; index < text.length; index += 1) {
-      const character = text[index];
-
-      if (inString) {
-        if (escaped) {
-          escaped = false;
-          continue;
-        }
-
-        if (character === "\\") {
-          escaped = true;
-        } else if (character === stringQuote) {
-          inString = false;
-          stringQuote = "";
-        }
-        continue;
-      }
-
-      if (character === "\"" || character === "'") {
-        inString = true;
-        stringQuote = character;
-        continue;
-      }
-
-      if (character === opening) {
-        depth += 1;
-      } else if (character === closing) {
-        depth -= 1;
-        if (depth === 0) {
-          return text.slice(startIndex, index + 1);
-        }
-      }
-    }
-
-    return null;
+    return EE.extractBalanced(text, startIndex);
   }
 
   function extractObjectLiteral(text, marker, searchFrom = 0) {
-    const markerIndex = text.indexOf(marker, searchFrom);
-    if (markerIndex === -1) return null;
-
-    const openBraceIndex = text.indexOf("{", markerIndex + marker.length);
-    if (openBraceIndex === -1) return null;
-
-    return extractBalanced(text, openBraceIndex);
+    return EE.extractObjectLiteral(text, marker, searchFrom);
   }
 
   function splitTopLevelArguments(text) {
-    const values = [];
-    let startIndex = 0;
-    let braceDepth = 0;
-    let bracketDepth = 0;
-    let parenDepth = 0;
-    let inString = false;
-    let stringQuote = "";
-    let escaped = false;
-
-    for (let index = 0; index < text.length; index += 1) {
-      const character = text[index];
-
-      if (inString) {
-        if (escaped) {
-          escaped = false;
-          continue;
-        }
-
-        if (character === "\\") {
-          escaped = true;
-        } else if (character === stringQuote) {
-          inString = false;
-          stringQuote = "";
-        }
-        continue;
-      }
-
-      if (character === "\"" || character === "'") {
-        inString = true;
-        stringQuote = character;
-        continue;
-      }
-
-      if (character === "{") {
-        braceDepth += 1;
-      } else if (character === "}") {
-        braceDepth -= 1;
-      } else if (character === "[") {
-        bracketDepth += 1;
-      } else if (character === "]") {
-        bracketDepth -= 1;
-      } else if (character === "(") {
-        parenDepth += 1;
-      } else if (character === ")") {
-        parenDepth -= 1;
-      } else if (character === "," && braceDepth === 0 && bracketDepth === 0 && parenDepth === 0) {
-        values.push(text.slice(startIndex, index).trim());
-        startIndex = index + 1;
-      }
-    }
-
-    const tail = text.slice(startIndex).trim();
-    if (tail) {
-      values.push(tail);
-    }
-
-    return values;
+    return EE.splitTopLevelArguments(text);
   }
 
   function extractCallArguments(text, marker, searchFrom = 0) {

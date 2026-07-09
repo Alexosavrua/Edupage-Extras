@@ -119,19 +119,7 @@ let cleanUiEnabled = false;
 let hideHelpTextEnabled = false;
 let currentRozvrhRoomChangeColor = DEFAULT_ROZVRH_ROOM_CHANGE_COLOR;
 let currentRozvrhSubstitutionColor = DEFAULT_ROZVRH_SUBSTITUTION_COLOR;
-const DEFAULT_CUSTOM_THEME = {
-  bgBase: "#11111b",
-  bgRaised: "#181825",
-  bgElevated: "#1e1e2e",
-  bgMuted: "#2a2b3d",
-  border: "#313244",
-  textMain: "#cdd6f4",
-  textMuted: "#a6adc8",
-  accent: "#89b4fa",
-  warning: "#fab387",
-  danger: "#f38ba8",
-  tableHeaderBg: "#2c70a3",
-};
+const DEFAULT_CUSTOM_THEME = EE.DEFAULT_CUSTOM_THEME;
 
 function buildDarkCSS() {
   return `
@@ -1555,7 +1543,7 @@ function clearNormalizedClasses() {
 }
 
 function normalizeTheme(theme) {
-  return ["dark", "ocean", "forest", "emerald", "pink", "purple", "custom", "light"].includes(theme) ? theme : "dark";
+  return EE.normalizeTheme(theme);
 }
 
 function shouldSuppressThemeForPath(pathname = window.location.pathname) {
@@ -1574,16 +1562,11 @@ function resolveAppliedTheme({
 }
 
 function normalizeColor(value, fallback) {
-  return /^#[0-9a-f]{6}$/i.test(String(value || "")) ? value : fallback;
+  return EE.normalizeColor(value, fallback);
 }
 
 function normalizeCustomTheme(theme) {
-  return Object.fromEntries(
-    Object.entries(DEFAULT_CUSTOM_THEME).map(([key, fallback]) => [
-      key,
-      normalizeColor(theme?.[key], fallback),
-    ]),
-  );
+  return EE.normalizeCustomTheme(theme);
 }
 
 function applyCustomThemeProperties(theme) {

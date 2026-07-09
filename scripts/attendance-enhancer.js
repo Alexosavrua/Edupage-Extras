@@ -97,24 +97,7 @@
   }
 
   function parseDateOnly(value) {
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""));
-    if (!match) return null;
-
-    const year = Number.parseInt(match[1], 10);
-    const month = Number.parseInt(match[2], 10);
-    const day = Number.parseInt(match[3], 10);
-    const date = new Date(year, month - 1, day);
-
-    if (
-      Number.isNaN(date.getTime())
-      || date.getFullYear() !== year
-      || date.getMonth() !== month - 1
-      || date.getDate() !== day
-    ) {
-      return null;
-    }
-
-    return date;
+    return EE.parseDateOnly(value);
   }
 
   function normalizeDateInput(value) {
@@ -136,49 +119,7 @@
   }
 
   function extractObjectLiteral(text, marker) {
-    const markerIndex = text.indexOf(marker);
-    if (markerIndex === -1) return null;
-
-    const startIndex = text.indexOf("{", markerIndex + marker.length);
-    if (startIndex === -1) return null;
-
-    let depth = 0;
-    let inString = false;
-    let escaped = false;
-
-    for (let index = startIndex; index < text.length; index += 1) {
-      const character = text[index];
-
-      if (inString) {
-        if (escaped) {
-          escaped = false;
-          continue;
-        }
-
-        if (character === "\\") {
-          escaped = true;
-        } else if (character === "\"") {
-          inString = false;
-        }
-        continue;
-      }
-
-      if (character === "\"") {
-        inString = true;
-        continue;
-      }
-
-      if (character === "{") {
-        depth += 1;
-      } else if (character === "}") {
-        depth -= 1;
-        if (depth === 0) {
-          return text.slice(startIndex, index + 1);
-        }
-      }
-    }
-
-    return null;
+    return EE.extractObjectLiteral(text, marker);
   }
 
   function parseInlineAttendanceData() {
