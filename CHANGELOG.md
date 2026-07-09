@@ -4,6 +4,13 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.9.2 — 2026-07-09
+
+- Added two more keyboard shortcuts (assignable on the browser's extension
+  shortcuts page, no default keys): "Open Edupage Extras settings" and
+  "Toggle mobile responsive layout".
+  ([#40](https://github.com/Alexosavrua/Edupage-Extras/issues/40))
+
 ## 0.9.1 — 2026-07-09
 
 - Tests no longer instrument the scripts with fragile string-replace

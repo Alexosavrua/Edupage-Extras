@@ -18,6 +18,9 @@ const ACTIVITY_SHIELD_ENABLED_KEY = "eeActivityShieldEnabled";
 const DARK_MODE_ENABLED_KEY = "darkModeEnabled";
 const TOGGLE_ACTIVITY_SHIELD_COMMAND = "toggle-stay-active-mode";
 const TOGGLE_THEME_COMMAND = "toggle-theme-mode";
+const OPEN_SETTINGS_COMMAND = "open-settings";
+const TOGGLE_MOBILE_RESPONSIVE_COMMAND = "toggle-mobile-responsive";
+const MOBILE_RESPONSIVE_KEY = "eeMobileResponsiveEnabled";
 const REPO_URL = "https://github.com/Alexosavrua/Edupage-Extras";
 const UPDATE_MANIFEST_URLS = [
   "https://raw.githubusercontent.com/Alexosavrua/Edupage-Extras/main/manifest.json",
@@ -514,6 +517,14 @@ async function toggleActivityShieldEnabled() {
   const enabled = result?.[ACTIVITY_SHIELD_ENABLED_KEY] === true;
   const nextValue = !enabled;
   await storageSet({ [ACTIVITY_SHIELD_ENABLED_KEY]: nextValue });
+  return nextValue;
+}
+
+async function toggleMobileResponsiveEnabled() {
+  const result = await storageGet([MOBILE_RESPONSIVE_KEY]);
+  const enabled = result?.[MOBILE_RESPONSIVE_KEY] === true;
+  const nextValue = !enabled;
+  await storageSet({ [MOBILE_RESPONSIVE_KEY]: nextValue });
   return nextValue;
 }
 
@@ -1450,6 +1461,18 @@ chrome.commands.onCommand.addListener((command) => {
   if (command === TOGGLE_THEME_COMMAND) {
     toggleThemeEnabled().catch((error) => {
       console.warn("[Edupage Extras] Could not toggle themes.", error);
+    });
+    return;
+  }
+
+  if (command === OPEN_SETTINGS_COMMAND) {
+    chrome.runtime.openOptionsPage();
+    return;
+  }
+
+  if (command === TOGGLE_MOBILE_RESPONSIVE_COMMAND) {
+    toggleMobileResponsiveEnabled().catch((error) => {
+      console.warn("[Edupage Extras] Could not toggle mobile responsive layout.", error);
     });
   }
 });
