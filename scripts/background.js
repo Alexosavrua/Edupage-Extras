@@ -1503,7 +1503,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (existing?.liveWeek) return;
         return writeTimetableSyncCache(origin, {
           liveWeek: weekData,
-          adjacentWeek: weekData,
+          // Preload only ever samples the currently-visible week — writing
+          // weekData here too would make an A/B-week school's half-year
+          // export believe there's no alternation (readFreshTimetableBundle
+          // only checks that adjacentWeek is truthy). Leave it null so the
+          // requireAdjacent=true half-year path keeps falling back to the
+          // real hidden-tab extraction instead of trusting this bundle.
+          adjacentWeek: null,
           sampleWeeks: [],
         });
       }).catch(() => {});

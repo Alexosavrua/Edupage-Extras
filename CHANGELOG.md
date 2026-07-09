@@ -4,6 +4,10 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.8.12 — 2026-07-09
+
+- Fixed the half-year .ics export silently dropping A/B-week alternation when the timetable preload cache was warm. ([#18](https://github.com/Alexosavrua/Edupage-Extras/issues/18))
+
 ## 0.8.11 — 2026-07-09
 
 - Added a "Preferred Account" auto-login setting so multi-account pickers can auto-select a chosen account instead of always stopping. ([#26](https://github.com/Alexosavrua/Edupage-Extras/issues/26))
