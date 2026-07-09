@@ -57,10 +57,22 @@ function writeThemeCache(settings) {
 // here, paints immediately regardless of pending stylesheet loads, so the
 // blank wait itself reads as dark instead of white. The real per-theme
 // background from buildDarkCSS() takes over the instant it's ready.
+//
+// "pink" is a light pastel theme (see isLightTonedTheme() below), and a
+// custom theme can pick a light bgBase too — forcing the dark navy for
+// those would itself be the wrong-color flash this code exists to avoid,
+// so skip the early paint and let the real light background load in.
+const LIGHT_TONED_THEMES = ["pink"];
 (function paintEarlyBackground() {
   try {
     const cached = readThemeCache();
-    if (cached && cached.darkModeEnabled && !shouldSuppressThemeForPath()) {
+    if (
+      cached &&
+      cached.darkModeEnabled &&
+      cached.theme !== "light" &&
+      !shouldSuppressThemeForPath() &&
+      !isLightTonedTheme(cached.theme, cached.customTheme)
+    ) {
       document.documentElement.style.backgroundColor = "#0c1220";
     }
   } catch (e) {
@@ -86,7 +98,8 @@ const HIDE_HELP_TEXT_CLASS = "ee-hide-help-text";
 // dark-mode-specific sensory adjustments (forced color-scheme: dark, image
 // dimming, icon inversion) would look broken on its light background, so
 // those are gated behind SCHEME_DARK_CLASS instead of CLASS_NAME.
-const LIGHT_TONED_THEMES = ["pink"];
+// (LIGHT_TONED_THEMES itself is declared above paintEarlyBackground(), which
+// needs it before this point in the file.)
 const SCHEME_DARK_CLASS = "ee-scheme-dark";
 const STYLE_ID = "ee-dark-mode-style";
 const SURFACE_CLASS = "ee-dark-surface";
