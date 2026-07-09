@@ -4,6 +4,14 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.8.25 — 2026-07-09
+
+- Added public `ARCHITECTURE.md` (content-script timing, FOUC theme cache,
+  Activity Shield design, dual background registration, conventions) and
+  `CONTRIBUTING.md` (setup, test caveats, how to add a feature, release
+  flow) for contributors; both excluded from store packages.
+  ([#31](https://github.com/Alexosavrua/Edupage-Extras/issues/31))
+
 ## 0.8.24 — 2026-07-09
 
 - Fixed the Activity Shield "ActivityRedirect" protection doing nothing on
