@@ -4,6 +4,12 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.8.21 — 2026-07-09
+
+- Added a CI workflow running unit tests and the Firefox lint on every push
+  to main and on pull requests, instead of only at release-tag time.
+  ([#29](https://github.com/Alexosavrua/Edupage-Extras/issues/29))
+
 ## 0.8.20 — 2026-07-09
 
 - Fixed virtual grades and mass overrides being stored unscoped by school —

@@ -1,0 +1,33 @@
+name: CI
+
+# Runs tests and the Firefox lint on every push to main and on pull requests,
+# so breakage is caught before release time (the release workflow runs the
+# same steps again on tag push).
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Lint for Firefox
+        run: npm run lint:firefox
