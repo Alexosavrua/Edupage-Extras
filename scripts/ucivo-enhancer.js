@@ -122,7 +122,7 @@
         });
       });
     });
-    return rows.map((row) => row.map(csvEscape).join(",")).join("\n") + "\n";
+    return "﻿" + rows.map((row) => row.map(csvEscape).join(",")).join("\n") + "\n";
   }
 
   function downloadFile(filename, mime, content) {

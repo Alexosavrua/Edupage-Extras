@@ -4,6 +4,10 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.8.5 — 2026-07-09
+
+- Fixed the ucivo CSV export missing a UTF-8 BOM, which made Excel garble Slovak/Czech diacritics. ([#24](https://github.com/Alexosavrua/Edupage-Extras/issues/24))
+
 ## 0.8.4 — 2026-07-09
 
 - Reworked the popup and settings UI: section cards with dividers, an icon
