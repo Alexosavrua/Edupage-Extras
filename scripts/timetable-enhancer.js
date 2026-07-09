@@ -423,7 +423,7 @@
             let year = now.getFullYear();
             // School year runs Sep–Jun; if the widget month is much earlier
             // than the current month we've crossed a calendar-year boundary.
-            if (month < now.getMonth() - 5) year++;
+            if (month - 1 < now.getMonth() - 5) year++;
             const d = new Date(year, month - 1, day);
             return dateKey(d);
           }
