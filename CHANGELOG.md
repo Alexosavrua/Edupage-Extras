@@ -4,6 +4,16 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.9.7 — 2026-07-09
+
+- Fixed a crash in the Virtual Grade Calculator popover: for subjects whose
+  grade weight isn't visible without expanding the row, the auto-detection
+  logic could synthetically click our own "+" virtual-grade button (it also
+  matches the "expand toggle" heuristic), re-entering the popover and
+  recursing until the call stack overflowed. The toggle-candidate scan now
+  skips our own injected UI, and the popover is marked "active" before async
+  detection starts so its own re-entrancy guard is live throughout.
+
 ## 0.9.6 — 2026-07-09
 
 - Internal: split the ~5,000-line `scripts/grades-enhancer.js` into feature

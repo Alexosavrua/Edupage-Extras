@@ -226,6 +226,11 @@
       }
 
       predmetRow.querySelectorAll("td, span, a, button, img, div, i").forEach((el) => {
+        // Skip our own injected UI (e.g. the "+" virtual-grade button also
+        // matches the "+" text heuristic below) — synthetically clicking it
+        // would re-enter openVirtualPopover from inside detectExistingMass.
+        if (el.closest(".ee-vg-btn, .ee-vg-reset-btn, .ee-vg-popover")) return;
+
         const text = (el.textContent || "").trim();
         const cls = String(el.className || "").toLowerCase();
         const aria = el.getAttribute?.("aria-expanded");
@@ -657,13 +662,19 @@
       // then run async detection (which may briefly expand the row to surface
       // category sub-rows) and re-render once the real weights are known.
       buildPopoverContent(popover, row, predmetid, scale, originalAvg);
+      document.body.appendChild(popover);
+      // Set before detectExistingMass runs: it can synthetically click toggle
+      // candidates inside the row, which — despite findExpandToggleCandidates
+      // excluding our own UI — could still re-enter this button's click
+      // handler via some other delegated toggle. activeVirtualPopover being
+      // live already lets that handler's re-entrancy guard short-circuit
+      // instead of recursing into another openVirtualPopover call.
+      activeVirtualPopover = popover;
       detectExistingMass(row, predmetid).then(() => {
         if (activeVirtualPopover !== popover) return;
         buildPopoverContent(popover, row, predmetid, scale, originalAvg);
         updateVirtualDisplay(row, predmetid, scale, originalAvg);
       });
-      document.body.appendChild(popover);
-      activeVirtualPopover = popover;
 
       const btnRect = triggerBtn.getBoundingClientRect();
       const popWidth = popover.offsetWidth || 210;
