@@ -4,6 +4,18 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.9.5 — 2026-07-09
+
+- Enhancer UI strings now go through i18n instead of being hardcoded:
+  the attendance-page summary (was Slovak-only, including the missing
+  diacritic in "Aktuálny") and its tooltips, the entire Virtual Grades
+  popover, and every grades attendance-column tooltip/placeholder (were
+  English-only) — 39 new keys translated in en/sk/cs. Dropped the two
+  genuinely unused locale keys (`backButton`, `experimentalTitle`); the
+  other keys #48 flagged turned out to be referenced via
+  `data-i18n-html`/`data-i18n-attr` and stay.
+  ([#48](https://github.com/Alexosavrua/Edupage-Extras/issues/48))
+
 ## 0.9.4 — 2026-07-09
 
 - Added grades export to .csv and .txt next to the existing JSON export —

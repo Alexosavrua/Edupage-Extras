@@ -10,6 +10,14 @@
   let attendancePercentagesEnabled = true;
   let halfyearStartOverride = "";
 
+  function t(key, substitutions) {
+    try {
+      return chrome.i18n.getMessage(key, substitutions) || key;
+    } catch (_) {
+      return key;
+    }
+  }
+
   function normalizeText(value) {
     return String(value || "")
       .normalize("NFD")
@@ -271,15 +279,15 @@
     strong.textContent = hasAttended ? formatPercent(data.percent) : "-";
 
     const small = document.createElement("small");
-    small.textContent = `${data.absent}/${attended} hod.`;
+    small.textContent = t("attHoursShort", [String(data.absent), String(attended)]);
 
     cell.append(strong, small);
 
     const tooltipParts = [
-      `${label}: ${data.absent} / ${attended} lessons absent (formula: absent / (present + absent))`,
+      t("attTooltipAbsent", [label, String(data.absent), String(attended)]),
     ];
     if (distant > 0) {
-      tooltipParts.push(`School activities (distant): ${distant} lessons — excluded from %`);
+      tooltipParts.push(t("attTooltipDistant", [String(distant)]));
     }
     cell.title = tooltipParts.join("\n");
     return cell;
@@ -314,20 +322,20 @@
 
     const firstHalf = computedHalves["1"] || { absent: 0, total: 0, percent: NaN };
     const secondHalf = computedHalves["2"] || { absent: 0, total: 0, percent: NaN };
-    const currentHalfLabel = halves?.[currentHalfKey] || `${currentHalfKey}. Polrok`;
+    const currentHalfLabel = halves?.[currentHalfKey] || t("attHalfFallback", [String(currentHalfKey)]);
 
-    const labelCell = createSpan("ee-attendance-stat ee-attendance-stat-label", "Absencia %");
+    const labelCell = createSpan("ee-attendance-stat ee-attendance-stat-label", t("attAbsencePercentLabel"));
     labelCell.style.borderTopWidth = "1px";
 
-    const firstValueCell = createValueCell(firstHalf, currentHalfKey === "1", true, halves?.["1"] || "1. Polrok");
-    const secondValueCell = createValueCell(secondHalf, currentHalfKey === "2", false, halves?.["2"] || "2. Polrok");
+    const firstValueCell = createValueCell(firstHalf, currentHalfKey === "1", true, halves?.["1"] || t("attHalfFallback", ["1"]));
+    const secondValueCell = createValueCell(secondHalf, currentHalfKey === "2", false, halves?.["2"] || t("attHalfFallback", ["2"]));
 
     const detailCell = createSpan(
       "ee-attendance-stat ee-attendance-stat-detail",
-      `Aktualny polrok: ${currentHalfLabel}`,
+      t("attCurrentHalf", [currentHalfLabel]),
     );
     detailCell.style.borderTopWidth = "1px";
-    detailCell.title = "Formula: absent / (present + absent). Distant lessons (school activities, trips, sick-bay) are excluded from the denominator to match the school's report.";
+    detailCell.title = t("attDetailFormula");
 
     grid.append(labelCell, firstValueCell, secondValueCell, detailCell);
   }

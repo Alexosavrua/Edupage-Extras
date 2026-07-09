@@ -368,7 +368,7 @@
     event.stopPropagation();
 
     const currentValue = normalizeWhitespace(gradeTitleOverrides[meta.storageKey] || meta.defaultTitle);
-    const updatedTitle = window.prompt("Grade title", currentValue);
+    const updatedTitle = window.prompt(t("vgGradeTitlePrompt"), currentValue);
     if (updatedTitle === null) return;
 
     const normalizedTitle = normalizeWhitespace(updatedTitle);
@@ -1464,7 +1464,7 @@
 
     const header = document.createElement("div");
     header.className = "ee-vg-popover-header";
-    header.textContent = "Virtual Grades";
+    header.textContent = t("vgTitle");
     popover.appendChild(header);
 
     const virtual = virtualGradesData[predmetid] || [];
@@ -1475,7 +1475,7 @@
     if (virtual.length === 0) {
       const empty = document.createElement("div");
       empty.className = "ee-vg-empty";
-      empty.textContent = "No virtual grades added yet.";
+      empty.textContent = t("vgEmpty");
       list.appendChild(empty);
     } else {
       virtual.forEach((grade, i) => {
@@ -1484,12 +1484,12 @@
 
         const lbl = document.createElement("span");
         lbl.className = "ee-vg-item-label";
-        lbl.textContent = `${formatAverageDisplay(grade.value, scale)} (weight: ${grade.weight})`;
+        lbl.textContent = `${formatAverageDisplay(grade.value, scale)} (${t("vgWeightLabel")}: ${grade.weight})`;
 
         const removeBtn = document.createElement("button");
         removeBtn.className = "ee-vg-remove";
         removeBtn.textContent = "×";
-        removeBtn.title = "Remove";
+        removeBtn.title = t("vgRemove");
         removeBtn.addEventListener("click", async () => {
           const arr = virtualGradesData[predmetid] || [];
           arr.splice(i, 1);
@@ -1516,7 +1516,7 @@
 
         const projLabel = document.createElement("span");
         projLabel.className = "ee-vg-proj-label";
-        projLabel.textContent = "Projected:";
+        projLabel.textContent = t("vgProjected");
 
         const projBadge = createBadgeElement(projected, formatAverageDisplay(projected, scale), { scale });
 
@@ -1549,8 +1549,8 @@
         const massLabel = document.createElement("span");
         massLabel.className = "ee-vg-mass-label";
         massLabel.textContent = detectedCellCount > 0
-          ? `Existing weight (${detectedCellCount} grades):`
-          : "Existing weight:";
+          ? t("vgExistingWeightCount", [String(detectedCellCount)])
+          : t("vgExistingWeight");
         massBox.appendChild(massLabel);
 
         const massInput = document.createElement("input");
@@ -1560,12 +1560,10 @@
         massInput.className = "ee-vg-input ee-vg-mass-input";
         massInput.value = String(Number.isInteger(effectiveMass) ? effectiveMass : Number(effectiveMass.toFixed(2)));
         massInput.title = override !== null
-          ? `Manual override (auto-detected: ${detectedMass}). Clear or set to ${detectedMass} to use auto-detection.`
+          ? t("vgMassOverrideTitle", [String(detectedMass)])
           : detectionSucceeded
-            ? (blobInfo
-                ? "Read from EduPage's own grade weights (p_váha). Edit if it's wrong."
-                : "Auto-detected from EduPage's category sub-rows (Váha udalosti). Edit if it's wrong.")
-            : "Auto-detection still running, or couldn't find weight info on this skin. Type the correct weight to override.";
+            ? (blobInfo ? t("vgMassBlobTitle") : t("vgMassSubrowTitle"))
+            : t("vgMassUnknownTitle");
         massInput.addEventListener("change", async () => {
           const typed = Number.parseFloat(massInput.value);
           const shouldClear = !Number.isFinite(typed) || typed <= 0 || typed === detectedMass;
@@ -1618,7 +1616,7 @@
     gradeInput.step = "0.1";
     gradeInput.min = scale === "percent" ? "0" : "1";
     gradeInput.max = scale === "percent" ? "100" : "5";
-    gradeInput.placeholder = scale === "percent" ? "Grade %" : "Grade (1–5)";
+    gradeInput.placeholder = scale === "percent" ? t("vgGradePlaceholderPercent") : t("vgGradePlaceholder");
     gradeInput.className = "ee-vg-input";
 
     const weightInput = document.createElement("input");
@@ -1626,12 +1624,12 @@
     weightInput.step = "0.1";
     weightInput.min = "0.1";
     weightInput.value = "1";
-    weightInput.placeholder = "Wt";
+    weightInput.placeholder = t("vgWeightPlaceholder");
     weightInput.className = "ee-vg-input ee-vg-weight-input";
 
     const addBtn = document.createElement("button");
     addBtn.className = "ee-vg-add-btn";
-    addBtn.textContent = "Add";
+    addBtn.textContent = t("vgAdd");
     addBtn.addEventListener("click", async () => {
       const value = Number.parseFloat(gradeInput.value);
       const weight = Math.max(0.1, Number.parseFloat(weightInput.value) || 1);
@@ -2006,8 +2004,8 @@
 
     if (attendanceSummary && Number.isFinite(attendanceSummary.percent)) {
       const summaryTitle = unmatchedSummary && (unmatchedSummary.total > 0 || unmatchedSummary.absent > 0)
-        ? `Official current halfyear: ${attendanceSummary.absent}/${attendanceSummary.total} lessons absent in total. ${unmatchedSummary.absent}/${unmatchedSummary.total} additional lessons are not mapped to grades rows yet.`
-        : `Official current halfyear: ${attendanceSummary.absent}/${attendanceSummary.total} lessons absent in total.`;
+        ? t("gradesOfficialHalfUnmatched", [String(attendanceSummary.absent), String(attendanceSummary.total), String(unmatchedSummary.absent), String(unmatchedSummary.total)])
+        : t("gradesOfficialHalf", [String(attendanceSummary.absent), String(attendanceSummary.total)]);
       const percentValue = document.createElement("span");
       percentValue.className = "ee-attendance-stat";
       if (summaryTone?.className) {
@@ -2028,8 +2026,8 @@
       const percentPlaceholder = buildAttendancePlaceholderState(
         attendanceState,
         attendanceState === "loading"
-          ? "Current halfyear attendance data is still loading."
-          : "Official current-halfyear attendance data is not available yet.",
+          ? t("gradesAttendanceLoading")
+          : t("gradesAttendanceUnavailable"),
       );
       const percentEmpty = document.createElement("span");
       percentEmpty.className = percentPlaceholder.className;
@@ -2040,8 +2038,8 @@
       const totalPlaceholder = buildAttendancePlaceholderState(
         attendanceState,
         attendanceState === "loading"
-          ? "Current halfyear attendance data is still loading."
-          : "Official current-halfyear attendance data is not available yet.",
+          ? t("gradesAttendanceLoading")
+          : t("gradesAttendanceUnavailable"),
       );
       const totalEmpty = document.createElement("span");
       totalEmpty.className = totalPlaceholder.className;
@@ -2051,7 +2049,7 @@
     }
 
     if (predictedAttendanceSummary && Number.isFinite(predictedAttendanceSummary.percent)) {
-      const predictedTitle = `If you miss no more lessons this halfyear, the projected absence total is ${predictedAttendanceSummary.absent}/${predictedAttendanceSummary.total}.`;
+      const predictedTitle = t("gradesPredictedSummary", [String(predictedAttendanceSummary.absent), String(predictedAttendanceSummary.total)]);
       const predictedPercentValue = document.createElement("span");
       predictedPercentValue.className = "ee-attendance-stat";
       if (predictedTone?.className) {
@@ -2072,8 +2070,8 @@
       const predictedPercentPlaceholder = buildAttendancePlaceholderState(
         predictionState,
         predictionState === "loading"
-          ? "Predicted end-of-halfyear attendance is still loading."
-          : "Predicted end-of-halfyear attendance is not available yet.",
+          ? t("gradesPredictedLoading")
+          : t("gradesPredictedUnavailable"),
       );
       const predictedPercentEmpty = document.createElement("span");
       predictedPercentEmpty.className = predictedPercentPlaceholder.className;
@@ -2084,8 +2082,8 @@
       const predictedTotalPlaceholder = buildAttendancePlaceholderState(
         predictionState,
         predictionState === "loading"
-          ? "Predicted end-of-halfyear attendance is still loading."
-          : "Predicted end-of-halfyear attendance is not available yet.",
+          ? t("gradesPredictedLoading")
+          : t("gradesPredictedUnavailable"),
       );
       const predictedTotalEmpty = document.createElement("span");
       predictedTotalEmpty.className = predictedTotalPlaceholder.className;
@@ -3204,28 +3202,28 @@
         headerRow,
         "ee-attendance-percent-header",
         t("gradesColAbsPercent"),
-        "Current halfyear absence percentage per subject.",
+        t("gradesColAbsPercentTitle"),
         anchorHeaderCell,
       );
       ensureAttendanceHeaderCell(
         headerRow,
         "ee-attendance-total-header",
         t("gradesColAbsTotal"),
-        "Current halfyear absent lessons / lessons held so far per subject.",
+        t("gradesColAbsTotalTitle"),
         percentHeader,
       );
       const predictedPercentHeader = ensureAttendanceHeaderCell(
         headerRow,
         "ee-attendance-predicted-percent-header",
         t("gradesColPredAbsPercent"),
-        "Projected end-of-halfyear absence percentage if you miss no more lessons.",
+        t("gradesColPredAbsPercentTitle"),
         headerRow.querySelector(".ee-attendance-total-header"),
       );
       ensureAttendanceHeaderCell(
         headerRow,
         "ee-attendance-predicted-total-header",
         t("gradesColPredAbsTotal"),
-        "Projected absent lessons / projected total lessons by the end of the current halfyear if you miss no more lessons.",
+        t("gradesColPredAbsTotalTitle"),
         predictedPercentHeader,
       );
       syncAttendanceHeaderLayout(table);
@@ -3317,7 +3315,7 @@
     }
   }
 
-  function populateAttendancePlaceholders(table, title = "Official current-halfyear attendance data is not available yet.", { loading = false } = {}) {
+  function populateAttendancePlaceholders(table, title = t("gradesAttendanceUnavailable"), { loading = false } = {}) {
     markInternalMutation();
     ensureAttendanceColumns(table);
     const placeholder = buildAttendancePlaceholderState(loading ? "loading" : "unavailable", title);
@@ -3571,22 +3569,22 @@
         setAttendanceCellValue(
           percentCell,
           "-",
-          { empty: true, title: `Current halfyear (${data.halfLabel}) data was not matched to this grades row.` },
+          { empty: true, title: t("gradesRowUnmatched", [data.halfLabel]) },
         );
         setAttendanceCellValue(
           totalCell,
           "-",
-          { empty: true, title: `Current halfyear (${data.halfLabel}) data was not matched to this grades row.` },
+          { empty: true, title: t("gradesRowUnmatched", [data.halfLabel]) },
         );
         setAttendanceCellValue(
           predictedPercentCell,
           "-",
-          { empty: true, title: `Projected end-of-halfyear (${data.halfLabel}) data was not matched to this grades row.` },
+          { empty: true, title: t("gradesRowPredictedUnmatched", [data.halfLabel]) },
         );
         setAttendanceCellValue(
           predictedTotalCell,
           "-",
-          { empty: true, title: `Projected end-of-halfyear (${data.halfLabel}) data was not matched to this grades row.` },
+          { empty: true, title: t("gradesRowPredictedUnmatched", [data.halfLabel]) },
         );
         delete row.dataset.eeAttendanceSignature;
         renderDebugRows.push({
@@ -3604,12 +3602,12 @@
       const predictedPlaceholder = buildAttendancePlaceholderState(
         data.predictionState === "unavailable" ? "unavailable" : "loading",
         data.predictionState === "unavailable"
-          ? "Predicted end-of-halfyear attendance is not available yet."
-          : "Predicted end-of-halfyear attendance is still loading.",
+          ? t("gradesPredictedUnavailable")
+          : t("gradesPredictedLoading"),
       );
       const rowSignature = `${rowText}:${matchedStats.absent}:${matchedStats.total}:${predictedReady ? matchedStats.predictedTotal : data.predictionState || "loading"}`;
-      const title = `Current halfyear (${data.halfLabel}): ${matchedStats.absent}/${matchedStats.total} lessons absent. Formula: absent / lessons held so far in the halfyear.`;
-      const predictedTitle = `If you miss no more lessons this ${data.halfLabel.toLowerCase()}, the projected end-of-halfyear total is ${matchedStats.absent}/${matchedStats.predictedTotal}.`;
+      const title = t("gradesRowTooltip", [data.halfLabel, String(matchedStats.absent), String(matchedStats.total)]);
+      const predictedTitle = t("gradesRowPredictedTooltip", [data.halfLabel, String(matchedStats.absent), String(matchedStats.predictedTotal)]);
       const tone = attendanceTone(matchedStats.percent);
       const predictedTone = attendanceTone(matchedStats.predictedPercent);
 
@@ -4760,7 +4758,7 @@
     const loadToken = ++attendanceLoadToken;
     tables.forEach((gradesTable) => populateAttendancePlaceholders(
       gradesTable,
-      "Official current-halfyear attendance data is still loading.",
+      t("gradesAttendanceStillLoading"),
       { loading: true },
     ));
     loadBaseSubjectAttendanceStats()
