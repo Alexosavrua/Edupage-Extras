@@ -170,6 +170,58 @@ runTest("template weeks prefer a later recurring slot over an earlier one-off va
   assert.equal(lessons[0].title, "Math");
 });
 
+// Regression for #43: the half-year .ics export ignored the custom
+// second-halfyear start/end date settings (eeHalfyearStartDate /
+// eeSecondHalfEndDate) that grades-enhancer.js/attendance-enhancer.js already
+// honor, always using the hardcoded Feb 1 -> Jun 30 window instead.
+runTest("buildHalfyearDesiredEvents honors a custom second-halfyear end override", () => {
+  const { buildHalfyearDesiredEvents } = loadBackgroundInternals();
+
+  const baseLesson = {
+    date: "2026-03-02",
+    dayIndex: 0, // Monday
+    period: "1",
+    startTime: "08:00",
+    endTime: "08:45",
+    duration: 1,
+    title: "Test Lesson",
+    group: "",
+    room: "101",
+    teacher: "Teacher A",
+    changed: false,
+    slotIndex: 0,
+    eventKey: "2026-03-02|1|0|test-lesson|",
+  };
+
+  const makeLiveWeek = (config) => ({
+    weekLabel: "A",
+    classLabel: "3.A",
+    dayHeaders: [{ date: "2026-03-02" }],
+    lessons: [baseLesson],
+    config,
+  });
+
+  // halfyearScope:"full" bypasses the "clamp to today" effectiveStart logic
+  // so this test doesn't depend on the real current date.
+  const withoutOverride = buildHalfyearDesiredEvents(makeLiveWeek({ halfyearScope: "full" }), null);
+  const withoutOverrideDates = withoutOverride.map((event) => event.startDateTime.slice(0, 10));
+  assert.ok(
+    withoutOverrideDates.some((date) => date > "2026-05-01"),
+    "default range (...Jun 30) should generate events past May 1",
+  );
+
+  const withOverride = buildHalfyearDesiredEvents(
+    makeLiveWeek({ halfyearScope: "full", secondHalfEndOverride: "2026-04-01" }),
+    null,
+  );
+  const withOverrideDates = withOverride.map((event) => event.startDateTime.slice(0, 10));
+  assert.ok(withOverrideDates.length > 0, "override should still generate some events");
+  assert.ok(
+    withOverrideDates.every((date) => date <= "2026-04-01"),
+    `no event should be generated past the overridden end date, got: ${withOverrideDates.join(", ")}`,
+  );
+});
+
 runTest("week sample selection shifts stale weekend weeks and keeps accurate extras", () => {
   const { selectTimetableSampleWeeks } = loadBackgroundInternals();
   const weeks = [

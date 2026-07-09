@@ -25,6 +25,10 @@ const TIMETABLE_SYNC_CACHE_KEY = "eeTimetableSyncCache";
 const TIMETABLE_SYNC_CACHE_VERSION = 1;
 const EE_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Bratislava";
 const TIMETABLE_LIVE_CACHE_TTL_MS = 10 * 60 * 1000;
+// Same keys grades-enhancer.js/attendance-enhancer.js read for the second
+// halfyear start/end overrides (Settings -> Features).
+const HALFYEAR_START_KEY = "eeHalfyearStartDate";
+const HALFYEAR_END_KEY = "eeSecondHalfEndDate";
 
 function compareVersions(left, right) {
   const leftParts = String(left || "0").split(".").map((part) => Number.parseInt(part, 10) || 0);
@@ -676,12 +680,18 @@ async function syncUpdateAlarm() {
 // Google Calendar sync settings (room/teacher in title reads better in a
 // calendar entry than not, so default both on).
 async function getTimetableExportConfig() {
-  const result = await storageGet([LAST_EDUPAGE_ORIGIN_KEY]);
+  const result = await storageGet([LAST_EDUPAGE_ORIGIN_KEY, HALFYEAR_START_KEY, HALFYEAR_END_KEY]);
   return {
     lastEdupageOrigin: String(result?.[LAST_EDUPAGE_ORIGIN_KEY] || "").trim(),
     roomInTitle: true,
     teacherInTitle: true,
     halfyearScope: "future",
+    // Same overrides grades-enhancer.js/attendance-enhancer.js already honor
+    // for attendance calculations — the half-year .ics export should use the
+    // same school-year boundaries instead of the hardcoded Feb 1 -> Jun 30
+    // default (see #43). computeCurrentHalfyearRange() validates these itself.
+    secondHalfStartOverride: String(result?.[HALFYEAR_START_KEY] || "").trim(),
+    secondHalfEndOverride: String(result?.[HALFYEAR_END_KEY] || "").trim(),
   };
 }
 
@@ -1111,8 +1121,11 @@ async function buildTimetableIcsExport(range, includeChanges = true) {
 
 function buildHalfyearDesiredEvents(liveWeek, adjacentWeek) {
   const anchorDate = parseDateOnly(liveWeek.dayHeaders[0]?.date) || new Date();
-  const halfyearRange = computeCurrentHalfyearRange(anchorDate);
   const config = liveWeek.config || {};
+  const halfyearRange = computeCurrentHalfyearRange(anchorDate, {
+    secondHalfStartOverride: config.secondHalfStartOverride,
+    secondHalfEndOverride: config.secondHalfEndOverride,
+  });
   const todayDate = parseDateOnly(formatDate(new Date())) || new Date();
   const effectiveStart = config.halfyearScope === "full"
     ? halfyearRange.start

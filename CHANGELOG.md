@@ -4,6 +4,13 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.8.15 — 2026-07-09
+
+- Fixed the half-year .ics export ignoring the custom second-halfyear
+  start/end dates from Settings — it now uses the same school-year
+  boundaries the grades/attendance features already honor instead of the
+  hardcoded Feb 1 -> Jun 30 window. ([#43](https://github.com/Alexosavrua/Edupage-Extras/issues/43))
+
 ## 0.8.14 — 2026-07-09
 
 - Fixed "Timetable Change Highlights" not staying off — disabling it in
