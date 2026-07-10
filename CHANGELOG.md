@@ -4,6 +4,17 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.9.8 — 2026-07-10
+
+- Dropped the `"tabs"` permission (#51) — it was the one entry producing the
+  "Read your browsing history" warning on the Chrome Web Store / AMO listing
+  and install prompt. Every `tabs.query`/`tab.url` use is already scoped to
+  `https://*.edupage.org/*`, which is covered by `host_permissions` alone;
+  normalized the two `*://*.edupage.org/*` queries to match that pattern
+  exactly. No behavior change — manually verified popup dark-mode broadcast,
+  settings' "reload EduPage tabs" and update-toast preview, and diagnostics
+  report still work.
+
 ## 0.9.7 — 2026-07-09
 
 - Fixed a crash in the Virtual Grade Calculator popover: for subjects whose

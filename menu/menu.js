@@ -95,7 +95,7 @@ toggle.addEventListener("change", () => {
 	chrome.storage.local.get([THEME_KEY, CUSTOM_THEME_KEY, CLEAN_UI_KEY, HIDE_HELP_TEXT_KEY, MOBILE_RESPONSIVE_KEY, ROZVRH_ROOM_CHANGE_COLOR_KEY, ROZVRH_SUBSTITUTION_COLOR_KEY], (result) => {
 		customTheme = normalizeCustomTheme(result[CUSTOM_THEME_KEY]);
 		applyMenuTheme(result[THEME_KEY], enabled, customTheme);
-		chrome.tabs.query({ url: "*://*.edupage.org/*" }, (tabs) => {
+		chrome.tabs.query({ url: "https://*.edupage.org/*" }, (tabs) => {
 			tabs.forEach((tab) => {
 				if (tab.id) {
 					chrome.tabs.sendMessage(tab.id, {

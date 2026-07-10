@@ -248,7 +248,7 @@ function notifyEdupageTabs() {
 	const hideHelpTextEnabled = hideHelpTextToggle.checked;
 	const mobileResponsiveEnabled = mobileResponsiveToggle?.checked === true;
 
-	chrome.tabs.query({ url: "*://*.edupage.org/*" }, (tabs) => {
+	chrome.tabs.query({ url: "https://*.edupage.org/*" }, (tabs) => {
 		tabs.forEach((tab) => {
 			if (tab.id) {
 				chrome.tabs.sendMessage(tab.id, {
@@ -899,7 +899,7 @@ if (resetActivityShieldButton) {
 
 if (reloadEdupageTabsButton) {
 	reloadEdupageTabsButton.addEventListener("click", () => {
-		chrome.tabs.query({ url: "*://*.edupage.org/*" }, (tabs) => {
+		chrome.tabs.query({ url: "https://*.edupage.org/*" }, (tabs) => {
 			tabs.forEach((tab) => {
 				if (tab.id) chrome.tabs.reload(tab.id);
 			});
@@ -993,7 +993,7 @@ if (etestCopyToggle) {
 
 if (previewUpdateToastButton) {
 	previewUpdateToastButton.addEventListener("click", () => {
-		chrome.tabs.query({ url: "*://*.edupage.org/*" }, (tabs) => {
+		chrome.tabs.query({ url: "https://*.edupage.org/*" }, (tabs) => {
 			if (reportStatus) {
 				reportStatus.textContent = tabs.length
 					? t("previewUpdateToastSent", [String(tabs.length)])
