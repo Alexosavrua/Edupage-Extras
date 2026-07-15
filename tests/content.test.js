@@ -147,3 +147,19 @@ runTest("non-login routes still apply the selected theme", () => {
   assert.equal(shouldSuppressThemeForPath("/dashboard"), false);
   assert.equal(resolveAppliedTheme({ darkModeEnabled: true, theme: "forest", pathname: "/dashboard" }), "forest");
 });
+
+runTest("custom theme pre-paint fallback matches the shared default background", () => {
+  const context = {};
+  context.globalThis = context;
+  const libPath = path.join(__dirname, "..", "scripts", "lib", "ee-common.js");
+  vm.runInNewContext(fs.readFileSync(libPath, "utf8"), context, { filename: libPath });
+
+  const css = fs.readFileSync(path.join(__dirname, "..", "scripts", "instant-theme.css"), "utf8");
+  const customRule = css.match(/html\.ee-theme-custom,[\s\S]*?\{([\s\S]*?)\}/);
+
+  assert.ok(customRule, "expected the custom theme pre-paint rule");
+  assert.match(
+    customRule[1],
+    new RegExp(`var\\(--ee-custom-bg-base, ${context.EE.DEFAULT_CUSTOM_THEME.bgBase}\\)`),
+  );
+});

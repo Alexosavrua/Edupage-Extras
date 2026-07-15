@@ -86,6 +86,6 @@ html.ee-theme-custom .skinContent,
 html.ee-theme-custom .userContentInner,
 html.ee-theme-custom #eb_main_content,
 html.ee-theme-custom #bar_mainDiv {
-  background: var(--ee-custom-bg-base, #0c1220) !important;
+  background: var(--ee-custom-bg-base, #11111b) !important;
   color: var(--ee-custom-text-main, #cdd6f4) !important;
 }

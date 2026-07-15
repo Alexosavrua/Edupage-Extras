@@ -4,6 +4,12 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.9.11 — 2026-07-15
+
+- Fixed the custom theme's first-paint background fallback so it matches the
+  configured default instead of briefly flashing the default dark theme color
+  before custom theme variables load. ([#54](https://github.com/Alexosavrua/Edupage-Extras/issues/54))
+
 ## 0.9.10 — 2026-07-15
 
 - Kept unpacked-install update notices out of store installs, refreshed the
