@@ -35,3 +35,16 @@ runTest("compact settings switches use screen-reader labels", () => {
     assert.match(body, /class="sr-only"/, "compact switch is missing screen-reader text");
   });
 });
+
+runTest("debug-only attendance dates and WIP feature markers stay in their intended settings sections", () => {
+  const debugStart = html.indexOf('id="panel-debug"');
+  assert.ok(debugStart >= 0, "expected a Debug settings panel");
+  assert.ok(html.indexOf('id="HalfyearStartDateInput"') > debugStart);
+  assert.ok(html.indexOf('id="HalfyearEndDateInput"') > debugStart);
+
+  const autoLoginRow = html.indexOf('for="AutoLoginCheckbox"');
+  const etestCopyRow = html.indexOf('for="EtestCopyCheckbox"');
+  assert.ok(autoLoginRow >= 0 && html.indexOf('setting-tag-wip', autoLoginRow - 500) >= 0);
+  assert.ok(etestCopyRow >= 0 && html.indexOf('setting-tag-wip', etestCopyRow - 500) >= 0);
+  assert.match(html, /id="AutoLoginPreferredAccountRow"/);
+});

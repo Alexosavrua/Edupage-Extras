@@ -949,17 +949,35 @@
       parent.insertBefore(cell, nextSibling || null);
       return cell;
     }
+    const AVERAGE_HEADER_LABELS = new Set(["priemer", "prumer", "average"]);
+
     function findAverageHeaderCell(headerRow) {
       if (!headerRow) return null;
 
       const exactMatch = Array.from(headerRow.cells).find(
-        (cell) => normalizeText(cell.textContent) === "priemer",
+        (cell) => AVERAGE_HEADER_LABELS.has(normalizeText(cell.textContent)),
       );
       if (exactMatch) return exactMatch;
 
       return headerRow.cells[headerRow.cells.length - 2]
         || headerRow.cells[headerRow.cells.length - 1]
         || null;
+    }
+
+    // The compact grades table has a top event/category row followed by the
+    // summary row containing Average, Certificate, and Notices. EduPage does
+    // not consistently put that visible summary row in <thead>, so inspect all
+    // table rows instead of assuming standard table-section markup. Header
+    // labels must be inserted into that summary row: using the first row makes
+    // the extension columns land one grid column away from their body cells.
+    // EduPage localises Average, hence all supported labels are recognised
+    // before the single-row fallback is used.
+    function findAttendanceHeaderRow(table) {
+      const tableRows = Array.from(table?.rows || table?.querySelectorAll?.("tr") || []);
+      const averageRow = tableRows.find((row) => Array.from(row.cells).some(
+        (cell) => AVERAGE_HEADER_LABELS.has(normalizeText(cell.textContent)),
+      ));
+      return averageRow || tableRows[tableRows.length - 1] || null;
     }
 
     // EduPage's "Vysvedčenie" (final report grade) column only appears at term end.
@@ -977,7 +995,7 @@
     // structurally as ".znPriemerCell"'s next sibling — that relationship holds
     // regardless of how many grade cells precede it.
     function tagVysvedcenieColumn(table) {
-      const headerRow = table.querySelector("thead tr");
+      const headerRow = findAttendanceHeaderRow(table);
       if (!headerRow) return;
       if (headerRow.querySelector(".ee-vysvedcenie-header")) return; // already tagged
 
@@ -1031,20 +1049,20 @@
         return;
       }
 
-      const existingWidth = cell.style.width;
-      const existingMinWidth = cell.style.minWidth;
-      const existingMaxWidth = cell.style.maxWidth;
       const existingTextAlign = cell.style.textAlign;
       const existingWhiteSpace = cell.style.whiteSpace;
-      cell.style.cssText = referenceCell.style.cssText;
-      cell.style.width = existingWidth;
-      cell.style.minWidth = existingMinWidth;
-      cell.style.maxWidth = existingMaxWidth;
+
+      // Do not clone cssText here. EduPage writes sticky positioning, offsets,
+      // and stacking order into native header cells at runtime. Copying those
+      // values gives our cells a different sticky layer from the rest of the
+      // table, making them detach at the top of the page while native headers
+      // remain in their own row. The table's normal <th> rules provide the
+      // visual styling; only retain the safe text-layout choices below.
       cell.style.textAlign = existingTextAlign || "center";
       cell.style.whiteSpace = existingWhiteSpace || "nowrap";
     }
     function syncAttendanceHeaderLayout(table) {
-      const headerRow = table?.querySelector?.("thead tr");
+      const headerRow = findAttendanceHeaderRow(table);
       if (!headerRow) return;
 
       const averageHeaderCell = findAverageHeaderCell(headerRow);
@@ -1091,7 +1109,7 @@
       table.querySelectorAll(".ee-subject-attendance").forEach((element) => element.remove());
       tagVysvedcenieColumn(table);
 
-      const headerRow = table.querySelector("thead tr");
+      const headerRow = findAttendanceHeaderRow(table);
       const anchorHeaderCell = findAttendanceAnchorHeader(headerRow);
 
       if (headerRow && anchorHeaderCell) {
@@ -2311,6 +2329,7 @@
     normalizeText,
     formatPercent,
     attendanceTone,
+    findAttendanceHeaderRow,
     tagVysvedcenieColumn,
   };
 })();

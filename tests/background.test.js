@@ -116,6 +116,31 @@ runTest("timetable date helpers reject calendar overflow dates", () => {
   assert.match(toRfc3339("2026-02-28", "08:00"), /^2026-02-28T08:00:00[+-]\d{2}:\d{2}$/);
 });
 
+runTest("theme shortcut messages carry the complete current theme state", () => {
+  const { buildThemeUpdateMessage } = loadBackgroundInternals();
+  const message = buildThemeUpdateMessage({
+    themeMode: "forest",
+    customThemeColors: { bgBase: "#123456" },
+    cleanUiEnabled: true,
+    hideHelpTextEnabled: true,
+    eeRozvrhRoomChangeColor: "#111111",
+    eeRozvrhSubstitutionColor: "#222222",
+    eeMobileResponsiveEnabled: true,
+  }, true);
+
+  assert.deepEqual(JSON.parse(JSON.stringify(message)), {
+    type: "ee-set-theme",
+    darkModeEnabled: true,
+    theme: "forest",
+    customTheme: { bgBase: "#123456" },
+    cleanUiEnabled: true,
+    hideHelpTextEnabled: true,
+    rozvrhRoomChangeColor: "#111111",
+    rozvrhSubstitutionColor: "#222222",
+    mobileResponsiveEnabled: true,
+  });
+});
+
 runTest("template weeks prefer a later recurring slot over an earlier one-off variant", () => {
   const { buildTemplateWeekMap } = loadBackgroundInternals();
 

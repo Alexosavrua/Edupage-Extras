@@ -33,7 +33,6 @@
   let gradeBadgesEnabled = false;
   let gradesExportEnabled = true;
   let observerTimer = null;
-  let headerSyncTimer = null;
   let ignoreMutationsUntil = 0;
   let attendanceLoadToken = 0;
 
@@ -1008,13 +1007,6 @@
       window.clearTimeout(observerTimer);
       observerTimer = window.setTimeout(enhanceGradesTable, 160);
     }
-    function syncAllAttendanceHeaderLayouts() {
-      getGradesTables().forEach((table) => GE.attendance.syncAttendanceHeaderLayout(table));
-    }
-    function scheduleHeaderSync() {
-      window.clearTimeout(headerSyncTimer);
-      headerSyncTimer = window.setTimeout(syncAllAttendanceHeaderLayouts, 0);
-    }
     function initStorage() {
       chrome.storage.local.get([
         GRADE_BADGES_KEY,
@@ -1140,8 +1132,6 @@
       GE.badges.loadGradeTitleOverrides();
       document.addEventListener("dblclick", GE.badges.handleGradeTitleEdit, true);
       document.addEventListener("click", GE.virtual.handleDocumentClickForPopover, true);
-      window.addEventListener("scroll", scheduleHeaderSync, { passive: true });
-      window.addEventListener("resize", scheduleHeaderSync, { passive: true });
       initStorage();
       enhanceGradesTable();
       initObserver();
@@ -1182,8 +1172,6 @@
   GE.injectStyles = injectStyles;
   GE.enhanceGradesTable = enhanceGradesTable;
   GE.scheduleEnhance = scheduleEnhance;
-  GE.syncAllAttendanceHeaderLayouts = syncAllAttendanceHeaderLayouts;
-  GE.scheduleHeaderSync = scheduleHeaderSync;
   GE.initStorage = initStorage;
   GE.initObserver = initObserver;
   GE.init = init;

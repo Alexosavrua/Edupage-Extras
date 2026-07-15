@@ -47,6 +47,7 @@ const reloadEdupageTabsButton = document.getElementById("ReloadEdupageTabsButton
 const experimentalSaveStatus = document.getElementById("ExperimentalSaveStatus");
 const mobileResponsiveToggle = document.getElementById("MobileResponsiveCheckbox");
 const autoLoginToggle = document.getElementById("AutoLoginCheckbox");
+const autoLoginPreferredAccountRow = document.getElementById("AutoLoginPreferredAccountRow");
 const autoLoginPreferredAccountInput = document.getElementById("AutoLoginPreferredAccountInput");
 const ucivoExportToggle = document.getElementById("UcivoExportCheckbox");
 const gradesExportToggle = document.getElementById("GradesExportCheckbox");
@@ -239,6 +240,10 @@ function updateDependentControls() {
 	if (rozvrhSubstitutionColorInput) rozvrhSubstitutionColorInput.disabled = !rozvrhColorsEnabled;
 	if (customRozvrhRoomChangeInput) customRozvrhRoomChangeInput.disabled = !(rozvrhColorsEnabled && customVisible);
 	if (customRozvrhSubstitutionInput) customRozvrhSubstitutionInput.disabled = !(rozvrhColorsEnabled && customVisible);
+
+	const autoLoginEnabled = autoLoginToggle?.checked === true;
+	if (autoLoginPreferredAccountRow) autoLoginPreferredAccountRow.hidden = !autoLoginEnabled;
+	if (autoLoginPreferredAccountInput) autoLoginPreferredAccountInput.disabled = !autoLoginEnabled;
 }
 
 function notifyEdupageTabs() {
@@ -390,18 +395,34 @@ function checkForUpdates() {
 	});
 }
 
-function renderShortcutStatus() {
+let shortcutStatusRefreshTimer = null;
+
+function renderShortcutStatus(retriesRemaining = 4) {
 	if (!chrome.commands?.getAll) {
 		themeShortcutStatus.textContent = t("shortcutUnavailable");
 		return;
 	}
 
 	chrome.commands.getAll((commands) => {
+		if (chrome.runtime.lastError) {
+			themeShortcutStatus.textContent = t("shortcutUnavailable");
+			return;
+		}
 		const command = commands.find((entry) => entry.name === THEME_TOGGLE_COMMAND);
 		const shortcut = command?.shortcut?.trim();
 		themeShortcutStatus.textContent = shortcut
 			? t("currentHotkey", [shortcut])
 			: t("noHotkey");
+
+		// Chrome can briefly return an empty shortcut list while an unpacked
+		// extension is coming back from a reload. Retry the read instead of
+		// showing a false "No hotkey assigned" state permanently.
+		if (!shortcut && retriesRemaining > 0) {
+			window.clearTimeout(shortcutStatusRefreshTimer);
+			shortcutStatusRefreshTimer = window.setTimeout(() => {
+				renderShortcutStatus(retriesRemaining - 1);
+			}, 300);
+		}
 	});
 }
 
@@ -949,9 +970,11 @@ if (mobileResponsiveToggle) {
 if (autoLoginToggle) {
 	chrome.storage.local.get([AUTOLOGIN_KEY], (result) => {
 		autoLoginToggle.checked = result[AUTOLOGIN_KEY] === true;
+		updateDependentControls();
 	});
 	autoLoginToggle.addEventListener("change", () => {
 		chrome.storage.local.set({ [AUTOLOGIN_KEY]: autoLoginToggle.checked });
+		updateDependentControls();
 	});
 }
 
@@ -1009,6 +1032,10 @@ if (previewUpdateToastButton) {
 renderShortcutStatus();
 renderDefaultHalfyearHints();
 window.addEventListener("focus", renderShortcutStatus);
+window.addEventListener("pageshow", renderShortcutStatus);
+document.addEventListener("visibilitychange", () => {
+	if (!document.hidden) renderShortcutStatus();
+});
 
 chrome.storage.onChanged.addListener((changes, area) => {
 	if (area !== "local") return;

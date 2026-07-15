@@ -4,6 +4,17 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.9.10 — 2026-07-15
+
+- Kept unpacked-install update notices out of store installs, refreshed the
+  shortcut status more reliably after extension reloads, and broadcast the
+  complete theme state when the theme shortcut is used.
+- Moved half-year attendance date overrides to Debug, marked Auto-Login and
+  eTest question copying as WIP, and only show the optional preferred-account
+  setting while Auto-Login is enabled.
+- Fixed attendance headers in compact localised grades tables and stopped
+  extension header cells from desynchronising while the page scrolls.
+
 ## 0.9.8 — 2026-07-10
 
 - Dropped the `"tabs"` permission (#51) — it was the one entry producing the

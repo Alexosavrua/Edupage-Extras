@@ -40,6 +40,7 @@
       computeProjectedSubjectTotals: GE.attendance.computeProjectedSubjectTotals,
       buildAttendancePlaceholderState: GE.attendance.buildAttendancePlaceholderState,
       shouldRenderPredictedAttendance: GE.attendance.shouldRenderPredictedAttendance,
+      findAttendanceHeaderRow: GE.attendance.findAttendanceHeaderRow,
       computeSummaryColumnLayout: GE.summary.computeSummaryColumnLayout,
       calcWeightedAvg: GE.virtual.calcWeightedAvg,
       projectAverageWithVirtualGrades: GE.virtual.projectAverageWithVirtualGrades,

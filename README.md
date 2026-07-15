@@ -220,8 +220,8 @@ This is a plain browser extension with an `npm`-based toolchain for the
 Firefox side (linting, packaging, and publishing). There's no build step for
 loading it unpacked in Chrome/Edge — that still works directly from source.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pieces fit together and
-[CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow.
+See the [documentation index](docs/README.md), [architecture guide](ARCHITECTURE.md),
+and [contributor workflow](CONTRIBUTING.md) for development details.
 
 Recommended checks before publishing:
 

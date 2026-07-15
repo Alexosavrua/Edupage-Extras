@@ -291,41 +291,7 @@
 
           <div class="setting-row">
             <div>
-              <h3 data-i18n="secondHalfStart">Second Halfyear Start Date</h3>
-              <p data-i18n="secondHalfStartDesc">Override when the second halfyear begins for attendance calculations. Leave this empty to use EduPage's default date for the current school year.</p>
-            </div>
-            <div class="date-setting-controls">
-              <div class="date-control-row">
-                <label class="date-control" for="HalfyearStartDateInput">
-                  <span data-i18n="dateLabel">Date</span>
-                  <input type="date" id="HalfyearStartDateInput">
-                </label>
-                <button class="secondary-button" id="ResetHalfyearStartDateButton" type="button" data-i18n="useEdupageDefault">Use EduPage Default</button>
-              </div>
-              <small class="date-default-hint" id="HalfyearStartDefaultHint"></small>
-            </div>
-          </div>
-
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="secondHalfEnd">Second Halfyear End Date</h3>
-              <p data-i18n="secondHalfEndDesc">Override when the second halfyear ends for predicted attendance in grades. Leave this empty to use EduPage's default end date for the current school year.</p>
-            </div>
-            <div class="date-setting-controls">
-              <div class="date-control-row">
-                <label class="date-control" for="HalfyearEndDateInput">
-                  <span data-i18n="dateLabel">Date</span>
-                  <input type="date" id="HalfyearEndDateInput">
-                </label>
-                <button class="secondary-button" id="ResetHalfyearEndDateButton" type="button" data-i18n="useEdupageDefault">Use EduPage Default</button>
-              </div>
-              <small class="date-default-hint" id="HalfyearEndDefaultHint"></small>
-            </div>
-          </div>
-
-          <div class="setting-row">
-            <div>
-              <h3 data-i18n="autoLogin">Auto-Login</h3>
+              <h3><span data-i18n="autoLogin">Auto-Login</span> <span class="setting-tag setting-tag-wip" data-i18n="wipBadge">WIP</span></h3>
               <p data-i18n="autoLoginDesc">Automatically clicks through the EduPage login (account picker included) and submits once your browser autofills the saved password. Stops the moment you type anything yourself.</p>
             </div>
             <label class="switch switch-compact" for="AutoLoginCheckbox">
@@ -335,7 +301,7 @@
             </label>
           </div>
 
-          <div class="setting-row">
+          <div class="setting-row" id="AutoLoginPreferredAccountRow">
             <div>
               <h3 data-i18n="autoLoginPreferredAccount">Preferred Account</h3>
               <p data-i18n="autoLoginPreferredAccountDesc">If the saved-account picker shows more than one account, auto-login normally stops and lets you choose. Enter part of an account name here (e.g. your own name) to have it picked automatically.</p>
@@ -376,7 +342,7 @@
 
           <div class="setting-row">
             <div>
-              <h3 data-i18n="etestCopy">Copy Test Questions</h3>
+              <h3><span data-i18n="etestCopy">Copy Test Questions</span> <span class="setting-tag setting-tag-wip" data-i18n="wipBadge">WIP</span></h3>
               <p data-i18n="etestCopyDesc">Add a copy button to each question in EduPage tests (eTest), plus a button to copy the whole numbered test at once.</p>
             </div>
             <label class="switch switch-compact" for="EtestCopyCheckbox">
@@ -489,6 +455,40 @@
               <span class="switch-track" aria-hidden="true"></span>
               <span class="sr-only" data-i18n="toggleGradesDebug">Toggle grades attendance debug</span>
             </label>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="secondHalfStart">Second Halfyear Start Date</h3>
+              <p data-i18n="secondHalfStartDesc">Override when the second halfyear begins for attendance calculations. Leave this empty to use EduPage's default date for the current school year.</p>
+            </div>
+            <div class="date-setting-controls">
+              <div class="date-control-row">
+                <label class="date-control" for="HalfyearStartDateInput">
+                  <span data-i18n="dateLabel">Date</span>
+                  <input type="date" id="HalfyearStartDateInput">
+                </label>
+                <button class="secondary-button" id="ResetHalfyearStartDateButton" type="button" data-i18n="useEdupageDefault">Use EduPage Default</button>
+              </div>
+              <small class="date-default-hint" id="HalfyearStartDefaultHint"></small>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <h3 data-i18n="secondHalfEnd">Second Halfyear End Date</h3>
+              <p data-i18n="secondHalfEndDesc">Override when the second halfyear ends for predicted attendance in grades. Leave this empty to use EduPage's default end date for the current school year.</p>
+            </div>
+            <div class="date-setting-controls">
+              <div class="date-control-row">
+                <label class="date-control" for="HalfyearEndDateInput">
+                  <span data-i18n="dateLabel">Date</span>
+                  <input type="date" id="HalfyearEndDateInput">
+                </label>
+                <button class="secondary-button" id="ResetHalfyearEndDateButton" type="button" data-i18n="useEdupageDefault">Use EduPage Default</button>
+              </div>
+              <small class="date-default-hint" id="HalfyearEndDefaultHint"></small>
+            </div>
           </div>
 
           <div class="setting-row setting-row-stack">

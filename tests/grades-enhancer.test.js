@@ -18,6 +18,11 @@ const GRADES_SCRIPT_FILES = [
   "grades-bootstrap.js",
 ];
 
+const gradesEnhancerSource = fs.readFileSync(
+  path.join(__dirname, "..", "scripts", "grades-enhancer.js"),
+  "utf8",
+);
+
 function loadGradesEnhancerInternals() {
   const scriptsDir = path.join(__dirname, "..", "scripts");
 
@@ -81,6 +86,27 @@ runTest("date-only parsing rejects calendar overflow dates", () => {
   assert.equal(parseDateOnly("2026-13-01"), null);
   assert.equal(normalizeDateInput("2026-02-31"), "");
   assert.equal(normalizeDateInput("2026-02-28"), "2026-02-28");
+});
+
+runTest("attendance headers use the localised Average row, not the first header row", () => {
+  const { findAttendanceHeaderRow } = loadGradesEnhancerInternals();
+  const eventRow = { cells: [{ textContent: "" }, { textContent: "" }] };
+  const englishSummaryRow = { cells: [{ textContent: "Average" }, { textContent: "Certificate" }] };
+  const czechSummaryRow = { cells: [{ textContent: "Průměr" }] };
+
+  assert.equal(
+    findAttendanceHeaderRow({ rows: [eventRow, englishSummaryRow] }),
+    englishSummaryRow,
+  );
+  assert.equal(
+    findAttendanceHeaderRow({ rows: [eventRow, czechSummaryRow] }),
+    czechSummaryRow,
+  );
+});
+
+runTest("grades enhancement does not mutate EduPage's header panel while scrolling", () => {
+  assert.doesNotMatch(gradesEnhancerSource, /addEventListener\("scroll",\s*scheduleHeaderSync/);
+  assert.doesNotMatch(gradesEnhancerSource, /function\s+syncAllAttendanceHeaderLayouts/);
 });
 
 runTest("attendance loading placeholders are visibly different from unavailable placeholders", () => {

@@ -21,6 +21,7 @@ const THEMES = EE.THEMES;
 const DEFAULT_CUSTOM_THEME = EE.DEFAULT_CUSTOM_THEME;
 
 let customTheme = { ...DEFAULT_CUSTOM_THEME };
+let isStoreInstall = false;
 
 function normalizeTheme(theme) {
 	return EE.normalizeTheme(theme);
@@ -52,6 +53,11 @@ function applyMenuTheme(theme, darkModeEnabled = false, colors = customTheme) {
 }
 
 function renderUpdateNotice(status) {
+	if (isStoreInstall) {
+		updateNotice.hidden = true;
+		return;
+	}
+
 	// The stored status is a snapshot from whenever checkForUpdates() last ran in
 	// the background — if this extension has been reloaded/updated since then
 	// (e.g. right after pulling a new unpacked version), status.localVersion is
@@ -80,13 +86,26 @@ function renderUpdateNotice(status) {
 	}
 }
 
-chrome.storage.local.get([STORAGE_KEY, THEME_KEY, CUSTOM_THEME_KEY, UPDATE_STATUS_KEY], (result) => {
-	const enabled = result[STORAGE_KEY] === true;
-	customTheme = normalizeCustomTheme(result[CUSTOM_THEME_KEY]);
-	toggle.checked = enabled;
-	applyMenuTheme(result[THEME_KEY], enabled, customTheme);
-	renderUpdateNotice(result[UPDATE_STATUS_KEY]);
-});
+function initializeMenu() {
+	chrome.storage.local.get([STORAGE_KEY, THEME_KEY, CUSTOM_THEME_KEY, UPDATE_STATUS_KEY], (result) => {
+		const enabled = result[STORAGE_KEY] === true;
+		customTheme = normalizeCustomTheme(result[CUSTOM_THEME_KEY]);
+		toggle.checked = enabled;
+		applyMenuTheme(result[THEME_KEY], enabled, customTheme);
+		renderUpdateNotice(result[UPDATE_STATUS_KEY]);
+	});
+}
+
+// Store installs update through Chrome Web Store or AMO. Keep the popup from
+// initiating the unpacked-install GitHub check in that case.
+if (chrome.management && typeof chrome.management.getSelf === "function") {
+	chrome.management.getSelf((info) => {
+		isStoreInstall = !chrome.runtime.lastError && info?.installType !== "development";
+		initializeMenu();
+	});
+} else {
+	initializeMenu();
+}
 
 toggle.addEventListener("change", () => {
 	const enabled = toggle.checked;
