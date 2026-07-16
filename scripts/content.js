@@ -301,7 +301,7 @@ function buildDarkCSS() {
     html.ee-dark input,
     html.ee-dark textarea,
     html.ee-dark select,
-    html.ee-dark button {
+    html.ee-dark button:not(.ee-etest-copyall-btn):not(.ee-etest-question-copy-btn) {
       background-color: var(--ee-card-bg) !important;
       color: var(--ee-text) !important;
       border-color: var(--ee-border) !important;

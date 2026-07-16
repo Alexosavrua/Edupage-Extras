@@ -407,6 +407,11 @@ code {
     gap: 12px;
 }
 
+.setting-row-dependent {
+    background: color-mix(in srgb, var(--control-bg) 45%, transparent);
+    padding-left: 34px;
+}
+
 .custom-theme-row {
     align-items: flex-start;
 }
@@ -620,6 +625,7 @@ code {
 
 .switch-compact {
     justify-content: flex-end;
+    min-height: 44px;
     min-width: 44px;
 }
 

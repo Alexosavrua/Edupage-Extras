@@ -55,6 +55,32 @@ reference those variables. Dark mode additionally runs a DOM normalizer
 (MutationObserver-driven) that re-tags dynamically rendered light surfaces
 with the dark surface classes.
 
+## eTest copy model
+
+`etest-enhancer.js` serializes question DOM into a small internal model instead
+of copying raw `innerText`. The serializer preserves line structure, represents
+inline answer fields as `___`, expands dropdown choices, separates ABCD options,
+keeps each choice label and its text together, and marks selected choices inline.
+Non-choice responses such as typed, dropdown, matching, and ordering answers use
+a separate selected-answer section. The serializer allowlists the HTML/URL
+surface used for rich clipboard output. Clipboard writes include both
+`text/plain` and sanitized `text/html`, then fall back to a plain-text write when
+rich clipboard APIs are unavailable.
+
+The enhancer keeps in-memory snapshots of questions seen in the current test so
+the whole-test action also works as a student moves through one-question pages.
+Stable `data-cardid` identities prevent the changing question counter from
+discarding or replacing earlier snapshots. Snapshots are never persisted and
+are cleared when the player instance changes. A document-start observer handles
+question UI inserted after the enhancer loads. Route changes also clear the
+snapshot set. The `eeEtestIncludeAnswers` and `eeEtestIncludeImages` preferences
+are default-on and only affect copied output. The default-on
+`eeEtestQuestionButtonsEnabled` and `eeEtestWholeTestButtonEnabled` preferences
+independently control the two button placements without disabling serialization.
+The icon-only whole-test control reuses EduPage's action-button classes and keeps
+its accessible name in `aria-label`/`title`; the per-question icon keeps an
+explicit high-contrast dark-theme foreground.
+
 ## Activity Shield (three pieces)
 
 - `activity-shield-main.js` runs in the **MAIN (page) world** — it patches

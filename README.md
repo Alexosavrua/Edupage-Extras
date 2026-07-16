@@ -78,8 +78,10 @@ log in, use credentials, fetch grades from a server, or calculate hidden grade d
 
 - **Curriculum export** — on a subject's Učivo (topic plan) page, export the
   full year's chapters, topics, and taught dates as `.txt` or `.csv`.
-- **Copy test questions** — adds copy buttons to e-test/e-learning questions
-  (per question and copy-all), controlled by a settings toggle.
+- **Copy test questions** — copies eTest questions with inline blanks, compact
+  answer choices, optional selected-answer markers, rich-text images, and
+  independently configurable per-question and whole-test actions controlled
+  from Settings.
 
 ### Login
 

@@ -343,12 +343,60 @@
           <div class="setting-row">
             <div>
               <h3><span data-i18n="etestCopy">Copy Test Questions</span> <span class="setting-tag setting-tag-wip" data-i18n="wipBadge">WIP</span></h3>
-              <p data-i18n="etestCopyDesc">Add a copy button to each question in EduPage tests (eTest), plus a button to copy the whole numbered test at once.</p>
+              <p data-i18n="etestCopyDesc">Add structured copy actions to EduPage tests (eTest), including a button for the whole numbered test.</p>
             </div>
             <label class="switch switch-compact" for="EtestCopyCheckbox">
               <input type="checkbox" id="EtestCopyCheckbox">
               <span class="switch-track" aria-hidden="true"></span>
               <span class="sr-only" data-i18n="toggleEtestCopy">Toggle test question copy button</span>
+            </label>
+          </div>
+
+          <div class="setting-row setting-row-dependent" id="EtestQuestionButtonsRow" hidden>
+            <div>
+              <h3 data-i18n="etestQuestionButtons">Individual Question Buttons</h3>
+              <p data-i18n="etestQuestionButtonsDesc">Show a copy button beside every question.</p>
+            </div>
+            <label class="switch switch-compact" for="EtestQuestionButtonsCheckbox">
+              <input type="checkbox" id="EtestQuestionButtonsCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleEtestQuestionButtons">Toggle individual question copy buttons</span>
+            </label>
+          </div>
+
+          <div class="setting-row setting-row-dependent" id="EtestWholeTestButtonRow" hidden>
+            <div>
+              <h3 data-i18n="etestWholeTestButton">Whole-Test Button</h3>
+              <p data-i18n="etestWholeTestButtonDesc">Show the action that copies every question collected from the current test.</p>
+            </div>
+            <label class="switch switch-compact" for="EtestWholeTestButtonCheckbox">
+              <input type="checkbox" id="EtestWholeTestButtonCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleEtestWholeTestButton">Toggle whole-test copy button</span>
+            </label>
+          </div>
+
+          <div class="setting-row setting-row-dependent" id="EtestIncludeAnswersRow" hidden>
+            <div>
+              <h3 data-i18n="etestIncludeAnswers">Include Selected Answers</h3>
+              <p data-i18n="etestIncludeAnswersDesc">Mark selected choices and include typed, dropdown, matching, or ordering answers in copied questions.</p>
+            </div>
+            <label class="switch switch-compact" for="EtestIncludeAnswersCheckbox">
+              <input type="checkbox" id="EtestIncludeAnswersCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleEtestIncludeAnswers">Toggle selected answers in copied questions</span>
+            </label>
+          </div>
+
+          <div class="setting-row setting-row-dependent" id="EtestIncludeImagesRow" hidden>
+            <div>
+              <h3 data-i18n="etestIncludeImages">Include Images in Whole-Test Copies</h3>
+              <p data-i18n="etestIncludeImagesDesc">Keep question images when pasting the whole test into apps that support rich content.</p>
+            </div>
+            <label class="switch switch-compact" for="EtestIncludeImagesCheckbox">
+              <input type="checkbox" id="EtestIncludeImagesCheckbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="sr-only" data-i18n="toggleEtestIncludeImages">Toggle images in whole-test copies</span>
             </label>
           </div>
         </div>

@@ -188,3 +188,11 @@ runTest("built-in dark themes keep secondary text readable", () => {
     assert.ok(contrast >= 7, `${theme} muted text contrast should be at least 7:1, got ${contrast}`);
   }
 });
+
+runTest("dark theme preserves native eTest copy-button styling", () => {
+  const css = fs.readFileSync(path.join(__dirname, "..", "scripts", "content.js"), "utf8");
+  assert.match(
+    css,
+    /html\.ee-dark button:not\(\.ee-etest-copyall-btn\):not\(\.ee-etest-question-copy-btn\)/,
+  );
+});

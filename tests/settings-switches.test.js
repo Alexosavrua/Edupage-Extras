@@ -47,4 +47,12 @@ runTest("debug-only attendance dates and WIP feature markers stay in their inten
   assert.ok(autoLoginRow >= 0 && html.indexOf('setting-tag-wip', autoLoginRow - 500) >= 0);
   assert.ok(etestCopyRow >= 0 && html.indexOf('setting-tag-wip', etestCopyRow - 500) >= 0);
   assert.match(html, /id="AutoLoginPreferredAccountRow"/);
+  assert.match(html, /id="EtestQuestionButtonsRow"[^>]*hidden/);
+  assert.match(html, /id="EtestWholeTestButtonRow"[^>]*hidden/);
+  assert.match(html, /id="EtestIncludeAnswersRow"[^>]*hidden/);
+  assert.match(html, /id="EtestIncludeImagesRow"[^>]*hidden/);
+  assert.match(html, /for="EtestQuestionButtonsCheckbox"/);
+  assert.match(html, /for="EtestWholeTestButtonCheckbox"/);
+  assert.match(html, /for="EtestIncludeAnswersCheckbox"/);
+  assert.match(html, /for="EtestIncludeImagesCheckbox"/);
 });

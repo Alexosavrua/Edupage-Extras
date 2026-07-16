@@ -4,6 +4,16 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.9.15 — 2026-07-16
+
+- Reworked eTest question copying with structured plain-text and rich HTML
+  output, inline blanks and selected-choice markers, matching/ordering answer
+  support, and complete whole-test collection across asynchronously rendered
+  or paginated questions. ([#60](https://github.com/JustAlex0000/Edupage-Extras/issues/60))
+- Added independent settings for per-question and whole-test copy buttons,
+  optional selected answers and whole-test images, plus accessible native-style
+  controls with reliable dark-mode contrast.
+
 ## 0.9.14 — 2026-07-16
 
 - Improved dark-mode secondary-text contrast across all built-in dark themes,

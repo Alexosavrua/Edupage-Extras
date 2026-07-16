@@ -52,6 +52,14 @@ const autoLoginPreferredAccountInput = document.getElementById("AutoLoginPreferr
 const ucivoExportToggle = document.getElementById("UcivoExportCheckbox");
 const gradesExportToggle = document.getElementById("GradesExportCheckbox");
 const etestCopyToggle = document.getElementById("EtestCopyCheckbox");
+const etestQuestionButtonsRow = document.getElementById("EtestQuestionButtonsRow");
+const etestQuestionButtonsToggle = document.getElementById("EtestQuestionButtonsCheckbox");
+const etestWholeTestButtonRow = document.getElementById("EtestWholeTestButtonRow");
+const etestWholeTestButtonToggle = document.getElementById("EtestWholeTestButtonCheckbox");
+const etestIncludeAnswersRow = document.getElementById("EtestIncludeAnswersRow");
+const etestIncludeAnswersToggle = document.getElementById("EtestIncludeAnswersCheckbox");
+const etestIncludeImagesRow = document.getElementById("EtestIncludeImagesRow");
+const etestIncludeImagesToggle = document.getElementById("EtestIncludeImagesCheckbox");
 const previewUpdateToastButton = document.getElementById("PreviewUpdateToastButton");
 const STORAGE_KEY = "darkModeEnabled";
 const THEME_KEY = "themeMode";
@@ -81,6 +89,10 @@ const AUTOLOGIN_PREFERRED_ACCOUNT_KEY = "eeAutoLoginPreferredAccount";
 const UCIVO_EXPORT_KEY = "eeUcivoExportEnabled";
 const GRADES_EXPORT_KEY = "eeGradesExportEnabled";
 const ETEST_COPY_KEY = "eeEtestCopyEnabled";
+const ETEST_QUESTION_BUTTONS_KEY = "eeEtestQuestionButtonsEnabled";
+const ETEST_WHOLE_TEST_BUTTON_KEY = "eeEtestWholeTestButtonEnabled";
+const ETEST_INCLUDE_ANSWERS_KEY = "eeEtestIncludeAnswers";
+const ETEST_INCLUDE_IMAGES_KEY = "eeEtestIncludeImages";
 const activityShieldSettings = [
 	["ActivityShieldEnabled", "eeActivityShieldEnabled"],
 	["ActivityVisibilityState", "eeActivityShieldVisibilityState"],
@@ -244,6 +256,16 @@ function updateDependentControls() {
 	const autoLoginEnabled = autoLoginToggle?.checked === true;
 	if (autoLoginPreferredAccountRow) autoLoginPreferredAccountRow.hidden = !autoLoginEnabled;
 	if (autoLoginPreferredAccountInput) autoLoginPreferredAccountInput.disabled = !autoLoginEnabled;
+
+	const etestCopyEnabled = etestCopyToggle?.checked === true;
+	if (etestQuestionButtonsRow) etestQuestionButtonsRow.hidden = !etestCopyEnabled;
+	if (etestQuestionButtonsToggle) etestQuestionButtonsToggle.disabled = !etestCopyEnabled;
+	if (etestWholeTestButtonRow) etestWholeTestButtonRow.hidden = !etestCopyEnabled;
+	if (etestWholeTestButtonToggle) etestWholeTestButtonToggle.disabled = !etestCopyEnabled;
+	if (etestIncludeAnswersRow) etestIncludeAnswersRow.hidden = !etestCopyEnabled;
+	if (etestIncludeAnswersToggle) etestIncludeAnswersToggle.disabled = !etestCopyEnabled;
+	if (etestIncludeImagesRow) etestIncludeImagesRow.hidden = !etestCopyEnabled;
+	if (etestIncludeImagesToggle) etestIncludeImagesToggle.disabled = !etestCopyEnabled;
 }
 
 function notifyEdupageTabs() {
@@ -1012,11 +1034,51 @@ if (gradesExportToggle) {
 }
 
 if (etestCopyToggle) {
-	chrome.storage.local.get([ETEST_COPY_KEY], (result) => {
+	chrome.storage.local.get([
+		ETEST_COPY_KEY,
+		ETEST_QUESTION_BUTTONS_KEY,
+		ETEST_WHOLE_TEST_BUTTON_KEY,
+		ETEST_INCLUDE_ANSWERS_KEY,
+		ETEST_INCLUDE_IMAGES_KEY,
+	], (result) => {
 		etestCopyToggle.checked = result[ETEST_COPY_KEY] !== false;
+		if (etestQuestionButtonsToggle) {
+			etestQuestionButtonsToggle.checked = result[ETEST_QUESTION_BUTTONS_KEY] !== false;
+		}
+		if (etestWholeTestButtonToggle) {
+			etestWholeTestButtonToggle.checked = result[ETEST_WHOLE_TEST_BUTTON_KEY] !== false;
+		}
+		if (etestIncludeAnswersToggle) etestIncludeAnswersToggle.checked = result[ETEST_INCLUDE_ANSWERS_KEY] !== false;
+		if (etestIncludeImagesToggle) etestIncludeImagesToggle.checked = result[ETEST_INCLUDE_IMAGES_KEY] !== false;
+		updateDependentControls();
 	});
 	etestCopyToggle.addEventListener("change", () => {
 		chrome.storage.local.set({ [ETEST_COPY_KEY]: etestCopyToggle.checked });
+		updateDependentControls();
+	});
+}
+
+if (etestQuestionButtonsToggle) {
+	etestQuestionButtonsToggle.addEventListener("change", () => {
+		chrome.storage.local.set({ [ETEST_QUESTION_BUTTONS_KEY]: etestQuestionButtonsToggle.checked });
+	});
+}
+
+if (etestWholeTestButtonToggle) {
+	etestWholeTestButtonToggle.addEventListener("change", () => {
+		chrome.storage.local.set({ [ETEST_WHOLE_TEST_BUTTON_KEY]: etestWholeTestButtonToggle.checked });
+	});
+}
+
+if (etestIncludeAnswersToggle) {
+	etestIncludeAnswersToggle.addEventListener("change", () => {
+		chrome.storage.local.set({ [ETEST_INCLUDE_ANSWERS_KEY]: etestIncludeAnswersToggle.checked });
+	});
+}
+
+if (etestIncludeImagesToggle) {
+	etestIncludeImagesToggle.addEventListener("change", () => {
+		chrome.storage.local.set({ [ETEST_INCLUDE_IMAGES_KEY]: etestIncludeImagesToggle.checked });
 	});
 }
 
