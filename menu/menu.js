@@ -16,7 +16,7 @@ const MOBILE_RESPONSIVE_KEY = "eeMobileResponsiveEnabled";
 const ROZVRH_ROOM_CHANGE_COLOR_KEY = "eeRozvrhRoomChangeColor";
 const ROZVRH_SUBSTITUTION_COLOR_KEY = "eeRozvrhSubstitutionColor";
 const UPDATE_STATUS_KEY = "eeUpdateStatus";
-const REPO_URL = "https://github.com/Alexosavrua/Edupage-Extras";
+const REPO_URL = "https://github.com/JustAlex0000/Edupage-Extras";
 const THEMES = EE.THEMES;
 const DEFAULT_CUSTOM_THEME = EE.DEFAULT_CUSTOM_THEME;
 

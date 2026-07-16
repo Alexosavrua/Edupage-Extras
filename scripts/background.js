@@ -27,10 +27,10 @@ const TOGGLE_THEME_COMMAND = "toggle-theme-mode";
 const OPEN_SETTINGS_COMMAND = "open-settings";
 const TOGGLE_MOBILE_RESPONSIVE_COMMAND = "toggle-mobile-responsive";
 const MOBILE_RESPONSIVE_KEY = "eeMobileResponsiveEnabled";
-const REPO_URL = "https://github.com/Alexosavrua/Edupage-Extras";
+const REPO_URL = "https://github.com/JustAlex0000/Edupage-Extras";
 const UPDATE_MANIFEST_URLS = [
-  "https://raw.githubusercontent.com/Alexosavrua/Edupage-Extras/main/manifest.json",
-  "https://raw.githubusercontent.com/Alexosavrua/Edupage-Extras/master/manifest.json",
+  "https://raw.githubusercontent.com/JustAlex0000/Edupage-Extras/main/manifest.json",
+  "https://raw.githubusercontent.com/JustAlex0000/Edupage-Extras/master/manifest.json",
 ];
 
 // The school origin is learned passively (timetable-sync.js reports it on every
@@ -75,6 +75,29 @@ function storageSet(values) {
 function storageRemove(keys) {
   return new Promise((resolve) => {
     chrome.storage.local.remove(keys, resolve);
+  });
+}
+
+function buildReportIssueUrl(title, body) {
+  return `${REPO_URL}/issues/new?` +
+    `title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
+}
+
+function openReportIssue(title, body) {
+  const url = buildReportIssueUrl(title, body);
+  return new Promise((resolve, reject) => {
+    chrome.tabs.create({ url }, (tab) => {
+      const error = chrome.runtime.lastError;
+      if (error) {
+        reject(new Error(error.message || "Could not open GitHub"));
+        return;
+      }
+      if (!tab) {
+        reject(new Error("Could not open GitHub"));
+        return;
+      }
+      resolve(tab);
+    });
   });
 }
 
@@ -1543,6 +1566,7 @@ if (globalThis.__EE_TEST__) {
     shouldSkipGeneratedSchoolDay,
     parseExcludedDateRanges,
     buildThemeUpdateMessage,
+    buildReportIssueUrl,
   };
 }
 
@@ -1639,11 +1663,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === "ee-report-open-issue") {
     const title = typeof message.title === "string" ? message.title : "Bug report";
     const body = typeof message.body === "string" ? message.body : "";
-    const url = `${REPO_URL}/issues/new?` +
-      `title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
-    chrome.tabs.create({ url });
-    sendResponse({ ok: true });
-    return false;
+    openReportIssue(title, body)
+      .then(() => sendResponse({ ok: true }))
+      .catch((error) => sendResponse({
+        ok: false,
+        error: error?.message || "Could not open GitHub",
+      }));
+    return true;
   }
 
   if (message?.type === "ee-edupage-page-context") {

@@ -141,6 +141,16 @@ runTest("theme shortcut messages carry the complete current theme state", () => 
   });
 });
 
+runTest("report issue URLs use the renamed repository and preserve fields", () => {
+  const { buildReportIssueUrl } = loadBackgroundInternals();
+  const url = new URL(buildReportIssueUrl("[Bug] Slovak text", "line one\nline two"));
+
+  assert.equal(url.origin, "https://github.com");
+  assert.equal(url.pathname, "/JustAlex0000/Edupage-Extras/issues/new");
+  assert.equal(url.searchParams.get("title"), "[Bug] Slovak text");
+  assert.equal(url.searchParams.get("body"), "line one\nline two");
+});
+
 runTest("template weeks prefer a later recurring slot over an earlier one-off variant", () => {
   const { buildTemplateWeekMap } = loadBackgroundInternals();
 

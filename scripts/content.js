@@ -19,7 +19,7 @@ const LAST_SEEN_VERSION_KEY = "eeLastSeenVersion";
 const UPDATE_REMINDER_ENABLED_KEY = "eeUpdateReminderEnabled";
 // The release workflow publishes a GitHub Release per tag (notes pulled from
 // CHANGELOG.md, zip/xpi attached), so link straight to the Releases page.
-const REPO_RELEASES_URL = "https://github.com/Alexosavrua/Edupage-Extras/releases";
+const REPO_RELEASES_URL = "https://github.com/JustAlex0000/Edupage-Extras/releases";
 const MOBILE_RESPONSIVE_KEY = "eeMobileResponsiveEnabled";
 const THEME_CACHE_KEY = "eeThemeCacheV1";
 

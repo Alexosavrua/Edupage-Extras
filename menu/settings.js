@@ -73,7 +73,7 @@ const GRADES_ATTENDANCE_CACHE_KEY = "eeGradesAttendanceStatsCache";
 const UPDATE_STATUS_KEY = "eeUpdateStatus";
 const UPDATE_REMINDER_ENABLED_KEY = "eeUpdateReminderEnabled";
 const THEME_TOGGLE_COMMAND = "toggle-theme-mode";
-const REPO_URL = "https://github.com/Alexosavrua/Edupage-Extras";
+const REPO_URL = "https://github.com/JustAlex0000/Edupage-Extras";
 const ACTIVITY_SHIELD_COMMAND = "toggle-stay-active-mode";
 const MOBILE_RESPONSIVE_KEY = "eeMobileResponsiveEnabled";
 const AUTOLOGIN_KEY = "eeAutoLoginEnabled";
@@ -798,9 +798,15 @@ openIssueButton.addEventListener("click", () => {
 		type: "ee-report-open-issue",
 		title: `[Bug] (v${version}) `,
 		body: buildIssueBody(latestReport),
+	}, (response) => {
+		if (chrome.runtime.lastError || !response?.ok) {
+			reportStatus.textContent = (t("reportError") || "Could not open a GitHub issue:") +
+				" " + (response?.error || chrome.runtime.lastError?.message || "unknown error");
+			return;
+		}
+		reportStatus.textContent = t("reportIssueOpened") ||
+			"Opened a new GitHub issue — attach the downloaded report or paste it in.";
 	});
-	reportStatus.textContent = t("reportIssueOpened") ||
-		"Opened a new GitHub issue — attach the downloaded report or paste it in.";
 });
 
 openShortcutSettingsButton.addEventListener("click", () => {

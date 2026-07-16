@@ -4,6 +4,14 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.9.13 — 2026-07-16
+
+- Restored the Android Firefox "Report a Problem" flow: Settings now waits for
+  the background tab-creation result and shows an error rather than claiming a
+  GitHub issue opened when the browser rejects it. ([#53](https://github.com/JustAlex0000/Edupage-Extras/issues/53))
+- Updated public repository and raw-manifest update-check URLs after the GitHub
+  account rename. The stable Firefox add-on ID is intentionally unchanged.
+
 ## 0.9.12 — 2026-07-15
 
 - Fixed grades attendance enhancements after changing the displayed school

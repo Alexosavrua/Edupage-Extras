@@ -6,7 +6,7 @@ Thanks for helping improve Edupage Extras! Start with
 ## Setup
 
 ```sh
-git clone https://github.com/Alexosavrua/Edupage-Extras.git
+git clone https://github.com/JustAlex0000/Edupage-Extras
 cd Edupage-Extras
 npm ci
 ```

@@ -2,7 +2,7 @@
   "name": "__MSG_extName__",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
-  "version": "0.9.12",
+  "version": "0.9.13",
   "manifest_version": 3,
   "icons": {
     "16": "images/icon-16.png",
@@ -26,7 +26,7 @@
   "host_permissions": [
     "https://*.edupage.org/*",
     "https://edublurtesting.ct.ws/*",
-    "https://raw.githubusercontent.com/Alexosavrua/Edupage-Extras/*"
+    "https://raw.githubusercontent.com/JustAlex0000/Edupage-Extras/*"
   ],
   "background": {
     "service_worker": "scripts/background.js",

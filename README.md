@@ -160,7 +160,7 @@ Edupage Extras requests:
   and lets the settings UI find and reload open Edupage tabs (no separate
   `tabs` permission is requested).
 - `https://edublurtesting.ct.ws/*` - testing purposes
-- `https://raw.githubusercontent.com/Alexosavrua/Edupage-Extras/*` host access -
+- `https://raw.githubusercontent.com/JustAlex0000/Edupage-Extras/*` host access -
   reads the public project manifest for update checks.
 
 The extension does not request access to all websites.
