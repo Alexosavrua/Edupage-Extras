@@ -6,7 +6,7 @@
 
   const UCIVO_EXPORT_KEY = "eeUcivoExportEnabled";
   const BUTTONS_ID = "ee-ucivo-export-buttons";
-  let ucivoExportEnabled = true;
+  let ucivoExportEnabled = false;
   let observerTimer = null;
 
   function getMessage(key, fallback) {
@@ -208,14 +208,14 @@
 
   function initStorage() {
     chrome.storage.local.get([UCIVO_EXPORT_KEY], (result) => {
-      ucivoExportEnabled = result[UCIVO_EXPORT_KEY] !== false;
+      ucivoExportEnabled = result[UCIVO_EXPORT_KEY] === true;
       ensureButtons();
     });
 
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== "local") return;
       if (!changes[UCIVO_EXPORT_KEY]) return;
-      ucivoExportEnabled = changes[UCIVO_EXPORT_KEY].newValue !== false;
+      ucivoExportEnabled = changes[UCIVO_EXPORT_KEY].newValue === true;
       ensureButtons();
     });
   }

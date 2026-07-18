@@ -31,7 +31,7 @@
   const VIRTUAL_GRADES_KEY = "eeVirtualGrades";
   const EXISTING_MASS_OVERRIDES_KEY = "eeVirtualGradeExistingMassOverrides";
   let gradeBadgesEnabled = false;
-  let gradesExportEnabled = true;
+  let gradesExportEnabled = false;
   let observerTimer = null;
   let ignoreMutationsUntil = 0;
   let attendanceLoadToken = 0;
@@ -1087,7 +1087,7 @@
         EXISTING_MASS_OVERRIDES_KEY,
       ], (result) => {
         gradeBadgesEnabled = result[GRADE_BADGES_KEY] === true;
-        gradesExportEnabled = result[GRADES_EXPORT_KEY] !== false;
+        gradesExportEnabled = result[GRADES_EXPORT_KEY] === true;
         GE.state.gradeTitleOverrides = result[GRADE_TITLE_OVERRIDES_KEY] && typeof result[GRADE_TITLE_OVERRIDES_KEY] === "object"
           ? result[GRADE_TITLE_OVERRIDES_KEY]
           : {};
@@ -1122,7 +1122,7 @@
         }
 
         if (changes[GRADES_EXPORT_KEY]) {
-          gradesExportEnabled = changes[GRADES_EXPORT_KEY].newValue !== false;
+          gradesExportEnabled = changes[GRADES_EXPORT_KEY].newValue === true;
           shouldEnhance = true;
         }
 

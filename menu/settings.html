@@ -87,7 +87,7 @@
             <label class="select-control" for="ThemeSelect">
               <span class="sr-only" data-i18n="themeLabel">Theme</span>
               <select id="ThemeSelect">
-                <option value="dark" data-i18n="themeOptionDark">Midnight Blue</option>
+                <option value="dark" data-i18n="themeOptionDark">Dark</option>
                 <option value="ocean" data-i18n="themeOptionOcean">Ocean Cyan</option>
                 <option value="forest" data-i18n="themeOptionForest">Forest Green</option>
                 <option value="emerald" data-i18n="themeOptionEmerald">Emerald Green</option>
@@ -342,70 +342,24 @@
 
           <div class="setting-row">
             <div>
-              <h3><span data-i18n="etestCopy">Copy Test Questions</span> <span class="setting-tag setting-tag-wip" data-i18n="wipBadge">WIP</span></h3>
-              <p data-i18n="etestCopyDesc">Add structured copy actions to EduPage tests (eTest), including a button for the whole numbered test.</p>
+              <h3 data-i18n="timetableExport">Timetable Export</h3>
+              <p data-i18n="timetableExportDesc">Show the tools for downloading your timetable as an .ics calendar file.</p>
             </div>
-            <label class="switch switch-compact" for="EtestCopyCheckbox">
-              <input type="checkbox" id="EtestCopyCheckbox">
+            <label class="switch switch-compact" for="TimetableExportCheckbox">
+              <input type="checkbox" id="TimetableExportCheckbox">
               <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleEtestCopy">Toggle test question copy button</span>
+              <span class="sr-only" data-i18n="toggleTimetableExport">Toggle timetable export</span>
             </label>
           </div>
 
-          <div class="setting-row setting-row-dependent" id="EtestQuestionButtonsRow" hidden>
-            <div>
-              <h3 data-i18n="etestQuestionButtons">Individual Question Buttons</h3>
-              <p data-i18n="etestQuestionButtonsDesc">Show a copy button beside every question.</p>
-            </div>
-            <label class="switch switch-compact" for="EtestQuestionButtonsCheckbox">
-              <input type="checkbox" id="EtestQuestionButtonsCheckbox">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleEtestQuestionButtons">Toggle individual question copy buttons</span>
-            </label>
-          </div>
-
-          <div class="setting-row setting-row-dependent" id="EtestWholeTestButtonRow" hidden>
-            <div>
-              <h3 data-i18n="etestWholeTestButton">Whole-Test Button</h3>
-              <p data-i18n="etestWholeTestButtonDesc">Show the action that copies every question collected from the current test.</p>
-            </div>
-            <label class="switch switch-compact" for="EtestWholeTestButtonCheckbox">
-              <input type="checkbox" id="EtestWholeTestButtonCheckbox">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleEtestWholeTestButton">Toggle whole-test copy button</span>
-            </label>
-          </div>
-
-          <div class="setting-row setting-row-dependent" id="EtestIncludeAnswersRow" hidden>
-            <div>
-              <h3 data-i18n="etestIncludeAnswers">Include Selected Answers</h3>
-              <p data-i18n="etestIncludeAnswersDesc">Mark selected choices and include typed, dropdown, matching, or ordering answers in copied questions.</p>
-            </div>
-            <label class="switch switch-compact" for="EtestIncludeAnswersCheckbox">
-              <input type="checkbox" id="EtestIncludeAnswersCheckbox">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleEtestIncludeAnswers">Toggle selected answers in copied questions</span>
-            </label>
-          </div>
-
-          <div class="setting-row setting-row-dependent" id="EtestIncludeImagesRow" hidden>
-            <div>
-              <h3 data-i18n="etestIncludeImages">Include Images in Whole-Test Copies</h3>
-              <p data-i18n="etestIncludeImagesDesc">Keep question images when pasting the whole test into apps that support rich content.</p>
-            </div>
-            <label class="switch switch-compact" for="EtestIncludeImagesCheckbox">
-              <input type="checkbox" id="EtestIncludeImagesCheckbox">
-              <span class="switch-track" aria-hidden="true"></span>
-              <span class="sr-only" data-i18n="toggleEtestIncludeImages">Toggle images in whole-test copies</span>
-            </label>
-          </div>
         </div>
       </section>
 
       <section class="setting-group" id="panel-timetable" role="tabpanel" aria-labelledby="timetable-heading nav-timetable" tabindex="0" hidden>
         <h2 id="timetable-heading" data-i18n="groupTimetable">Timetable</h2>
 
-        <div class="setting-card">
+        <div id="TimetableExportContent" hidden>
+          <div class="setting-card">
           <div class="setting-row">
             <div>
               <h3 data-i18n="exportTimetable">Export Timetable (.ics)</h3>
@@ -447,9 +401,10 @@
               <p id="ExportTimetableStatus" class="setting-note" role="status" aria-live="polite"></p>
             </div>
           </div>
-        </div>
+          </div>
 
-        <p class="setting-tip" data-i18n="exportTimetableEdupageTip">Tip: EduPage also has its own calendar subscription, with no extension needed — Môj profil → Nastavenia kalendára → Stiahnuť ICS/WebCal.</p>
+          <p class="setting-tip" data-i18n="exportTimetableEdupageTip">Tip: EduPage also has its own calendar subscription, with no extension needed — Môj profil → Nastavenia kalendára → Stiahnúť ICS/WebCal.</p>
+        </div>
       </section>
 
       <section class="setting-group" id="panel-updates" role="tabpanel" aria-labelledby="updates-heading nav-updates" tabindex="0" hidden>
@@ -569,6 +524,83 @@
           <h2 id="experimental-heading" data-i18n="experimentalHeading">Experimental</h2>
           <p class="setting-group-subtitle" data-i18n="experimentalSubtitle">Test activity and visibility protections on Edupage pages.</p>
           <p class="setting-group-subtitle"><a class="inline-link" href="https://edublurtesting.ct.ws/" target="_blank" rel="noopener noreferrer" data-i18n="openTestingSite">Open the testing website</a></p>
+          <div class="setting-card">
+            <div class="setting-row">
+              <div>
+                <h3><span data-i18n="etestCopy">Copy Test Questions</span> <span class="setting-tag setting-tag-wip" data-i18n="wipBadge">WIP</span></h3>
+                <p data-i18n="etestCopyDesc">Add structured copy actions to EduPage tests (eTest), including a button for the whole numbered test.</p>
+              </div>
+              <label class="switch switch-compact" for="EtestCopyCheckbox">
+                <input type="checkbox" id="EtestCopyCheckbox">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleEtestCopy">Toggle test question copy button</span>
+              </label>
+            </div>
+
+            <div class="setting-row setting-row-dependent" id="EtestQuestionButtonsRow" hidden>
+              <div>
+                <h3 data-i18n="etestQuestionButtons">Individual Question Buttons</h3>
+                <p data-i18n="etestQuestionButtonsDesc">Show a copy button beside every question.</p>
+              </div>
+              <label class="switch switch-compact" for="EtestQuestionButtonsCheckbox">
+                <input type="checkbox" id="EtestQuestionButtonsCheckbox">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleEtestQuestionButtons">Toggle individual question copy buttons</span>
+              </label>
+            </div>
+
+            <div class="setting-row setting-row-dependent" id="EtestWholeTestButtonRow" hidden>
+              <div>
+                <h3 data-i18n="etestWholeTestButton">Whole-Test Button</h3>
+                <p data-i18n="etestWholeTestButtonDesc">Show the action that copies every question collected from the current test.</p>
+              </div>
+              <label class="switch switch-compact" for="EtestWholeTestButtonCheckbox">
+                <input type="checkbox" id="EtestWholeTestButtonCheckbox">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleEtestWholeTestButton">Toggle whole-test copy button</span>
+              </label>
+            </div>
+
+            <div class="setting-row setting-row-dependent" id="EtestIncludeAnswersRow" hidden>
+              <div>
+                <h3 data-i18n="etestIncludeAnswers">Include Selected Answers</h3>
+                <p data-i18n="etestIncludeAnswersDesc">Mark selected choices and include typed, dropdown, matching, or ordering answers in copied questions.</p>
+              </div>
+              <label class="switch switch-compact" for="EtestIncludeAnswersCheckbox">
+                <input type="checkbox" id="EtestIncludeAnswersCheckbox">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleEtestIncludeAnswers">Toggle selected answers in copied questions</span>
+              </label>
+            </div>
+
+            <div class="setting-row setting-row-dependent" id="EtestIncludeImagesRow" hidden>
+              <div>
+                <h3 data-i18n="etestIncludeImages">Include Images in Whole-Test Copies</h3>
+                <p data-i18n="etestIncludeImagesDesc">Keep question images when pasting the whole test into apps that support rich content.</p>
+              </div>
+              <label class="switch switch-compact" for="EtestIncludeImagesCheckbox">
+                <input type="checkbox" id="EtestIncludeImagesCheckbox">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="sr-only" data-i18n="toggleEtestIncludeImages">Toggle images in whole-test copies</span>
+              </label>
+            </div>
+
+            <div class="setting-row setting-row-stack setting-row-dependent" id="EtestImageExportRow" hidden>
+              <div>
+                <h3 data-i18n="etestImageExport">Test Image</h3>
+                <p data-i18n="etestImageExportDesc">Paste copied test text to download a readable PNG. The text stays on this device.</p>
+              </div>
+              <div class="etest-image-export-controls">
+                <label class="sr-only" for="EtestImageExportInput" data-i18n="etestImageExportLabel">Copied test text</label>
+                <textarea id="EtestImageExportInput" rows="6" spellcheck="true" data-i18n-attr="placeholder:etestImageExportPlaceholder" placeholder="Paste copied test text here."></textarea>
+                <div class="actions-row">
+                  <button class="secondary-button" id="EtestImageExportButton" type="button" data-i18n="etestImageExportButton">Download PNG</button>
+                  <span class="save-status" id="EtestImageExportStatus" role="status" aria-live="polite"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="section-heading">
             <h3 id="activity-heading" data-i18n="samHeading">Stay Active Mode</h3>
             <p data-i18n="samDesc">Controls how Edupage sees tab activity, focus, mouse movement, and clipboard actions. Changes apply live, but reloading open Edupage tabs gives the cleanest start.</p>
@@ -804,5 +836,6 @@
     <script src="../scripts/lib/ee-common.js"></script>
     <script src="i18n.js"></script>
     <script src="settings.js"></script>
+    <script src="etest-image-export.js"></script>
   </body>
 </html>

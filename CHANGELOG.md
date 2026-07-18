@@ -4,6 +4,15 @@ All notable changes to Edupage Extras are documented here. Versions follow
 `package.json` / `manifest.json`. Older history (pre-0.7.0) is only in the git
 log — this file starts at the Firefox-compatibility milestone.
 
+## 0.9.16 — 2026-07-18
+
+- Moved eTest copying to Experimental and made it opt-in. Its related copy
+  controls and local Test Image utility now stay hidden until enabled.
+- Added a local settings tool for turning pasted eTest copy text into a
+  readable PNG, while keeping the eTest page itself limited to copy actions.
+- Made curriculum, grades, and timetable export opt-in; timetable export now
+  has its own Features switch. Renamed the default theme fallback to Dark.
+
 ## 0.9.15 — 2026-07-16
 
 - Reworked eTest question copying with structured plain-text and rich HTML

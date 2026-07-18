@@ -154,12 +154,29 @@ test("stable card ids keep paginated questions distinct", () => {
   assert.equal(getQuestionIdentity(second, 0, "Same position"), "data-cardid:card-2");
 });
 
-test("question and whole-test button preferences are independent and default on", () => {
+test("whole-test copy includes a portable question type identifier", () => {
+  const { getQuestionType, getQuestionInteractionData, renderQuestionHtml } = loadInternals().exports;
+  const matching = { querySelector: (selector) => selector === ".etest-pair-item" ? {} : null };
+  const choice = { querySelector: (selector) => selector === ".etest-alist-answer" ? {} : null };
+  assert.equal(getQuestionType(matching), "matching");
+  assert.equal(getQuestionType(choice), "choice");
+  assert.equal(getQuestionType({ querySelector: (selector) => [".etest-alist-answer", "select"].includes(selector) ? {} : null }), "mixed");
+  assert.match(
+    renderQuestionHtml({ type: "matching", interactionData: { pairs: [["A", "1"]] }, htmlBody: "<p>Match</p>", htmlBodyWithoutImages: "<p>Match</p>", answers: [] }, {}),
+    /data-ee-question-type="matching" data-ee-question-data=/,
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(getQuestionInteractionData({ querySelectorAll: () => [element("li", { children: [text("A) Answer")] })] }, "choice"))),
+    { options: ["A) Answer"] },
+  );
+});
+
+test("test copying is opt-in while its child preferences default on", () => {
   const { resolvePreferences } = loadInternals().exports;
   assert.deepEqual(
     { ...resolvePreferences({}) },
     {
-      copyEnabled: true,
+      copyEnabled: false,
       questionButtons: true,
       wholeTestButton: true,
       selectedAnswers: true,
@@ -172,13 +189,20 @@ test("question and whole-test button preferences are independent and default on"
       eeEtestWholeTestButtonEnabled: true,
     }) },
     {
-      copyEnabled: true,
+      copyEnabled: false,
       questionButtons: false,
       wholeTestButton: true,
       selectedAnswers: true,
       wholeTestImages: true,
     },
   );
+  assert.equal(resolvePreferences({ eeEtestCopyEnabled: true }).copyEnabled, true);
+});
+
+test("the test page keeps image export out of its action bar", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "scripts", "etest-enhancer.js"), "utf8");
+  assert.match(source, /etest-screen-action-btn flat-button flat-button-blue \$\{COPY_ALL_BTN_CLASS\}/);
+  assert.doesNotMatch(source, /downloadTestImage|makeDownloadImageButton|DOWNLOAD_IMAGE_BTN_CLASS/);
 });
 
 test("whole-test rendering numbers questions and controls rich-copy images", () => {

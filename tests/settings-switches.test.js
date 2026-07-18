@@ -15,6 +15,7 @@ function runTest(name, fn) {
 
 const settingsPath = path.join(__dirname, "..", "menu", "settings.html");
 const html = fs.readFileSync(settingsPath, "utf8");
+const settingsScript = fs.readFileSync(path.join(__dirname, "..", "menu", "settings.js"), "utf8");
 const switchLabels = Array.from(
   html.matchAll(/<label class="([^"]*\bswitch\b[^"]*)"[^>]*>([\s\S]*?)<\/label>/g),
 );
@@ -55,4 +56,22 @@ runTest("debug-only attendance dates and WIP feature markers stay in their inten
   assert.match(html, /for="EtestWholeTestButtonCheckbox"/);
   assert.match(html, /for="EtestIncludeAnswersCheckbox"/);
   assert.match(html, /for="EtestIncludeImagesCheckbox"/);
+});
+
+runTest("test copying and its image export remain experimental dependent settings", () => {
+  const imageExport = html.indexOf('id="EtestImageExportInput"');
+  const experimentalPanel = html.indexOf('id="panel-experimental"');
+  assert.ok(imageExport > experimentalPanel, "expected the image exporter in the Experimental panel");
+  assert.match(html, /id="EtestImageExportButton"/);
+  assert.match(html, /id="EtestImageExportRow"[^>]*hidden/);
+  assert.ok(html.indexOf('for="EtestCopyCheckbox"') > experimentalPanel, "expected test copying in Experimental");
+  assert.match(html, /src="etest-image-export\.js"/);
+});
+
+runTest("optional export tools are opt-in", () => {
+  assert.match(html, /id="TimetableExportCheckbox"/);
+  assert.match(html, /id="TimetableExportContent" hidden/);
+  assert.match(settingsScript, /ucivoExportToggle\.checked = result\[UCIVO_EXPORT_KEY\] === true/);
+  assert.match(settingsScript, /gradesExportToggle\.checked = result\[GRADES_EXPORT_KEY\] === true/);
+  assert.match(settingsScript, /timetableExportToggle\.checked = result\[TIMETABLE_EXPORT_KEY\] === true/);
 });

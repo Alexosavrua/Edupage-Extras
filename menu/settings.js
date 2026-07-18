@@ -51,6 +51,8 @@ const autoLoginPreferredAccountRow = document.getElementById("AutoLoginPreferred
 const autoLoginPreferredAccountInput = document.getElementById("AutoLoginPreferredAccountInput");
 const ucivoExportToggle = document.getElementById("UcivoExportCheckbox");
 const gradesExportToggle = document.getElementById("GradesExportCheckbox");
+const timetableExportToggle = document.getElementById("TimetableExportCheckbox");
+const timetableExportContent = document.getElementById("TimetableExportContent");
 const etestCopyToggle = document.getElementById("EtestCopyCheckbox");
 const etestQuestionButtonsRow = document.getElementById("EtestQuestionButtonsRow");
 const etestQuestionButtonsToggle = document.getElementById("EtestQuestionButtonsCheckbox");
@@ -60,6 +62,9 @@ const etestIncludeAnswersRow = document.getElementById("EtestIncludeAnswersRow")
 const etestIncludeAnswersToggle = document.getElementById("EtestIncludeAnswersCheckbox");
 const etestIncludeImagesRow = document.getElementById("EtestIncludeImagesRow");
 const etestIncludeImagesToggle = document.getElementById("EtestIncludeImagesCheckbox");
+const etestImageExportRow = document.getElementById("EtestImageExportRow");
+const etestImageExportInput = document.getElementById("EtestImageExportInput");
+const etestImageExportButton = document.getElementById("EtestImageExportButton");
 const previewUpdateToastButton = document.getElementById("PreviewUpdateToastButton");
 const STORAGE_KEY = "darkModeEnabled";
 const THEME_KEY = "themeMode";
@@ -88,6 +93,7 @@ const AUTOLOGIN_KEY = "eeAutoLoginEnabled";
 const AUTOLOGIN_PREFERRED_ACCOUNT_KEY = "eeAutoLoginPreferredAccount";
 const UCIVO_EXPORT_KEY = "eeUcivoExportEnabled";
 const GRADES_EXPORT_KEY = "eeGradesExportEnabled";
+const TIMETABLE_EXPORT_KEY = "eeTimetableExportEnabled";
 const ETEST_COPY_KEY = "eeEtestCopyEnabled";
 const ETEST_QUESTION_BUTTONS_KEY = "eeEtestQuestionButtonsEnabled";
 const ETEST_WHOLE_TEST_BUTTON_KEY = "eeEtestWholeTestButtonEnabled";
@@ -266,6 +272,13 @@ function updateDependentControls() {
 	if (etestIncludeAnswersToggle) etestIncludeAnswersToggle.disabled = !etestCopyEnabled;
 	if (etestIncludeImagesRow) etestIncludeImagesRow.hidden = !etestCopyEnabled;
 	if (etestIncludeImagesToggle) etestIncludeImagesToggle.disabled = !etestCopyEnabled;
+	if (etestImageExportRow) etestImageExportRow.hidden = !etestCopyEnabled;
+	if (etestImageExportInput) etestImageExportInput.disabled = !etestCopyEnabled;
+	if (etestImageExportButton) etestImageExportButton.disabled = !etestCopyEnabled;
+}
+
+function updateTimetableExportVisibility() {
+	if (timetableExportContent) timetableExportContent.hidden = timetableExportToggle?.checked !== true;
 }
 
 function notifyEdupageTabs() {
@@ -1017,7 +1030,7 @@ if (autoLoginPreferredAccountInput) {
 
 if (ucivoExportToggle) {
 	chrome.storage.local.get([UCIVO_EXPORT_KEY], (result) => {
-		ucivoExportToggle.checked = result[UCIVO_EXPORT_KEY] !== false;
+		ucivoExportToggle.checked = result[UCIVO_EXPORT_KEY] === true;
 	});
 	ucivoExportToggle.addEventListener("change", () => {
 		chrome.storage.local.set({ [UCIVO_EXPORT_KEY]: ucivoExportToggle.checked });
@@ -1025,12 +1038,23 @@ if (ucivoExportToggle) {
 
 if (gradesExportToggle) {
 	chrome.storage.local.get([GRADES_EXPORT_KEY], (result) => {
-		gradesExportToggle.checked = result[GRADES_EXPORT_KEY] !== false;
+		gradesExportToggle.checked = result[GRADES_EXPORT_KEY] === true;
 	});
 	gradesExportToggle.addEventListener("change", () => {
 		chrome.storage.local.set({ [GRADES_EXPORT_KEY]: gradesExportToggle.checked });
 	});
 }
+}
+
+if (timetableExportToggle) {
+	chrome.storage.local.get([TIMETABLE_EXPORT_KEY], (result) => {
+		timetableExportToggle.checked = result[TIMETABLE_EXPORT_KEY] === true;
+		updateTimetableExportVisibility();
+	});
+	timetableExportToggle.addEventListener("change", () => {
+		chrome.storage.local.set({ [TIMETABLE_EXPORT_KEY]: timetableExportToggle.checked });
+		updateTimetableExportVisibility();
+	});
 }
 
 if (etestCopyToggle) {
@@ -1041,7 +1065,7 @@ if (etestCopyToggle) {
 		ETEST_INCLUDE_ANSWERS_KEY,
 		ETEST_INCLUDE_IMAGES_KEY,
 	], (result) => {
-		etestCopyToggle.checked = result[ETEST_COPY_KEY] !== false;
+		etestCopyToggle.checked = result[ETEST_COPY_KEY] === true;
 		if (etestQuestionButtonsToggle) {
 			etestQuestionButtonsToggle.checked = result[ETEST_QUESTION_BUTTONS_KEY] !== false;
 		}

@@ -41,7 +41,7 @@
   ]);
   const ANSWER_INPUT_TYPES = new Set([...BLANK_INPUT_TYPES].filter((type) => type !== "password"));
 
-  let etestCopyEnabled = true;
+  let etestCopyEnabled = false;
   let questionButtonsEnabled = true;
   let wholeTestButtonEnabled = true;
   let includeSelectedAnswers = true;
@@ -400,10 +400,70 @@
     return `position:${index}:${plainBody.slice(0, 120)}`;
   }
 
+  function getQuestionType(content) {
+    if (!content || typeof content.querySelector !== "function") return "question";
+    const types = [
+      ["ordering", ".etest-alist-ordering"],
+      ["matching", ".etest-pair-item"],
+      ["choice", ".etest-alist-answer"],
+      ["dropdown", "select"],
+      ["fill-in", "textarea, input:not([type='radio']):not([type='checkbox'])"],
+    ].filter(([, selector]) => content.querySelector(selector)).map(([type]) => type);
+    if (types.includes("ordering")) return "ordering";
+    if (types.includes("matching")) return "matching";
+    if (types.length > 1) return "mixed";
+    if (types.length) return types[0];
+    return "question";
+  }
+
+  function getQuestionInteractionData(content, type) {
+    if (!content || typeof content.querySelectorAll !== "function") return {};
+    if (type === "choice" || type === "mixed") {
+      return {
+        options: Array.from(content.querySelectorAll(".etest-alist-answer"))
+          .map(extractElementText)
+          .filter(Boolean),
+      };
+    }
+    if (type === "dropdown" || type === "mixed") {
+      return {
+        dropdowns: Array.from(content.querySelectorAll("select"))
+          .map(getChoiceLabels)
+          .filter((choices) => choices.length),
+      };
+    }
+    if (type === "fill-in" || type === "mixed") {
+      return {
+        blanks: Array.from(content.querySelectorAll("textarea, input"))
+          .filter((control) => BLANK_INPUT_TYPES.has(String(control.type || "").toLowerCase()))
+          .length,
+      };
+    }
+    if (type === "matching") {
+      return {
+        pairs: Array.from(content.querySelectorAll(".etest-pair-item"))
+          .map((pair) => {
+            const left = pair.querySelector(".pair-l");
+            const right = pair.querySelector(".pair-r");
+            return left && right ? [extractElementText(left), extractElementText(right)] : null;
+          })
+          .filter((pair) => pair && pair[0] && pair[1]),
+      };
+    }
+    if (type === "ordering") {
+      const list = content.querySelector(".etest-alist-ordering");
+      return {
+        options: list ? Array.from(list.querySelectorAll(".etest-alist-answer")).map(extractElementText).filter(Boolean) : [],
+      };
+    }
+    return {};
+  }
+
   function buildQuestionModel(content, index = 0) {
     const withoutImages = serializeNode(content, false);
     const withImages = serializeNode(content, true);
     const plainBody = normalizeStructuredText(withoutImages.plain);
+    const type = getQuestionType(content);
     return {
       identity: getQuestionIdentity(content, index, plainBody),
       number: getQuestionNumber(content),
@@ -411,6 +471,8 @@
       htmlBody: withImages.html,
       htmlBodyWithoutImages: withoutImages.html,
       answers: collectSelectedAnswers(content),
+      type,
+      interactionData: getQuestionInteractionData(content, type),
       order: index,
     };
   }
@@ -450,7 +512,9 @@
       options.includeAnswers ? selectedMarker : "",
     );
     const answer = options.includeAnswers ? renderAnswerHtml(model.answers || []) : "";
-    return `<section>${number}${body}${answer}</section>`;
+    const type = escapeHtml(model.type || "question");
+    const interactionData = encodeURIComponent(JSON.stringify(model.interactionData || {}));
+    return `<section data-ee-question-type="${type}" data-ee-question-data="${escapeHtml(interactionData)}">${number}${body}${answer}</section>`;
   }
 
   function renderTestPayload(models, options = {}) {
@@ -500,11 +564,11 @@
     return navigator.clipboard.write([item]).catch(() => writePlainText(payload.plain));
   }
 
-  function flashFeedback(button, icon, status, ok) {
+  function flashFeedback(button, icon, status, ok, successMessage) {
     const originalClass = icon.className;
     const originalLabel = button.getAttribute("aria-label") || "";
     const message = ok
-      ? getMessage("etestCopySucceeded", "Copied")
+      ? (successMessage || getMessage("etestCopySucceeded", "Copied"))
       : getMessage("etestCopyFailed", "Copy failed");
     icon.className = ok ? "fa fa-fw fa-check" : "fa fa-fw fa-times";
     button.classList.add(ok ? "ee-copy-ok" : "ee-copy-fail");
@@ -629,7 +693,7 @@
     const style = document.createElement("style");
     style.id = STYLE_ID;
     style.textContent = `
-      .${COPY_BTN_CLASS}, .${COPY_ALL_BTN_CLASS} {
+      .${COPY_BTN_CLASS} {
         align-items: center;
         box-sizing: border-box;
         cursor: pointer;
@@ -640,7 +704,7 @@
         position: relative;
         transition: opacity 100ms ease-out, transform 100ms ease-out;
       }
-      .${COPY_BTN_CLASS} > i, .${COPY_ALL_BTN_CLASS} > i {
+      .${COPY_BTN_CLASS} > i {
         color: currentColor !important;
         opacity: 1 !important;
         visibility: visible !important;
@@ -661,7 +725,6 @@
         inset: -6px;
         position: absolute;
       }
-      .${COPY_ALL_BTN_CLASS} { line-height: normal; }
       html.ee-dark .${COPY_BTN_CLASS} {
         background: transparent !important;
         border-color: transparent !important;
@@ -671,7 +734,7 @@
         outline: 2px solid currentColor;
         outline-offset: 2px;
       }
-      .${COPY_BTN_CLASS}:active, .${COPY_ALL_BTN_CLASS}:active { transform: scale(0.97); }
+      .${COPY_BTN_CLASS}:active { transform: scale(0.97); }
       .ee-etest-copy-status {
         clip: rect(0 0 0 0);
         clip-path: inset(50%);
@@ -682,7 +745,7 @@
         width: 1px;
       }
       @media (prefers-reduced-motion: reduce) {
-        .${COPY_BTN_CLASS}, .${COPY_ALL_BTN_CLASS} { transition-duration: 0.01ms; }
+        .${COPY_BTN_CLASS} { transition-duration: 0.01ms; }
       }
     `;
     styleHost.appendChild(style);
@@ -712,8 +775,8 @@
         actions.querySelectorAll(`.${COPY_ALL_BTN_CLASS}`).forEach((button) => button.remove());
         return;
       }
-      if (actions.querySelector(`.${COPY_ALL_BTN_CLASS}`) || !document.querySelector(".etest-question-content")) return;
-      actions.appendChild(makeCopyAllButton());
+      if (!document.querySelector(".etest-question-content")) return;
+      if (!actions.querySelector(`.${COPY_ALL_BTN_CLASS}`)) actions.appendChild(makeCopyAllButton());
     });
   }
 
@@ -769,7 +832,7 @@
 
   function resolvePreferences(values = {}) {
     return {
-      copyEnabled: values[ETEST_COPY_KEY] !== false,
+      copyEnabled: values[ETEST_COPY_KEY] === true,
       questionButtons: values[ETEST_QUESTION_BUTTONS_KEY] !== false,
       wholeTestButton: values[ETEST_WHOLE_TEST_BUTTON_KEY] !== false,
       selectedAnswers: values[ETEST_INCLUDE_ANSWERS_KEY] !== false,
@@ -797,7 +860,7 @@
 
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== "local") return;
-      if (changes[ETEST_COPY_KEY]) etestCopyEnabled = changes[ETEST_COPY_KEY].newValue !== false;
+      if (changes[ETEST_COPY_KEY]) etestCopyEnabled = changes[ETEST_COPY_KEY].newValue === true;
       if (changes[ETEST_QUESTION_BUTTONS_KEY]) {
         questionButtonsEnabled = changes[ETEST_QUESTION_BUTTONS_KEY].newValue !== false;
       }
@@ -821,6 +884,8 @@
       serializeNode,
       collectSelectedAnswers,
       getQuestionIdentity,
+      getQuestionType,
+      getQuestionInteractionData,
       buildQuestionModel,
       getSeenQuestionModels,
       renderQuestionPlain,

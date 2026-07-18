@@ -542,6 +542,24 @@ code {
     padding: 9px 10px;
 }
 
+.etest-image-export-controls {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+}
+
+.etest-image-export-controls textarea {
+    width: 100%;
+    min-height: 140px;
+    resize: vertical;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-control);
+    background: var(--control-bg);
+    color: var(--text-main);
+    font: 14px/1.5 ui-monospace, SFMono-Regular, Consolas, "Courier New", monospace;
+    padding: 10px 12px;
+}
+
 /* ---- Control clusters --------------------------------------------------- */
 
 .actions-row {
@@ -609,6 +627,10 @@ code {
     font-size: 13px;
     min-height: 18px;
     text-align: right;
+}
+
+.save-status.is-error {
+    color: var(--danger-color);
 }
 
 /* ---- Switch ------------------------------------------------------------- */
